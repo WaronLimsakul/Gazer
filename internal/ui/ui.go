@@ -11,17 +11,13 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/WaronLimsakul/Gazer/internal/engine"
 )
-
-type UserInput struct {
-	Url *string
-}
 
 const WINDOW_WIDTH = 600
 const WINDOW_HEIGHT = 800
 
-func Draw(input UserInput) {
-	w := setupWindow()
+func Draw(w *app.Window, s *engine.State) {
 	ops := op.Ops{}
 	thm := material.NewTheme()
 	srcInput := setupSrcInput()
@@ -39,7 +35,8 @@ func Draw(input UserInput) {
 
 				switch editorEv.(type) {
 				case widget.SubmitEvent:
-					*input.Url = srcInput.Text()
+					s.Url = srcInput.Text()
+					s.Notifier <- engine.Search
 				default:
 					continue
 				}
@@ -70,6 +67,14 @@ func Draw(input UserInput) {
 						return border.Layout(gtx, srcInputUi.Layout)
 					})
 				}),
+				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+					if len(s.Content) == 0 {
+						return layout.Dimensions{}
+					}
+
+					text := material.Body1(thm, s.Content)
+					return text.Layout(gtx)
+				}),
 			)
 
 			ev.Frame(gtx.Ops)
@@ -79,7 +84,7 @@ func Draw(input UserInput) {
 	}
 }
 
-func setupWindow() *app.Window {
+func NewWindow() *app.Window {
 	w := new(app.Window)
 	w.Option(app.Title("Gazer"))
 	w.Option(app.Size(unit.Dp(WINDOW_WIDTH), unit.Dp(WINDOW_HEIGHT)))
