@@ -14,8 +14,10 @@ import (
 	"github.com/WaronLimsakul/Gazer/internal/engine"
 )
 
-const WINDOW_WIDTH = 600
-const WINDOW_HEIGHT = 800
+const (
+	WINDOW_WIDTH  = 600
+	WINDOW_HEIGHT = 800
+)
 
 func Draw(w *app.Window, s *engine.State) {
 	ops := op.Ops{}
@@ -34,6 +36,7 @@ func Draw(w *app.Window, s *engine.State) {
 				}
 
 				switch editorEv.(type) {
+				// TODO: while loading, show something instead
 				case widget.SubmitEvent:
 					s.Url = srcInput.Text()
 					s.Notifier <- engine.Search

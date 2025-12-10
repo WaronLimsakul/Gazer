@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 
@@ -31,19 +32,25 @@ func Start(state *State, window *app.Window) {
 		case Search:
 			url := state.Url
 			if len(url) == 0 {
-				// TODO
+				// TODO: make it formal log
+				fmt.Println("Empty URL")
 				continue
 			}
+
 			res, err := http.Get(url)
 			if err != nil {
-				// TODO
+				// TODO: make it formal log
+				fmt.Println("http.Get:", err)
 				continue
 			}
+
 			resBody, err := io.ReadAll(res.Body)
 			if err != nil {
-				// TODO
+				// TODO: make it formal log
+				fmt.Println("io.ReadAll:", err)
 				continue
 			}
+
 			state.Content = string(resBody)
 			window.Invalidate()
 		default:
