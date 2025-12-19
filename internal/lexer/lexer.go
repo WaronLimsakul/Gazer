@@ -53,9 +53,9 @@ func GetNextToken(raw string, pos int) Token {
 					res.Type = Open
 				}
 			case Open:
-				res.Content += string('<')
+				res.Content = string('<') + res.Content
 				res.Type = Inner // reinterpret itself to inner
-				res.Endpos = idx + 1
+				res.Endpos = idx
 				return res
 			default:
 				res.Content += string('<')
@@ -92,7 +92,6 @@ func GetNextToken(raw string, pos int) Token {
 		}
 	}
 
-	// TODO: Deformed for sure
 	res.Endpos = idx + 1
 	return res
 }
