@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"gioui.org/app"
+	"github.com/WaronLimsakul/Gazer/internal/parser"
 )
 
 type Notification int
@@ -17,7 +18,10 @@ const (
 type State struct {
 	Url      string
 	Notifier chan Notification
-	Content  string
+	Content  string //  TODO: delete after finish html rendering
+
+	// DOM root
+	Root *parser.Node
 }
 
 func NewState() *State {
