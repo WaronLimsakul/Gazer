@@ -2,7 +2,8 @@ package parser
 
 import (
 	"fmt"
-	"strings"
+
+	"github.com/WaronLimsakul/Gazer/internal/lexer"
 )
 
 type Tag int
@@ -39,22 +40,68 @@ type Node struct {
 	Inner    string
 	Attrs    map[string]any
 	Children []*Node
+	Parent   *Node
 }
 
 // Parse parses raw html string and return root node of the DOM
+// NOTE: if tag invalid, assume it's "p" tag
 func Parse(src string) (*Node, error) {
-	src, isHtml := strings.CutPrefix(src, "<!DOCTYPE html>")
-	if !isHtml {
-		return nil, fmt.Errorf("parser: not HTML5")
-	}
+	root := newRootNode()
+	curNode := root
 
-	// TODO
-	return nil, nil
+	var token lexer.Token
+	// process token-by-token to create a DOM tree
+	for idx := 0; idx < len(src); idx = token.Endpos {
+		token = lexer.GetNextToken(src, idx)
+
+		switch token.Type {
+		// open-tag = create a child node
+		case lexer.Open:
+			child, err := newNode(token.Content)
+			if err != nil {
+				return nil, err
+			}
+			child.Parent = curNode
+			curNode.Children = append(curNode.Children, child)
+			curNode = child
+		// close-tag = done with a child node, going back to parent
+		case lexer.Close:
+			if curNode.Parent != nil {
+				curNode = curNode.Parent
+			}
+		case lexer.Inner:
+			curNode.Inner += token.Content
+		// same as having open tag, but not going to that child
+		case lexer.SClose:
+			child, err := newNode(token.Content)
+			if err != nil {
+				return nil, err
+			}
+			child.Parent = curNode
+			curNode.Children = append(curNode.Children, child)
+		// specailly just to check HTML
+		case lexer.DocType:
+			if token.Content != "html" {
+				return nil, fmt.Errorf("Not html")
+			}
+		// if invalid token (Void), just ignore
+		default:
+			continue
+		}
+
+	}
+	return root, nil
 }
 
-func newNode() *Node {
-	node := Node{}
+// newNode takes content of the open tag and return a new node
+func newNode(content string) (*Node, error) {
+	node := new(Node)
+	return node, nil
+}
+
+func newRootNode() *Node {
+	node := new(Node)
 	node.Attrs = make(map[string]any)
 	node.Children = make([]*Node, 0)
-	return &node
+	return node
 }

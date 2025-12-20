@@ -13,6 +13,7 @@ const (
 	Inner   // anything that's not tags
 	SClose  // self-closed
 	DocType // special syntax for <!DOCTYPE ..>
+	// TODO: Comment
 )
 
 type Token struct {
