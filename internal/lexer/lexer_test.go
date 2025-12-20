@@ -27,15 +27,19 @@ func TestGetNextTokenBasic(t *testing.T) {
 	t1 := `
 	<!DOCTYPE html>
 		<body>
-			<p>hello, world</p>
+			<p style="hello">hello, world</p>
+			<img src="img_src.jpg" width="500" height="600"/>
 		</body>
 	`
 	expectedTokens := []Token{
 		{Type: DocType, Content: "html", Endpos: endPos(t1, "<!DOCTYPE html>")},
 		{Type: Open, Content: "body", Endpos: endPos(t1, "<body>")},
-		{Type: Open, Content: "p", Endpos: endPos(t1, "<p>")},
+		{Type: Open, Content: `p style="hello"`, Endpos: endPos(t1, `<p style="hello">`)},
 		{Type: Inner, Content: "hello, world", Endpos: endPos(t1, "hello, world")},
 		{Type: Close, Content: "p", Endpos: endPos(t1, "</p>")},
+		{Type: SClose,
+			Content: `img src="img_src.jpg" width="500" height="600"`,
+			Endpos:  endPos(t1, `<img src="img_src.jpg" width="500" height="600"/>`)},
 		{Type: Close, Content: "body", Endpos: endPos(t1, "</body>")},
 	}
 
