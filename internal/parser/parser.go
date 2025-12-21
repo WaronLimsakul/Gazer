@@ -2,6 +2,8 @@ package parser
 
 import (
 	"fmt"
+	"strings"
+	"unicode"
 
 	"github.com/WaronLimsakul/Gazer/internal/lexer"
 )
@@ -11,6 +13,7 @@ type Tag int
 const (
 	Html Tag = iota
 	Head
+	Body
 	Title
 	H1
 	H2
@@ -26,6 +29,7 @@ const (
 var TagMap = map[string]Tag{
 	"html": Html,
 	"head": Head,
+	"body": Body,
 	"h1":   H1,
 	"h2":   H2,
 	"h3":   H3,
@@ -36,9 +40,9 @@ var TagMap = map[string]Tag{
 }
 
 type Node struct {
-	Tag      string
+	Tag      Tag
 	Inner    string
-	Attrs    map[string]any
+	Attrs    map[string]string
 	Children []*Node
 	Parent   *Node
 }
@@ -94,14 +98,103 @@ func Parse(src string) (*Node, error) {
 }
 
 // newNode takes content of the open tag and return a new node
+// 1. get tag name
+// 2. assign attributes
+//   - key=value works
+//   - key="value and another value" also works
 func newNode(content string) (*Node, error) {
 	node := new(Node)
+	content = strings.TrimSpace(content)
+
+	// Get tag
+	var tagName string
+	tagSepIdx := strings.Index(content, " ")
+	if tagSepIdx != -1 {
+		tagName = content[:tagSepIdx]
+	} else {
+		tagName = content
+	}
+	node.Tag = getTag(tagName)
+
+	// Assign attributes
+	if tagSepIdx == -1 || tagSepIdx+1 >= len(content) {
+		return node, nil
+	}
+	content = content[tagSepIdx+1:]
+	assignAttrs(&node.Attrs, content)
 	return node, nil
+}
+
+// enum for attribute processing states
+type attrParsingState int
+
+const (
+	Keying    attrParsingState = iota // processing key part
+	Observing                         // observe wheter it will be key=value or key="value" format
+	QValuing                          // processing value in key="value" format
+	Valuing                           // processing value in key=value format
+)
+
+// assignAttrs takes a map and raw string in the attribute part of HTML tag
+// then assign all of them to the map
+func assignAttrs(attrs *map[string]string, s string) {
+	s = strings.TrimSpace(s)
+	var key, val string
+	state := Keying
+	for _, char := range s {
+		switch state {
+		case Keying:
+			if unicode.IsSpace(char) {
+				continue
+			}
+
+			if char == '=' {
+				state = Observing
+			} else {
+				key += string(char)
+			}
+		case Observing:
+			if unicode.IsSpace(char) {
+				continue
+			}
+
+			if char == '"' {
+				state = QValuing
+			} else {
+				state = Valuing
+			}
+			val = ""
+		case QValuing:
+			if char == '"' {
+				(*attrs)[key] = val
+				state = Keying
+			} else {
+				val += string(char)
+			}
+		case Valuing:
+			if unicode.IsSpace(char) {
+				(*attrs)[key] = val
+				state = Keying
+			} else {
+				val += string(char)
+			}
+		}
+	}
+}
+
+// getTag return Tag based on the name, if invalid, gives <p>
+func getTag(tagName string) Tag {
+	tag, ok := TagMap[tagName]
+	if !ok {
+		return P
+	} else {
+		return tag
+	}
 }
 
 func newRootNode() *Node {
 	node := new(Node)
-	node.Attrs = make(map[string]any)
+	node.Attrs = make(map[string]string)
 	node.Children = make([]*Node, 0)
 	return node
 }
