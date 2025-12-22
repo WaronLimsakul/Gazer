@@ -25,32 +25,36 @@ const (
 	P
 	Br
 
+	Text // For no tag content or invalid tag
+
 	// TODO: A Img Ul Ol Li B (or Strong) I (or Em) Hr Div Span
 )
 
 var TagMap = map[string]Tag{
-	"html": Html,
-	"head": Head,
-	"body": Body,
-	"h1":   H1,
-	"h2":   H2,
-	"h3":   H3,
-	"h4":   H4,
-	"h5":   H5,
-	"p":    P,
-	"br":   Br,
+	"html":  Html,
+	"head":  Head,
+	"body":  Body,
+	"title": Title,
+	"h1":    H1,
+	"h2":    H2,
+	"h3":    H3,
+	"h4":    H4,
+	"h5":    H5,
+	"p":     P,
+	"br":    Br,
 }
 
 type Node struct {
 	Tag      Tag
-	Inner    string
+	Inner    string // only for Text node content
 	Attrs    map[string]string
 	Children []*Node
 	Parent   *Node
 }
 
 // Parse parses raw html string and return root node of the DOM
-// NOTE: if tag invalid, assume it's "p" tag
+// NOTE: if tag invalid, assume it's Text node
+// NOTE2: special tag <br>, <br/> or even </br> always means self-close <br/>
 func Parse(src string) (*Node, error) {
 	root := newBaseNode()
 	curNode := root
@@ -59,6 +63,11 @@ func Parse(src string) (*Node, error) {
 	// process token-by-token to create a DOM tree
 	for idx := 0; idx < len(src); idx = token.Endpos {
 		token = lexer.GetNextToken(src, idx)
+
+		// look at NOTE2
+		if getTagFromContent(token.Content) == Br {
+			token.Type = lexer.SClose
+		}
 
 		switch token.Type {
 		// open-tag = create a child node
@@ -75,8 +84,9 @@ func Parse(src string) (*Node, error) {
 			if curNode.Parent != nil {
 				curNode = curNode.Parent
 			}
-		case lexer.Inner:
-			curNode.Inner += token.Content
+		// no tag content = being a child Text node
+		case lexer.NoTag:
+			curNode.Children = append(curNode.Children, newText(token.Content, curNode))
 		// same as having open tag, but not going to that child
 		case lexer.SClose:
 			child, err := newNode(token.Content)
@@ -100,7 +110,7 @@ func Parse(src string) (*Node, error) {
 }
 
 // newNode takes content of the open tag and return a new node
-// 1. get tag name
+// 1. get tag name.
 // 2. assign attributes
 //   - key=value works
 //   - key="value and another value" also works
@@ -108,17 +118,10 @@ func newNode(content string) (*Node, error) {
 	node := newBaseNode()
 	content = strings.TrimSpace(content)
 
-	// Get tag
-	var tagName string
-	tagSepIdx := strings.Index(content, " ")
-	if tagSepIdx != -1 {
-		tagName = content[:tagSepIdx]
-	} else {
-		tagName = content
-	}
-	node.Tag = getTag(tagName)
+	node.Tag = getTagFromContent(content)
 
 	// Assign attributes
+	tagSepIdx := strings.Index(content, " ")
 	if tagSepIdx == -1 || tagSepIdx+1 >= len(content) {
 		return node, nil
 	}
@@ -170,6 +173,7 @@ func assignAttrs(attrs *map[string]string, s string) {
 			if char == '"' {
 				(*attrs)[key] = val
 				state = Keying
+				key = ""
 			} else {
 				val += string(char)
 			}
@@ -177,6 +181,7 @@ func assignAttrs(attrs *map[string]string, s string) {
 			if unicode.IsSpace(char) {
 				(*attrs)[key] = val
 				state = Keying
+				key = ""
 			} else {
 				val += string(char)
 			}
@@ -184,11 +189,24 @@ func assignAttrs(attrs *map[string]string, s string) {
 	}
 }
 
+// getTagFromContent takes string content of the tag and appropriate Tag
+// e.g. getTagFromContent("p style=color:white") will return P
+func getTagFromContent(content string) Tag {
+	var tagName string
+	tagSepIdx := strings.Index(content, " ")
+	if tagSepIdx != -1 {
+		tagName = content[:tagSepIdx]
+	} else {
+		tagName = content
+	}
+	return getTag(tagName)
+}
+
 // getTag return Tag based on the name, if invalid, gives <p>
 func getTag(tagName string) Tag {
 	tag, ok := TagMap[tagName]
 	if !ok {
-		return P
+		return Text
 	} else {
 		return tag
 	}
@@ -230,9 +248,8 @@ func (n Node) String() string {
 // recursively print node while informed layer
 func (n Node) StringRec(layer int) string {
 	tags := []string{"root", "html", "head", "body", "title", "h1", "h2", "h3", "h4", "h5", "p", "br"}
-	var res string
+	res := "\n"
 	if layer > 0 {
-		res += "\n"
 		for range layer {
 			res += "\t"
 		}
@@ -247,4 +264,13 @@ func (n Node) StringRec(layer int) string {
 		res += child.StringRec(layer + 1)
 	}
 	return res
+}
+
+// newText create a new Text Node with target content and its parent
+func newText(content string, parent *Node) *Node {
+	text := newBaseNode()
+	text.Tag = Text
+	text.Inner = content
+	text.Parent = parent
+	return text
 }

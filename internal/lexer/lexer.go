@@ -7,12 +7,12 @@ import (
 type Type int
 
 const (
-	Void Type = iota // unknown state
-	Open
-	Close
-	Inner   // anything that's not tags
-	SClose  // self-closed
-	DocType // special syntax for <!DOCTYPE ..>
+	Void    Type = iota // initial state
+	Open                // <open>
+	Close               // </close>
+	NoTag               // content with no tag
+	SClose              // <self-closed/>
+	DocType             // only for <!DOCTYPE ..>
 	// TODO: Comment
 )
 
@@ -32,8 +32,8 @@ func GetNextToken(raw string, pos int) Token {
 		switch char {
 		case '<':
 			switch res.Type {
-			case Inner:
-				res.Type = Inner
+			case NoTag:
+				res.Type = NoTag
 				res.Endpos = idx
 				return res
 			case Void:
@@ -53,9 +53,13 @@ func GetNextToken(raw string, pos int) Token {
 				} else {
 					res.Type = Open
 				}
+
+			// e.g. <p> 1 < 2 </p>
+			// 				  ^
+			// 				we are here
 			case Open:
 				res.Content = string('<') + res.Content
-				res.Type = Inner // reinterpret itself to inner
+				res.Type = NoTag // reinterpret itself to "no tag" content
 				res.Endpos = idx
 				return res
 			default:
@@ -87,7 +91,7 @@ func GetNextToken(raw string, pos int) Token {
 			}
 		default:
 			if res.Type == Void {
-				res.Type = Inner
+				res.Type = NoTag
 			}
 			res.Content += string(char)
 		}
