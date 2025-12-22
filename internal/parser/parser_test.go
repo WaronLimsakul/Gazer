@@ -44,3 +44,33 @@ func TestAssignAttrs(t *testing.T) {
 		}
 	}
 }
+
+func TestParse(t *testing.T) {
+	testCases := []string{
+		`<!DOCTYPE html>
+		<html>
+			<h1 style="color:blue">This is a Heading</h1>
+			<p>This is a paragraph.</p>
+		</html>`,
+	}
+
+	// TODO: do something with the way to test this. It's kinda inconvenient
+	root := newBaseNode()
+	root.Children = append(root.Children, &Node{Tag: Html, Inner: "", Attrs: map[string]string{}, Children: []*Node{
+		{Tag: H1, Inner: "This is a Heading", Attrs: map[string]string{"style": "color:blue"}, Children: []*Node{}, Parent: nil},
+		{Tag: P, Inner: "This is a paragraph.", Attrs: map[string]string{}, Children: []*Node{}, Parent: nil},
+	}, Parent: nil})
+
+	expected := []*Node{root}
+
+	for i, test := range testCases {
+		actual, err := Parse(test)
+		if err != nil {
+			t.Errorf("#%d: unexpected error %v", i, err)
+		} else {
+			if !actual.equal(expected[i]) {
+				t.Errorf("#%d: Expected %v \n Got %v", i, *expected[i], *actual)
+			}
+		}
+	}
+}

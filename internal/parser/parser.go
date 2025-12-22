@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"maps"
 	"strings"
 	"unicode"
 
@@ -11,7 +12,8 @@ import (
 type Tag int
 
 const (
-	Html Tag = iota
+	Root Tag = iota // Only for root node
+	Html
 	Head
 	Body
 	Title
@@ -50,7 +52,7 @@ type Node struct {
 // Parse parses raw html string and return root node of the DOM
 // NOTE: if tag invalid, assume it's "p" tag
 func Parse(src string) (*Node, error) {
-	root := newRootNode()
+	root := newBaseNode()
 	curNode := root
 
 	var token lexer.Token
@@ -103,7 +105,7 @@ func Parse(src string) (*Node, error) {
 //   - key=value works
 //   - key="value and another value" also works
 func newNode(content string) (*Node, error) {
-	node := new(Node)
+	node := newBaseNode()
 	content = strings.TrimSpace(content)
 
 	// Get tag
@@ -192,9 +194,57 @@ func getTag(tagName string) Tag {
 	}
 }
 
-func newRootNode() *Node {
+func newBaseNode() *Node {
 	node := new(Node)
 	node.Attrs = make(map[string]string)
 	node.Children = make([]*Node, 0)
 	return node
+}
+
+func (n Node) equal(other *Node) bool {
+	// check simple fields
+	if n.Tag != other.Tag ||
+		n.Inner != other.Inner ||
+		len(n.Children) != len(other.Children) ||
+		!maps.Equal(n.Attrs, other.Attrs) {
+		return false
+	}
+
+	// recursively check children
+	if len(n.Children) == 0 && len(other.Children) == 0 {
+		return true
+	} else {
+		for i, child := range n.Children {
+			if !child.equal(other.Children[i]) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func (n Node) String() string {
+	return n.StringRec(0)
+}
+
+// recursively print node while informed layer
+func (n Node) StringRec(layer int) string {
+	tags := []string{"root", "html", "head", "body", "title", "h1", "h2", "h3", "h4", "h5", "p", "br"}
+	var res string
+	if layer > 0 {
+		res += "\n"
+		for range layer {
+			res += "\t"
+		}
+	}
+
+	res += fmt.Sprintf("{%s | inner: %s | attrs: %v | parent: %p}", tags[n.Tag], n.Inner, n.Attrs, n.Parent)
+	if len(n.Children) == 0 {
+		return res
+	}
+
+	for _, child := range n.Children {
+		res += child.StringRec(layer + 1)
+	}
+	return res
 }
