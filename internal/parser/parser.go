@@ -10,7 +10,7 @@ import (
 
 // Parse parses raw html string and return root node of the DOM
 // NOTE: if tag invalid, assume it's Text node
-// NOTE2: special tag <br>, <br/> or even </br> always means self-close <br/>
+// NOTE2: void elements (e.g. <br>) always means self-close
 func Parse(src string) (*Node, error) {
 	root := newNode()
 	curNode := root
@@ -20,8 +20,8 @@ func Parse(src string) (*Node, error) {
 	for idx := 0; idx < len(src); idx = token.Endpos {
 		token = lexer.GetNextToken(src, idx)
 
-		// look at NOTE2
-		if getTagFromContent(token.Content) == Br {
+		// handle void elements
+		if voidElements[getTagFromContent(token.Content)] {
 			token.Type = lexer.SClose
 		}
 

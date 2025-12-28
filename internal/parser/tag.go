@@ -6,6 +6,8 @@ type Tag int
 // If change this part. Then change:
 // 1. TagMap
 // 2. Tag.String method
+// 3. voidElements if appropriate
+// 4. ui.renderNode()
 const (
 	Root Tag = iota // Only for root node
 	Html
@@ -13,6 +15,7 @@ const (
 	Body
 
 	Title
+	Meta
 
 	Div
 
@@ -34,6 +37,7 @@ var TagMap = map[string]Tag{
 	"head":  Head,
 	"body":  Body,
 	"title": Title,
+	"meta":  Meta,
 	"div":   Div,
 	"h1":    H1,
 	"h2":    H2,
@@ -54,6 +58,8 @@ func (t Tag) String() string {
 		return "body"
 	case Title:
 		return "title"
+	case Meta:
+		return "meta"
 	case Div:
 		return "div"
 	case H1:
@@ -75,4 +81,10 @@ func (t Tag) String() string {
 	default:
 		return "unknown"
 	}
+}
+
+// void elements = tag that always means self-close
+var voidElements = map[Tag]bool{
+	Br:   true,
+	Meta: true,
 }

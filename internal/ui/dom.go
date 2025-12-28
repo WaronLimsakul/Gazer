@@ -47,6 +47,8 @@ func renderNode(thm *material.Theme, node *parser.Node) []layout.FlexChild {
 		}
 	case parser.Title:
 		return res // TODO
+	case parser.Meta:
+		return res // TODO
 	case parser.Div:
 		for _, child := range node.Children {
 			res = append(res, renderNode(thm, child)...)

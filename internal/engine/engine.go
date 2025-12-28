@@ -18,7 +18,6 @@ const (
 type State struct {
 	Url      string
 	Notifier chan Notification
-	Content  string //  TODO: delete after finish html rendering
 
 	// DOM root
 	Root *parser.Node
@@ -46,8 +45,7 @@ func Start(state *State, window *app.Window) {
 				continue
 			}
 
-			// state.Content = string(resBody)
-			log.Println("fetch:", string(resBody))
+			log.Println("fetch:\n", string(resBody))
 
 			root, err := parser.Parse(string(resBody))
 			if err != nil {
@@ -55,6 +53,7 @@ func Start(state *State, window *app.Window) {
 				continue
 			}
 			state.Root = root
+			log.Println("parse:\n", *root)
 
 			window.Invalidate()
 		default:
