@@ -1,8 +1,8 @@
 package engine
 
 import (
-	"fmt"
 	"io"
+	"log"
 	"net/http"
 
 	"gioui.org/app"
@@ -24,41 +24,46 @@ type State struct {
 	Root *parser.Node
 }
 
-func NewState() *State {
-	s := State{}
-	s.Notifier = make(chan Notification)
-	return &s
-}
-
 func Start(state *State, window *app.Window) {
 	for noti := range state.Notifier {
 		switch noti {
 		case Search:
 			url := state.Url
 			if len(url) == 0 {
-				// TODO: make it formal log
-				fmt.Println("Empty URL")
+				log.Println("Empty URL")
 				continue
 			}
 
 			res, err := http.Get(url)
 			if err != nil {
-				// TODO: make it formal log
-				fmt.Println("http.Get:", err)
+				log.Println("http.Get:", err)
 				continue
 			}
 
 			resBody, err := io.ReadAll(res.Body)
 			if err != nil {
-				// TODO: make it formal log
-				fmt.Println("io.ReadAll:", err)
+				log.Println("io.ReadAll:", err)
 				continue
 			}
 
-			state.Content = string(resBody)
+			// state.Content = string(resBody)
+
+			root, err := parser.Parse(string(resBody))
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			state.Root = root
+
 			window.Invalidate()
 		default:
 			continue
 		}
 	}
+}
+
+func NewState() *State {
+	s := State{}
+	s.Notifier = make(chan Notification)
+	return &s
 }

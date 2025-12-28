@@ -19,16 +19,19 @@ const (
 	WINDOW_HEIGHT = 800
 )
 
-func Draw(w *app.Window, s *engine.State) {
+// Draw takes gio's Window and Gazer's state
+// and keep redrawing according to state
+func Draw(window *app.Window, state *engine.State) {
 	ops := op.Ops{}
 	thm := material.NewTheme()
 	srcInput := setupSrcInput()
 
 	for {
-		switch ev := w.Event().(type) {
+		switch ev := window.Event().(type) {
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, ev)
 
+			// Handle user search behavior
 			for {
 				editorEv, ok := srcInput.Update(gtx)
 				if !ok {
@@ -38,8 +41,8 @@ func Draw(w *app.Window, s *engine.State) {
 				switch editorEv.(type) {
 				// TODO: while loading, show something instead
 				case widget.SubmitEvent:
-					s.Url = srcInput.Text()
-					s.Notifier <- engine.Search
+					state.Url = srcInput.Text()
+					state.Notifier <- engine.Search
 				default:
 					continue
 				}
@@ -56,10 +59,8 @@ func Draw(w *app.Window, s *engine.State) {
 				Right:  unit.Dp(25),
 			}
 
-			layout.Flex{
-				Axis:      layout.Vertical,
-				Alignment: layout.Middle,
-			}.Layout(gtx,
+			flexChildren := []layout.FlexChild{
+				// search bar
 				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 					border := widget.Border{
 						Color:        color.NRGBA{R: 0, G: 0, B: 0, A: 255},
@@ -70,15 +71,15 @@ func Draw(w *app.Window, s *engine.State) {
 						return border.Layout(gtx, srcInputUi.Layout)
 					})
 				}),
-				layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					if len(s.Content) == 0 {
-						return layout.Dimensions{}
-					}
+			}
 
-					text := material.Body1(thm, s.Content)
-					return text.Layout(gtx)
-				}),
-			)
+			// children from DOM rendering
+			flexChildren = append(flexChildren, renderDOM(&gtx, thm, state.Root)...)
+
+			layout.Flex{
+				Axis:      layout.Vertical,
+				Alignment: layout.Middle,
+			}.Layout(gtx, flexChildren...)
 
 			ev.Frame(gtx.Ops)
 		case app.DestroyEvent:
@@ -87,6 +88,7 @@ func Draw(w *app.Window, s *engine.State) {
 	}
 }
 
+// NewWindow creates new Gazer window
 func NewWindow() *app.Window {
 	w := new(app.Window)
 	w.Option(app.Title("Gazer"))
@@ -96,6 +98,8 @@ func NewWindow() *app.Window {
 	return w
 }
 
+// setupSrcInput create a new widget.Editor used as
+// input behavior for search component
 func setupSrcInput() *widget.Editor {
 	srcInput := new(widget.Editor)
 	srcInput.Alignment = text.Middle

@@ -16,3 +16,11 @@ is also valid and would break my implementation (I mean... how can you determine
 Therefore, I'd add new node type called `Text` and use it instead of `Inner`. However, I'd reuse `Inner` field as a field only for `Text` to holds its content. Now I can just do `children{Text{"Hello "}, Br{}, Text{" world"}}`
 
 
+### High-level Architecture
+
+2 main components: `engine` and `ui`
+- `ui` (`ui.Draw`) uses `engine.State.Notifier` channel to notify the engine to do something
+- `engine` (`engine.start`) uses `app.Window.Invalidate` to trigger redraw 
+
+### DOM rendering
+- Somehow, `p` inside `h1` cannot override `h1` while `h2` can. So I don't want this confusing heirachy. I will just separate
