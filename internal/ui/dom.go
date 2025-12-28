@@ -9,7 +9,7 @@ import (
 
 // renderDOM takes a DOM root node and return a slice of FlexChild
 // NOTE: Cuz I want to plug this in Flex.layout()
-func renderDOM(gtx *layout.Context, thm *material.Theme, root *parser.Node) []layout.FlexChild {
+func renderDOM(thm *material.Theme, root *parser.Node) []layout.FlexChild {
 	res := make([]layout.FlexChild, 0)
 
 	// expect to be Root node
@@ -24,15 +24,14 @@ func renderDOM(gtx *layout.Context, thm *material.Theme, root *parser.Node) []la
 
 	htmlNode := root.Children[0]
 	for _, child := range htmlNode.Children {
-		res = append(res, renderNode(gtx, thm, child)...)
+		res = append(res, renderNode(thm, child)...)
 	}
 
 	return res
 }
 
-// renderNodes return flex children needs for render the node and its children
-// NOTE: do we need the gtx here?
-func renderNode(gtx *layout.Context, thm *material.Theme, node *parser.Node) []layout.FlexChild {
+// renderNodes returns flex children needs for render the node and its children.
+func renderNode(thm *material.Theme, node *parser.Node) []layout.FlexChild {
 	res := make([]layout.FlexChild, 0)
 	switch node.Tag {
 	// Ignore root or html tag
@@ -44,75 +43,45 @@ func renderNode(gtx *layout.Context, thm *material.Theme, node *parser.Node) []l
 		return res // TODO
 	case parser.Body:
 		for _, child := range node.Children {
-			res = append(res, renderNode(gtx, thm, child)...)
+			res = append(res, renderNode(thm, child)...)
 		}
 	case parser.Title:
 		return res // TODO
 	case parser.H1:
-		for _, child := range node.Children {
-			if child.Tag == parser.Text {
-				res = append(res, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return material.H1(thm, child.Inner).Layout(gtx)
-				}))
-			} else {
-				res = append(res, renderNode(gtx, thm, child)...)
-			}
-		}
+		res = append(res, renderText(thm, material.H1, node)...)
 	case parser.H2:
-		for _, child := range node.Children {
-			if child.Tag == parser.Text {
-				res = append(res, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return material.H2(thm, child.Inner).Layout(gtx)
-				}))
-			} else {
-				res = append(res, renderNode(gtx, thm, child)...)
-			}
-		}
+		res = append(res, renderText(thm, material.H2, node)...)
 	case parser.H3:
-		for _, child := range node.Children {
-			if child.Tag == parser.Text {
-				res = append(res, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return material.H3(thm, child.Inner).Layout(gtx)
-				}))
-			} else {
-				res = append(res, renderNode(gtx, thm, child)...)
-			}
-		}
+		res = append(res, renderText(thm, material.H3, node)...)
 	case parser.H4:
-		for _, child := range node.Children {
-			if child.Tag == parser.Text {
-				res = append(res, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return material.H4(thm, child.Inner).Layout(gtx)
-				}))
-			} else {
-				res = append(res, renderNode(gtx, thm, child)...)
-			}
-		}
+		res = append(res, renderText(thm, material.H4, node)...)
 	case parser.H5:
-		for _, child := range node.Children {
-			if child.Tag == parser.Text {
-				res = append(res, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return material.H5(thm, child.Inner).Layout(gtx)
-				}))
-			} else {
-				res = append(res, renderNode(gtx, thm, child)...)
-			}
-		}
+		res = append(res, renderText(thm, material.H5, node)...)
 	case parser.P:
-		for _, child := range node.Children {
-			if child.Tag == parser.Text {
-				res = append(res, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return material.Body1(thm, child.Inner).Layout(gtx)
-				}))
-			} else {
-				res = append(res, renderNode(gtx, thm, child)...)
-			}
-		}
+		res = append(res, renderText(thm, material.Body1, node)...)
 	case parser.Br:
 		res = append(res, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.Spacer{Height: unit.Dp(10)}.Layout(gtx)
 		}))
 	}
 
+	return res
+}
+
+type Label = func(*material.Theme, string) material.LabelStyle
+
+// renderText return flex children needs for rendering text-based node.
+// requires: node must be a text-based tag (e.g. h1, p)
+func renderText(thm *material.Theme, textFunc Label, node *parser.Node) []layout.FlexChild {
+	res := make([]layout.FlexChild, 0)
+	for _, child := range node.Children {
+		if child.Tag == parser.Text {
+			res = append(res, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+				return textFunc(thm, child.Inner).Layout(gtx)
+			}))
+		} else {
+			res = append(res, renderNode(thm, child)...)
+		}
+	}
 	return res
 }

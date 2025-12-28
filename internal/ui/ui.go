@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	WINDOW_WIDTH  = 600
-	WINDOW_HEIGHT = 800
+	WINDOW_WIDTH  = 1600
+	WINDOW_HEIGHT = 900
 )
 
 // Draw takes gio's Window and Gazer's state
@@ -74,7 +74,7 @@ func Draw(window *app.Window, state *engine.State) {
 			}
 
 			// children from DOM rendering
-			flexChildren = append(flexChildren, renderDOM(&gtx, thm, state.Root)...)
+			flexChildren = append(flexChildren, renderDOM(thm, state.Root)...)
 
 			layout.Flex{
 				Axis:      layout.Vertical,
