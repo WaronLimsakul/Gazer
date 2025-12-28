@@ -47,6 +47,7 @@ func Start(state *State, window *app.Window) {
 			}
 
 			// state.Content = string(resBody)
+			log.Println("fetch:", string(resBody))
 
 			root, err := parser.Parse(string(resBody))
 			if err != nil {

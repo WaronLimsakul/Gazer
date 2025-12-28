@@ -2,61 +2,17 @@ package parser
 
 import (
 	"fmt"
-	"maps"
 	"strings"
 	"unicode"
 
 	"github.com/WaronLimsakul/Gazer/internal/lexer"
 )
 
-type Tag int
-
-const (
-	Root Tag = iota // Only for root node
-	Html
-	Head
-	Body
-	Title
-	H1
-	H2
-	H3
-	H4
-	H5
-	P
-	Br
-
-	Text // For no tag content or invalid tag
-
-	// TODO: A Img Ul Ol Li B (or Strong) I (or Em) Hr Div Span
-)
-
-var TagMap = map[string]Tag{
-	"html":  Html,
-	"head":  Head,
-	"body":  Body,
-	"title": Title,
-	"h1":    H1,
-	"h2":    H2,
-	"h3":    H3,
-	"h4":    H4,
-	"h5":    H5,
-	"p":     P,
-	"br":    Br,
-}
-
-type Node struct {
-	Tag      Tag
-	Inner    string // only for Text node content
-	Attrs    map[string]string
-	Children []*Node
-	Parent   *Node
-}
-
 // Parse parses raw html string and return root node of the DOM
 // NOTE: if tag invalid, assume it's Text node
 // NOTE2: special tag <br>, <br/> or even </br> always means self-close <br/>
 func Parse(src string) (*Node, error) {
-	root := newBaseNode()
+	root := newNode()
 	curNode := root
 
 	var token lexer.Token
@@ -72,7 +28,7 @@ func Parse(src string) (*Node, error) {
 		switch token.Type {
 		// open-tag = create a child node
 		case lexer.Open:
-			child, err := newNode(token.Content)
+			child, err := parseNode(token.Content)
 			if err != nil {
 				return nil, err
 			}
@@ -86,10 +42,10 @@ func Parse(src string) (*Node, error) {
 			}
 		// no tag content = being a child Text node
 		case lexer.NoTag:
-			curNode.Children = append(curNode.Children, newText(token.Content, curNode))
+			curNode.Children = append(curNode.Children, newTextNode(token.Content, curNode))
 		// same as having open tag, but not going to that child
 		case lexer.SClose:
-			child, err := newNode(token.Content)
+			child, err := parseNode(token.Content)
 			if err != nil {
 				return nil, err
 			}
@@ -109,13 +65,13 @@ func Parse(src string) (*Node, error) {
 	return root, nil
 }
 
-// newNode takes content of the open tag and return a new node
+// parseNode takes content of the open tag and return a new node
 // 1. get tag name.
 // 2. assign attributes
 //   - key=value works
 //   - key="value and another value" also works
-func newNode(content string) (*Node, error) {
-	node := newBaseNode()
+func parseNode(content string) (*Node, error) {
+	node := newNode()
 	content = strings.TrimSpace(content)
 
 	node.Tag = getTagFromContent(content)
@@ -210,67 +166,4 @@ func getTag(tagName string) Tag {
 	} else {
 		return tag
 	}
-}
-
-func newBaseNode() *Node {
-	node := new(Node)
-	node.Attrs = make(map[string]string)
-	node.Children = make([]*Node, 0)
-	return node
-}
-
-func (n Node) equal(other *Node) bool {
-	// check simple fields
-	if n.Tag != other.Tag ||
-		n.Inner != other.Inner ||
-		len(n.Children) != len(other.Children) ||
-		!maps.Equal(n.Attrs, other.Attrs) {
-		return false
-	}
-
-	// recursively check children
-	if len(n.Children) == 0 && len(other.Children) == 0 {
-		return true
-	} else {
-		for i, child := range n.Children {
-			if !child.equal(other.Children[i]) {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-func (n Node) String() string {
-	return n.StringRec(0)
-}
-
-// recursively print node while informed layer
-func (n Node) StringRec(layer int) string {
-	tags := []string{"root", "html", "head", "body", "title", "h1", "h2", "h3", "h4", "h5", "p", "br"}
-	res := "\n"
-	if layer > 0 {
-		for range layer {
-			res += "\t"
-		}
-	}
-
-	res += fmt.Sprintf("{%s | inner: %s | attrs: %v | parent: %p}", tags[n.Tag], n.Inner, n.Attrs, n.Parent)
-	if len(n.Children) == 0 {
-		return res
-	}
-
-	for _, child := range n.Children {
-		res += child.StringRec(layer + 1)
-	}
-	return res
-}
-
-// newText create a new Text Node with target content and its parent
-func newText(content string, parent *Node) *Node {
-	text := newBaseNode()
-	text.Tag = Text
-	text.Inner = content
-	text.Parent = parent
-	return text
 }

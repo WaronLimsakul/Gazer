@@ -2,6 +2,7 @@ package lexer
 
 import (
 	"strings"
+	"unicode"
 )
 
 type Type int
@@ -46,8 +47,10 @@ func GetNextToken(raw string, pos int) Token {
 				if raw[idx+1] == '/' {
 					res.Type = Close
 					idx++ // skip '/'
-				} else if dtLen := len("!DOCTYPE"); idx+dtLen < len(raw) &&
-					raw[idx+1:idx+dtLen+1] == "!DOCTYPE" {
+
+					// for special <!doctype> tag
+				} else if dtLen := len("!doctype"); idx+dtLen < len(raw) &&
+					strings.ToLower(raw[idx+1:idx+dtLen+1]) == "!doctype" {
 					res.Type = DocType
 					idx += dtLen
 				} else {
@@ -103,7 +106,7 @@ func GetNextToken(raw string, pos int) Token {
 
 func skipWhiteSpace(s string, pos int) int {
 	for idx, char := range s[pos:] {
-		if char != ' ' && char != '\n' && char != '\t' {
+		if !unicode.IsSpace(char) {
 			return idx + pos
 		}
 	}
