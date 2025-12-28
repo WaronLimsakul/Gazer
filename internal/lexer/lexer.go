@@ -24,6 +24,9 @@ type Token struct {
 	// line?
 }
 
+// GetNextToken receive raw html string and starting position and
+// return the next html token (e.g. "<hello>", "</word>", "foo") from the
+// starting position.
 // TODO: support comment <!--something-->
 func GetNextToken(raw string, pos int) Token {
 	var res Token
@@ -104,6 +107,8 @@ func GetNextToken(raw string, pos int) Token {
 	return res
 }
 
+// skipWhiteSpace takes a string s and starting position pos and
+// returns the position after pos that is not white space.
 func skipWhiteSpace(s string, pos int) int {
 	for idx, char := range s[pos:] {
 		if !unicode.IsSpace(char) {
