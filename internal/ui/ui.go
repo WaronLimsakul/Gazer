@@ -52,7 +52,7 @@ func Draw(window *app.Window, state *engine.State) {
 			srcInputUi := material.Editor(thm, srcInput, "search")
 			srcInputUi.TextSize = unit.Sp(20)
 
-			margin := layout.Inset{
+			inputMargin := layout.Inset{
 				Top:    unit.Dp(25),
 				Bottom: unit.Dp(25),
 				Left:   unit.Dp(25),
@@ -67,19 +67,25 @@ func Draw(window *app.Window, state *engine.State) {
 						CornerRadius: unit.Dp(2),
 						Width:        unit.Dp(1),
 					}
-					return margin.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					return inputMargin.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 						return border.Layout(gtx, srcInputUi.Layout)
 					})
 				}),
 			}
 
-			// children from DOM rendering
-			flexChildren = append(flexChildren, renderDOM(thm, state.Root)...)
+			siteMargin := layout.Inset{
+				Left:  unit.Dp(25),
+				Right: unit.Dp(25),
+			}
 
-			layout.Flex{
-				Axis:      layout.Vertical,
-				Alignment: layout.Middle,
-			}.Layout(gtx, flexChildren...)
+			siteMargin.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+				// children from DOM rendering
+				flexChildren = append(flexChildren, renderDOM(thm, state.Root)...)
+				return layout.Flex{
+					Axis:      layout.Vertical,
+					Alignment: layout.Middle,
+				}.Layout(gtx, flexChildren...)
+			})
 
 			ev.Frame(gtx.Ops)
 		case app.DestroyEvent:
