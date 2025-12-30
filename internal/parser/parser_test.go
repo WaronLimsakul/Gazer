@@ -105,13 +105,15 @@ func TestParse(t *testing.T) {
 						newTextNode("Title", nil)))),
 		},
 		{
-			name: "self-closing br",
+			name: "self-closing tags",
 			input: `<!DOCTYPE html>
 		<html>
+			<meta>
 			<p>Line one<br>Line two</p>
 		</html>`,
 			expected: newTestTree(Root, "", nil,
 				newTestTree(Html, "", nil,
+					newTestTree(Meta, "", nil),
 					newTestTree(P, "", nil,
 						newTextNode("Line one", nil),
 						newTestTree(Br, "", nil),
@@ -143,6 +145,22 @@ func TestParse(t *testing.T) {
 				newTestTree(Html, "", nil,
 					newTestTree(H1, "", nil),
 					newTestTree(P, "", nil))),
+		},
+		{
+			name: "Head-body autoclose",
+			input: `<!DOCTYPE html>
+		<html>
+			<head>
+				<title>Hello</title>
+			<body>
+			</body>
+		</html>`,
+			expected: newTestTree(Root, "", nil,
+				newTestTree(Html, "", nil,
+					newTestTree(Head, "", nil,
+						newTestTree(Title, "", nil, newTextNode("Hello", nil))),
+					newTestTree(Body, "", nil),
+				)),
 		},
 	}
 

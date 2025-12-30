@@ -101,6 +101,7 @@ func NewWindow() *app.Window {
 	w.Option(app.Size(unit.Dp(WINDOW_WIDTH), unit.Dp(WINDOW_HEIGHT)))
 	w.Option(app.MinSize(unit.Dp(WINDOW_WIDTH), unit.Dp(WINDOW_HEIGHT)))
 	w.Option(app.MaxSize(unit.Dp(WINDOW_WIDTH), unit.Dp(WINDOW_HEIGHT)))
+	// w.Option(app.Decorated(false))
 	return w
 }
 
@@ -112,4 +113,14 @@ func setupSrcInput() *widget.Editor {
 	srcInput.SingleLine = true
 	srcInput.Submit = true
 	return srcInput
+}
+
+func newTheme() *material.Theme {
+	thm := material.NewTheme()
+	thm.Palette = material.Palette{
+		Bg: color.NRGBA{R: 0xf5, G: 0xf5, B: 0xf5, A: 0xff}, // Light gray background
+		Fg: color.NRGBA{R: 0x00, G: 0x00, B: 0x00, A: 0xff}, // Black text
+		// Adjust ContrastBg, ContrastFg, etc.
+	}
+	return thm
 }
