@@ -34,9 +34,15 @@ func Start(state *State, window *app.Window) {
 			}
 
 			res, err := http.Get(url)
+			// fall back url: add "https://" prefix
 			if err != nil {
 				log.Println("http.Get:", err)
-				continue
+				httpUrl := "https://" + url
+				res, err = http.Get(httpUrl)
+				if err != nil {
+					log.Println("http.Get (https):", err)
+					continue
+				}
 			}
 
 			resBody, err := io.ReadAll(res.Body)
