@@ -42,17 +42,15 @@ func renderNode(thm *material.Theme, node *parser.Node) []layout.FlexChild {
 	case parser.Head:
 		return res // TODO
 	case parser.Body:
-		for _, child := range node.Children {
-			res = append(res, renderNode(thm, child)...)
-		}
+		// Text child from body should be rendered as body1
+		res = append(res, renderText(thm, material.Body1, node)...)
 	case parser.Title:
 		return res // TODO
 	case parser.Meta:
 		return res // TODO
 	case parser.Div:
-		for _, child := range node.Children {
-			res = append(res, renderNode(thm, child)...)
-		}
+		// Text child from div should be rendered as body1
+		res = append(res, renderText(thm, material.Body1, node)...)
 	case parser.H1:
 		res = append(res, renderText(thm, material.H1, node)...)
 	case parser.H2:
@@ -76,8 +74,8 @@ func renderNode(thm *material.Theme, node *parser.Node) []layout.FlexChild {
 
 type Label = func(*material.Theme, string) material.LabelStyle
 
-// renderText return flex children needs for rendering text-based node.
-// requires: node must be a text-based tag (e.g. h1, p)
+// renderText returns flex children needs for rendering node
+// with the direct child node that has Text tag being rendered as textFuc desire.
 func renderText(thm *material.Theme, textFunc Label, node *parser.Node) []layout.FlexChild {
 	res := make([]layout.FlexChild, 0)
 	for _, child := range node.Children {
