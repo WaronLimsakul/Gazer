@@ -1,9 +1,12 @@
 package engine
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"strings"
+	"time"
 
 	"gioui.org/app"
 	"github.com/WaronLimsakul/Gazer/internal/parser"
@@ -23,6 +26,8 @@ type State struct {
 	Root *parser.Node
 }
 
+var client = &http.Client{Timeout: 3 * time.Second}
+
 func Start(state *State, window *app.Window) {
 	for noti := range state.Notifier {
 		switch noti {
@@ -33,16 +38,15 @@ func Start(state *State, window *app.Window) {
 				continue
 			}
 
-			res, err := http.Get(url)
-			// fall back url: add "https://" prefix
+			// handle prefix: we want https:// or http://
+			if !strings.HasPrefix(url, "https://") && !strings.HasPrefix(url, "http://") {
+				url = "https://" + url
+			}
+
+			res, err := fetch(url)
 			if err != nil {
-				log.Println("http.Get:", err)
-				httpUrl := "https://" + url
-				res, err = http.Get(httpUrl)
-				if err != nil {
-					log.Println("http.Get (https):", err)
-					continue
-				}
+				log.Println("fetch:", err)
+				continue
 			}
 
 			resBody, err := io.ReadAll(res.Body)
@@ -72,4 +76,18 @@ func NewState() *State {
 	s := State{}
 	s.Notifier = make(chan Notification)
 	return &s
+}
+
+func fetch(url string) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("http.NewRequest: %v", err)
+	}
+	req.Header.Set("User-Agent", "Gazer")
+
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("client.Do: %v", err)
+	}
+	return res, nil
 }
