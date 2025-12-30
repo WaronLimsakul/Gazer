@@ -37,6 +37,17 @@ func (n Node) recursiveString(layer int) string {
 	return res
 }
 
+// isChildOfTag traces the tree and and return boolean whether the
+// node is a child of a node with target tag.
+// func (n Node) isChildOfTag(tag Tag) bool {
+// 	if n.Parent == nil {
+// 		return false
+// 	} else if n.Parent.Tag == tag {
+// 		return true
+// 	}
+// 	return n.Parent.isChildOfTag(tag)
+// }
+
 func (n Node) equal(other *Node) bool {
 	// check simple fields
 	if n.Tag != other.Tag ||

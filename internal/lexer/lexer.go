@@ -17,6 +17,7 @@ const (
 	// TODO: Comment
 )
 
+// html token designed for parsing
 type Token struct {
 	Type    Type
 	Content string

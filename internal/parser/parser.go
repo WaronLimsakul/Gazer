@@ -32,6 +32,13 @@ func Parse(src string) (*Node, error) {
 			if err != nil {
 				return nil, err
 			}
+
+			// if head is still not closed but there is body, auto-close head
+			// NOTE: If any more rule like this, we have to centralize it.
+			if curNode.Tag == Head && child.Tag == Body {
+				curNode = curNode.Parent
+			}
+
 			child.Parent = curNode
 			curNode.Children = append(curNode.Children, child)
 			curNode = child
