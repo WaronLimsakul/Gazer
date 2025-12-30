@@ -1,6 +1,7 @@
 package renderer
 
 import (
+	"image/color"
 	"os"
 
 	"gioui.org/app"
@@ -27,7 +28,7 @@ type (
 // and keep redrawing according to state
 func Draw(window *app.Window, state *engine.State) {
 	ops := op.Ops{}
-	thm := material.NewTheme()
+	thm := newTheme()
 	srcInput := ui.SetupSrcInput()
 	searchClickable := new(widget.Clickable)
 
@@ -95,4 +96,16 @@ func NewWindow() *app.Window {
 	w.Option(app.MaxSize(unit.Dp(WINDOW_WIDTH), unit.Dp(WINDOW_HEIGHT)))
 	// w.Option(app.Decorated(false))
 	return w
+}
+
+func newTheme() *material.Theme {
+	thm := material.NewTheme()
+	// Nordic Blue theme
+	thm.Palette = material.Palette{
+		Bg:         color.NRGBA{R: 236, G: 239, B: 244, A: 255},
+		Fg:         color.NRGBA{R: 76, G: 86, B: 106, A: 255},
+		ContrastBg: color.NRGBA{R: 94, G: 129, B: 172, A: 255},
+		ContrastFg: color.NRGBA{R: 236, G: 239, B: 244, A: 255},
+	}
+	return thm
 }
