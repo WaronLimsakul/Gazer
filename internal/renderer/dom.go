@@ -1,4 +1,4 @@
-package ui
+package renderer
 
 import (
 	"gioui.org/layout"
