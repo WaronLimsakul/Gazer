@@ -11,7 +11,6 @@ import (
 // Parse parses raw html string and return root node of the DOM
 // NOTE: if tag invalid, assume it's Text node
 // NOTE2: void elements (e.g. <br>) always means self-close
-// TODO: what if it's like <h1>foo</p>
 func Parse(src string) (*Node, error) {
 	root := newNode()
 	curNode := root
@@ -44,6 +43,7 @@ func Parse(src string) (*Node, error) {
 			curNode.Children = append(curNode.Children, child)
 			curNode = child
 		// close-tag = done with a child node, going back to parent
+		// NOTE: notice that the tag type doesn't matter. Close is close.
 		case lexer.Close:
 			if curNode.Parent != nil {
 				curNode = curNode.Parent

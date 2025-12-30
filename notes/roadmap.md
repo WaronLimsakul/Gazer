@@ -7,7 +7,7 @@
 [ ] B (or Strong) 
 [ ] I (or Em) 
 [ ] Hr 
-[ ] Div 
+[x] Div 
 [ ] Span
 
 ### CSS Support
@@ -24,4 +24,4 @@
 [ ] Search bar's search button 
 [ ] Search bar's suggestion
 [ ] Tab system
-[ ] GioUI normal window is super ugly. Turn-off window decuration and handroll the window.
+[ ] GioUI normal window is super ugly. Turn-off window decoration and handroll the window.
