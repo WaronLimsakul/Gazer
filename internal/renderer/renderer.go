@@ -2,11 +2,13 @@ package renderer
 
 import (
 	"image/color"
+	"log"
 	"os"
 
 	"gioui.org/app"
 	"gioui.org/layout"
 	"gioui.org/op"
+	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -100,6 +102,14 @@ func NewWindow() *app.Window {
 
 func newTheme() *material.Theme {
 	thm := material.NewTheme()
+
+	// use set font faces
+	faces, err := loadFont()
+	if err != nil {
+		log.Fatalf("loadFont: %v", err)
+	}
+	thm.Shaper = text.NewShaper(text.WithCollection(faces))
+
 	// Nordic Blue theme
 	thm.Palette = material.Palette{
 		Bg:         color.NRGBA{R: 236, G: 239, B: 244, A: 255},
@@ -107,5 +117,6 @@ func newTheme() *material.Theme {
 		ContrastBg: color.NRGBA{R: 94, G: 129, B: 172, A: 255},
 		ContrastFg: color.NRGBA{R: 236, G: 239, B: 244, A: 255},
 	}
+
 	return thm
 }

@@ -1,6 +1,7 @@
 package renderer
 
 import (
+	"gioui.org/font"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
@@ -63,6 +64,12 @@ func renderNode(thm *material.Theme, node *parser.Node) []layout.FlexChild {
 		res = append(res, renderText(thm, material.H5, node)...)
 	case parser.P:
 		res = append(res, renderText(thm, material.Body1, node)...)
+	case parser.I:
+		res = append(res, renderText(thm, func(thm *material.Theme, txt string) material.LabelStyle {
+			label := material.Body1(thm, txt)
+			label.Font.Style = font.Italic
+			return label
+		}, node)...)
 	case parser.Br:
 		res = append(res, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.Spacer{Height: unit.Dp(10)}.Layout(gtx)

@@ -25,6 +25,8 @@ const (
 	H4
 	H5
 	P
+	I
+
 	Br
 
 	Text // For no tag content or invalid tag
@@ -45,11 +47,15 @@ var TagMap = map[string]Tag{
 	"h4":    H4,
 	"h5":    H5,
 	"p":     P,
+	"i":     I,
+	"em":    I,
 	"br":    Br,
 }
 
 func (t Tag) String() string {
 	switch t {
+	case Root:
+		return "root"
 	case Html:
 		return "html"
 	case Head:
@@ -74,6 +80,8 @@ func (t Tag) String() string {
 		return "h5"
 	case P:
 		return "p"
+	case I:
+		return "i"
 	case Br:
 		return "br"
 	case Text:

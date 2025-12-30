@@ -29,6 +29,7 @@ type Token struct {
 // return the next html token (e.g. "<hello>", "</word>", "foo") from the
 // starting position.
 // NOTE: support comment <!--something-->, <!foo>
+// TODO NOW: can't just check <!...>, because what if <!-- <h1>Hello, world</h1> -->
 func GetNextToken(raw string, pos int) Token {
 	var res Token
 	idx := skipWhiteSpace(raw, pos)
