@@ -63,7 +63,10 @@ func Draw(window *app.Window, state *engine.State) {
 				state.Notifier <- engine.Search
 			}
 
-			flexChildren := []layout.FlexChild{newSearchBar(thm, srcInput, searchClickable)}
+			flexChildren := []layout.FlexChild{
+				searchBar(thm, srcInput, searchClickable),
+				horizontalLine(thm, unit.Dp(WINDOW_WIDTH)),
+			}
 
 			siteMargin := layout.Inset{
 				Left:  unit.Dp(25),
@@ -107,7 +110,7 @@ func setupSrcInput() *widget.Editor {
 	return srcInput
 }
 
-func newSearchBar(
+func searchBar(
 	thm *material.Theme,
 	editor *widget.Editor,
 	searchClickable *widget.Clickable,
@@ -160,5 +163,12 @@ func newSearchBar(
 				}),
 			)
 		})
+	})
+}
+
+func horizontalLine(thm *material.Theme, width unit.Dp) layout.FlexChild {
+	border := widget.Border{Color: thm.Fg, Width: unit.Dp(1)}
+	return layout.Rigid(func(gtx C) D {
+		return border.Layout(gtx, layout.Spacer{Width: width, Height: unit.Dp(0.5)}.Layout)
 	})
 }
