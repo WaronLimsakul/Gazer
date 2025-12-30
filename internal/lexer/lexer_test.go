@@ -21,6 +21,13 @@ func TestGetNextToken(t *testing.T) {
 		<body>
 			<p>hello, <world</p>
 		</body>`
+	comment := `<!doctype html>
+    <!--foo-->
+    <body>
+        <p>hello<!--hello world-->,world</p>
+    </body>
+    <!--
+    bar-->`
 	testCases := []TestGetNextTokenCase{
 		{
 			name:  "normal",
@@ -48,6 +55,22 @@ func TestGetNextToken(t *testing.T) {
 				{Type: NoTag, Content: "<world", Endpos: endPos(brackInInner, "<world")},
 				{Type: Close, Content: "p", Endpos: endPos(brackInInner, "</p>")},
 				{Type: Close, Content: "body", Endpos: endPos(brackInInner, "</body>")},
+			},
+		},
+		{
+			name:  "ignore comment",
+			input: comment,
+			expected: []Token{
+				{Type: DocType, Content: "html", Endpos: endPos(comment, "<!doctype html>")},
+				{Type: Comment, Content: "foo", Endpos: endPos(comment, "<!--foo-->")},
+				{Type: Open, Content: "body", Endpos: endPos(comment, "<body>")},
+				{Type: Open, Content: "p", Endpos: endPos(comment, "<p>")},
+				{Type: NoTag, Content: "hello", Endpos: endPos(comment, "hello")},
+				{Type: Comment, Content: "hello world", Endpos: endPos(comment, "<!--hello world-->")},
+				{Type: NoTag, Content: ",world", Endpos: endPos(comment, ",world")},
+				{Type: Close, Content: "p", Endpos: endPos(comment, "</p>")},
+				{Type: Close, Content: "body", Endpos: endPos(comment, "</body>")},
+				{Type: Comment, Content: "bar", Endpos: endPos(comment, "bar-->")},
 			},
 		},
 	}

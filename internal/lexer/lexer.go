@@ -9,12 +9,12 @@ type Type int
 
 const (
 	Void    Type = iota // initial state
-	Open                // <open>
-	Close               // </close>
+	Open                // <openTag>
+	Close               // </closeTag>
 	NoTag               // content with no tag
 	SClose              // <self-closed/>
 	DocType             // only for <!DOCTYPE ..>
-	// TODO: Comment
+	Comment             // <!--something-->
 )
 
 // html token designed for parsing
@@ -28,7 +28,7 @@ type Token struct {
 // GetNextToken receive raw html string and starting position and
 // return the next html token (e.g. "<hello>", "</word>", "foo") from the
 // starting position.
-// TODO: support comment <!--something-->
+// NOTE: support comment <!--something-->, <!foo>
 func GetNextToken(raw string, pos int) Token {
 	var res Token
 	idx := skipWhiteSpace(raw, pos)
@@ -48,6 +48,7 @@ func GetNextToken(raw string, pos int) Token {
 					return res
 				}
 
+				// handle close-tag
 				if raw[idx+1] == '/' {
 					res.Type = Close
 					idx++ // skip '/'
@@ -57,6 +58,9 @@ func GetNextToken(raw string, pos int) Token {
 					strings.ToLower(raw[idx+1:idx+dtLen+1]) == "!doctype" {
 					res.Type = DocType
 					idx += dtLen
+				} else if raw[idx+1] == '!' {
+					res.Type = Comment
+					idx++ // skip '!'
 				} else {
 					res.Type = Open
 				}
@@ -73,9 +77,14 @@ func GetNextToken(raw string, pos int) Token {
 				res.Content += string('<')
 			}
 		case '>':
-			if res.Type == Close || res.Type == Open || res.Type == DocType {
+			// Token that has '<' will ends with '>'
+			if res.Type == Open || res.Type == Close || res.Type == Comment || res.Type == DocType {
 				if res.Type == DocType {
 					res.Content = strings.TrimSpace(res.Content)
+				}
+				if res.Type == Comment {
+					res.Content = strings.Trim(res.Content, "--") // <!--hi--> = "hi"
+					res.Content = strings.TrimSpace(res.Content)  // <! \n haha> = "haha"
 				}
 				res.Endpos = idx + 1
 				return res

@@ -11,6 +11,7 @@ import (
 // Parse parses raw html string and return root node of the DOM
 // NOTE: if tag invalid, assume it's Text node
 // NOTE2: void elements (e.g. <br>) always means self-close
+// TODO: what if it's like <h1>foo</p>
 func Parse(src string) (*Node, error) {
 	root := newNode()
 	curNode := root
@@ -63,7 +64,7 @@ func Parse(src string) (*Node, error) {
 			if token.Content != "html" {
 				return nil, fmt.Errorf("Not html")
 			}
-		// if invalid token (Void), just ignore
+		// if invalid token (Void) or comment, just ignore
 		default:
 			continue
 		}
