@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"gioui.org/app"
+	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/text"
@@ -62,6 +63,11 @@ func Draw(window *app.Window, state *engine.State) {
 			if searchClickable.Clicked(gtx) {
 				state.Url = searchEditor.Text()
 				state.Notifier <- engine.Search
+			}
+
+			// change the pointer cursor when hover
+			if searchClickable.Hovered() {
+				pointer.CursorPointer.Add(&ops)
 			}
 
 			flexChildren := []layout.FlexChild{

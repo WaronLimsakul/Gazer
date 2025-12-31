@@ -33,7 +33,7 @@ const (
 
 	Text // For no tag content or invalid tag
 
-	// TODO: A Img Ul Ol Li B (or Strong) Hr Span
+	// TODO: A Img Ul Ol Li Hr Span
 )
 
 var TagMap = map[string]Tag{
