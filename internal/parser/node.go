@@ -22,7 +22,7 @@ func (n Node) recursiveString(layer int) string {
 	res := "\n"
 	if layer > 0 {
 		for range layer {
-			res += "\t"
+			res += "  "
 		}
 	}
 

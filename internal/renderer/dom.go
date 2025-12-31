@@ -117,6 +117,8 @@ func (dr *DomRenderer) renderText(node *parser.Node) []material.LabelStyle {
 		dec = ui.P
 	case parser.I:
 		dec = ui.I
+	case parser.B:
+		dec = ui.B
 	}
 
 	for i := range res {

@@ -27,6 +27,7 @@ const (
 	H5
 	P
 	I
+	B
 
 	Br
 
@@ -36,21 +37,23 @@ const (
 )
 
 var TagMap = map[string]Tag{
-	"html":  Html,
-	"head":  Head,
-	"body":  Body,
-	"title": Title,
-	"meta":  Meta,
-	"div":   Div,
-	"h1":    H1,
-	"h2":    H2,
-	"h3":    H3,
-	"h4":    H4,
-	"h5":    H5,
-	"p":     P,
-	"i":     I,
-	"em":    I,
-	"br":    Br,
+	"html":   Html,
+	"head":   Head,
+	"body":   Body,
+	"title":  Title,
+	"meta":   Meta,
+	"div":    Div,
+	"h1":     H1,
+	"h2":     H2,
+	"h3":     H3,
+	"h4":     H4,
+	"h5":     H5,
+	"p":      P,
+	"i":      I,
+	"em":     I,
+	"b":      B,
+	"strong": B,
+	"br":     Br,
 }
 
 func (t Tag) String() string {
@@ -83,6 +86,8 @@ func (t Tag) String() string {
 		return "p"
 	case I:
 		return "i"
+	case B:
+		return "b"
 	case Br:
 		return "br"
 	case Text:
@@ -106,5 +111,6 @@ var TextElements = map[Tag]bool{
 	H5:   true,
 	P:    true,
 	I:    true,
+	B:    true,
 	Text: true,
 }

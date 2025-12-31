@@ -38,7 +38,7 @@ func H4(thm *material.Theme, label material.LabelStyle) material.LabelStyle {
 }
 
 func H5(thm *material.Theme, label material.LabelStyle) material.LabelStyle {
-	label.TextSize = thm.TextSize * 34.0 / 16.0
+	label.TextSize = thm.TextSize * 24.0 / 16.0
 	label.Font.Weight = font.Bold
 	return label
 }
@@ -50,6 +50,11 @@ func P(thm *material.Theme, label material.LabelStyle) material.LabelStyle {
 
 func I(thm *material.Theme, label material.LabelStyle) material.LabelStyle {
 	label.Font.Style = font.Italic
+	return label
+}
+
+func B(thm *material.Theme, label material.LabelStyle) material.LabelStyle {
+	label.Font.Weight = font.Bold
 	return label
 }
 
