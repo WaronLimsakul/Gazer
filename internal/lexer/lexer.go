@@ -28,87 +28,84 @@ type Token struct {
 // GetNextToken receive raw html string and starting position and
 // return the next html token (e.g. "<hello>", "</word>", "foo") from the
 // starting position.
-// NOTE: support comment <!--something-->, <!foo>
-// TODO NOW: can't just check <!...>, because what if <!-- <h1>Hello, world</h1> -->
+// NOTE: support comment <!--...-->
 func GetNextToken(raw string, pos int) Token {
 	var res Token
 	idx := skipWhiteSpace(raw, pos)
 	for ; idx < len(raw); idx++ {
 		char := raw[idx]
-		switch char {
-		case '<':
-			switch res.Type {
-			case NoTag:
-				res.Type = NoTag
-				res.Endpos = idx
-				return res
-			case Void:
-				if idx+1 >= len(raw) {
-					res.Content += string(char)
-					res.Endpos = idx + 1
-					return res
-				}
-
-				// handle close-tag
-				if raw[idx+1] == '/' {
+		switch res.Type {
+		case Void:
+			if char == '<' {
+				if idx+1 < len(raw) && raw[idx+1] == '/' {
 					res.Type = Close
-					idx++ // skip '/'
-
-					// for special <!doctype> tag
-				} else if dtLen := len("!doctype"); idx+dtLen < len(raw) &&
-					strings.ToLower(raw[idx+1:idx+dtLen+1]) == "!doctype" {
+					idx++ // skip /
+				} else if dtLen := len("<!doctype"); idx+dtLen <= len(raw) &&
+					strings.ToLower(raw[idx:idx+dtLen]) == "<!doctype" {
 					res.Type = DocType
-					idx += dtLen
-				} else if raw[idx+1] == '!' {
+					idx += dtLen - 1 // skip <!doctype
+				} else if cLen := len("<!--"); idx+cLen <= len(raw) &&
+					raw[idx:idx+cLen] == "<!--" {
 					res.Type = Comment
-					idx++ // skip '!'
+					idx += cLen - 1 // skip <!--
 				} else {
 					res.Type = Open
 				}
+			} else {
+				res.Type = NoTag
+				res.Content += string(char)
+			}
 
+		case Open:
+			if char == '>' {
+				res.Endpos = idx + 1
+				return res
+			}
+			if idx+1 < len(raw) && raw[idx:idx+2] == "/>" {
+				res.Type = SClose
+				res.Endpos = idx + 2
+				return res
+			}
+
+			// Reinterpret ourselves back to notag.
 			// e.g. <p> 1 < 2 </p>
 			// 				  ^
 			// 				we are here
-			case Open:
-				res.Content = string('<') + res.Content
-				res.Type = NoTag // reinterpret itself to "no tag" content
+			if char == '<' {
+				res.Type = NoTag
+				res.Content = "<" + res.Content
 				res.Endpos = idx
 				return res
-			default:
-				res.Content += string('<')
 			}
-		case '>':
-			// Token that has '<' will ends with '>'
-			if res.Type == Open || res.Type == Close || res.Type == Comment || res.Type == DocType {
-				if res.Type == DocType {
-					res.Content = strings.TrimSpace(res.Content)
-				}
-				if res.Type == Comment {
-					res.Content = strings.Trim(res.Content, "--") // <!--hi--> = "hi"
-					res.Content = strings.TrimSpace(res.Content)  // <! \n haha> = "haha"
-				}
+			res.Content += string(char)
+
+		case Close:
+			if char == '>' {
 				res.Endpos = idx + 1
 				return res
-			} else {
-				res.Content += string('>')
 			}
-		case '/':
-			if res.Type == Open {
-				if idx+1 == len(raw) {
-					res.Content += string(char)
-					res.Endpos = idx + 1
-					return res
-				} else if raw[idx+1] == '>' {
-					res.Type = SClose
-					res.Endpos = idx + 2
-					return res
-				}
-			} else {
-				res.Content += string('>')
+			res.Content += string(char)
+
+		case DocType:
+			if char == '>' {
+				res.Content = strings.TrimSpace(res.Content)
+				res.Endpos = idx + 1
+				return res
 			}
-		default:
-			if res.Type == Void {
-				res.Type = NoTag
+			res.Content += string(char)
+
+		case Comment:
+			if cLen := len("-->"); idx+cLen <= len(raw) && raw[idx:idx+cLen] == "-->" {
+				res.Content = strings.TrimSpace(res.Content)
+				res.Endpos = idx + cLen
+				return res
+			}
+			res.Content += string(char)
+
+		case NoTag:
+			if char == '<' {
+				res.Endpos = idx
+				return res
 			}
 			res.Content += string(char)
 		}
