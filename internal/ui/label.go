@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"image/color"
+
 	"gioui.org/font"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -55,6 +57,11 @@ func I(thm *material.Theme, label material.LabelStyle) material.LabelStyle {
 
 func B(thm *material.Theme, label material.LabelStyle) material.LabelStyle {
 	label.Font.Weight = font.Bold
+	return label
+}
+
+func A(thm *material.Theme, label material.LabelStyle) material.LabelStyle {
+	label.Color = color.NRGBA{R: 0, G: 0, B: 238, A: 255}
 	return label
 }
 

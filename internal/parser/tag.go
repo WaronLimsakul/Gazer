@@ -28,12 +28,13 @@ const (
 	P
 	I
 	B
+	A
 
 	Br
 
 	Text // For no tag content or invalid tag
 
-	// TODO: A Img Ul Ol Li Hr Span
+	// TODO: Img Ul Ol Li Hr Span
 )
 
 var TagMap = map[string]Tag{
@@ -52,6 +53,7 @@ var TagMap = map[string]Tag{
 	"i":      I,
 	"em":     I,
 	"b":      B,
+	"a":      A,
 	"strong": B,
 	"br":     Br,
 }
@@ -88,6 +90,8 @@ func (t Tag) String() string {
 		return "i"
 	case B:
 		return "b"
+	case A:
+		return "a"
 	case Br:
 		return "br"
 	case Text:
@@ -112,5 +116,6 @@ var TextElements = map[Tag]bool{
 	P:    true,
 	I:    true,
 	B:    true,
+	A:    true,
 	Text: true,
 }
