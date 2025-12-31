@@ -56,33 +56,25 @@ func (dr *DomRenderer) renderNode(node *parser.Node) []layout.FlexChild {
 	case parser.Head:
 		return res // TODO
 	case parser.Body:
-		// Text child from body should be rendered as body1
-		res = append(res, dr.renderText(ui.P, node)...)
+		for _, child := range node.Children {
+			res = append(res, dr.renderNode(child)...)
+		}
 	case parser.Title:
 		return res // TODO
 	case parser.Meta:
 		return res // TODO
 	case parser.Div:
-		// Text child from div should be rendered as body1
-		res = append(res, dr.renderText(ui.P, node)...)
-	case parser.H1:
-		res = append(res, dr.renderText(ui.H1, node)...)
-	case parser.H2:
-		res = append(res, dr.renderText(ui.H2, node)...)
-	case parser.H3:
-		res = append(res, dr.renderText(ui.H3, node)...)
-	case parser.H4:
-		res = append(res, dr.renderText(ui.H4, node)...)
-	case parser.H5:
-		res = append(res, dr.renderText(ui.H5, node)...)
-	case parser.P:
-		res = append(res, dr.renderText(ui.P, node)...)
-	case parser.I:
-		res = append(res, dr.renderText(ui.I, node)...)
+		for _, child := range node.Children {
+			res = append(res, dr.renderNode(child)...)
+		}
 	case parser.Br:
 		res = append(res, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.Spacer{Height: unit.Dp(10)}.Layout(gtx)
 		}))
+	}
+
+	if parser.TextElements[node.Tag] {
+		res = append(res, labelsToFlexChildren(dr.renderText(node))...)
 	}
 
 	return res
@@ -90,22 +82,55 @@ func (dr *DomRenderer) renderNode(node *parser.Node) []layout.FlexChild {
 
 // renderText returns flex children needs for rendering node
 // with the direct child node that has Text tag being rendered as textFuc desire.
-func (dr *DomRenderer) renderText(textFunc ui.Text, node *parser.Node) []layout.FlexChild {
-	res := make([]layout.FlexChild, 0)
-	for _, child := range node.Children {
-		if child.Tag == parser.Text {
-			// get text's selectable before layout
-			selectable, ok := dr.selectables[node]
-			if !ok {
-				selectable = new(widget.Selectable)
-				dr.selectables[node] = selectable
-			}
-			res = append(res, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				return textFunc(dr.thm, selectable, child.Inner).Layout(gtx)
-			}))
-		} else {
-			res = append(res, dr.renderNode(child)...)
+// TODO NOW: have to make the rendering inherited
+// e.g. <i><h1>hello</h1></i>, <h1><i>hello</i></h1> or  has to be big and italic
+func (dr *DomRenderer) renderText(node *parser.Node) []material.LabelStyle {
+	// base case
+	if node.Tag == parser.Text {
+		selectable, ok := dr.selectables[node]
+		if !ok {
+			selectable = new(widget.Selectable)
+			dr.selectables[node] = selectable
 		}
+		return []material.LabelStyle{ui.Text(dr.thm, selectable, node.Inner)}
+	}
+
+	res := make([]material.LabelStyle, 0)
+	for _, child := range node.Children {
+		res = append(res, dr.renderText(child)...)
+	}
+
+	// recursive case: decorate
+	dec := ui.P
+	switch node.Tag {
+	case parser.H1:
+		dec = ui.H1
+	case parser.H2:
+		dec = ui.H2
+	case parser.H3:
+		dec = ui.H3
+	case parser.H4:
+		dec = ui.H4
+	case parser.H5:
+		dec = ui.H5
+	case parser.P:
+		dec = ui.P
+	case parser.I:
+		dec = ui.I
+	}
+
+	for i := range res {
+		res[i] = dec(dr.thm, res[i])
+	}
+	return res
+}
+
+func labelsToFlexChildren(labels []material.LabelStyle) []layout.FlexChild {
+	res := make([]layout.FlexChild, len(labels))
+	for i, label := range labels {
+		res[i] = layout.Rigid(func(gtx C) D {
+			return label.Layout(gtx)
+		})
 	}
 	return res
 }

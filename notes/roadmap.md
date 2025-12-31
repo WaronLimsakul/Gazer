@@ -1,17 +1,17 @@
 ## List of what I want to do
 
 ### To-do Lists
-- [ ] Fix `<!...>` comment style. what if `<!-- <h1>Hello, world</h1> -->`
-- [ ] `<h1><i>hello</i></h1>` has to be big and italic
+- [x] Fix `<!...>` comment style. what if `<!-- <h1>Hello, world</h1> -->`
 - [x] Update default font
-- [ ] Has text rendering custom component
+- [x] Has text rendering custom component
+- [ ] `<h1><i>hello</i></h1>` has to be big and italic
 
 ### HTML tags support
 - [ ] A 
 - [ ] Img 
 - [ ] Ul, Ol, LI 
 - [ ] B (or Strong) 
-- [ ] I (or Em) 
+- [x] I (or Em) 
 - [ ] Hr 
 - [x] Div 
 - [ ] Span

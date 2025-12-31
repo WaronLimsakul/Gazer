@@ -6,8 +6,9 @@ type Tag int
 // If change this part. Then change:
 // 1. TagMap
 // 2. Tag.String method
-// 3. voidElements if appropriate
-// 4. ui.renderNode()
+// 3. VoidElements if appropriate
+// 4. TextElements if appropriate
+// 5. ui.renderNode()
 const (
 	Root Tag = iota // Only for root node
 	Html
@@ -31,7 +32,7 @@ const (
 
 	Text // For no tag content or invalid tag
 
-	// TODO: A Img Ul Ol Li B (or Strong) I (or Em) Hr Div Span
+	// TODO: A Img Ul Ol Li B (or Strong) Hr Span
 )
 
 var TagMap = map[string]Tag{
@@ -92,7 +93,18 @@ func (t Tag) String() string {
 }
 
 // void elements = tag that always means self-close
-var voidElements = map[Tag]bool{
+var VoidElements = map[Tag]bool{
 	Br:   true,
 	Meta: true,
+}
+
+var TextElements = map[Tag]bool{
+	H1:   true,
+	H2:   true,
+	H3:   true,
+	H4:   true,
+	H5:   true,
+	P:    true,
+	I:    true,
+	Text: true,
 }

@@ -33,4 +33,13 @@ Somehow, `p` inside `h1` cannot override `h1` while `h2` can. So I don't want th
 Gio need me to hold the state of "selectable" text separate from the material (nothing unexpected), so I implementd
 `DomRenderer` struct (1 of this per 1 website) so that it can hold any widget state related to that website
 
+### DOM label style inheritance
+A node like this `H1 -> i -> Text` means we want the render text to be big and italic.
+Therefore, we need style inheritance system. Decorator pattern seems like a good idea.
+But I don't want to make it super OOP, so I modified it a bit just be `LabelFunc` and `LabelDecorator` 
+type in `ui` package. 
 
+- `type LabelFunc = func(*Theme, *Selectable, string) LabelStyle` is a base text
+- `type LabelDecorator = func(*Theme, LabelStyle) LabelStyle` is a decorated text
+
+Now we can just do `H1(thm, I(thm, Text(thm, "hello")))` for the example node (easy for recursion).

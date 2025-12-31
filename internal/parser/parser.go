@@ -21,7 +21,7 @@ func Parse(src string) (*Node, error) {
 		token = lexer.GetNextToken(src, idx)
 
 		// handle void elements
-		if voidElements[getTagFromContent(token.Content)] {
+		if VoidElements[getTagFromContent(token.Content)] {
 			token.Type = lexer.SClose
 		}
 
