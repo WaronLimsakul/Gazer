@@ -3,7 +3,8 @@
 ### To-do Lists
 - [ ] Fix `<!...>` comment style. what if `<!-- <h1>Hello, world</h1> -->`
 - [ ] `<h1><i>hello</i></h1>` has to be big and italic
-- [ ] Update default font
+- [x] Update default font
+- [ ] Has text rendering custom component
 
 ### HTML tags support
 - [ ] A 

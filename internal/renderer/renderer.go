@@ -31,8 +31,9 @@ type (
 func Draw(window *app.Window, state *engine.State) {
 	ops := op.Ops{}
 	thm := newTheme()
-	srcInput := ui.SetupSrcInput()
+	searchEditor := ui.SetupSearchEditor()
 	searchClickable := new(widget.Clickable)
+	domRenderer := newDomRenderer(thm, state.Url)
 
 	for {
 		switch ev := window.Event().(type) {
@@ -41,7 +42,7 @@ func Draw(window *app.Window, state *engine.State) {
 
 			// Handle user search behavior
 			for {
-				editorEv, ok := srcInput.Update(gtx)
+				editorEv, ok := searchEditor.Update(gtx)
 				if !ok {
 					break
 				}
@@ -49,7 +50,7 @@ func Draw(window *app.Window, state *engine.State) {
 				switch editorEv.(type) {
 				// press "enter" search
 				case widget.SubmitEvent:
-					state.Url = srcInput.Text()
+					state.Url = searchEditor.Text()
 					state.Notifier <- engine.Search
 				default:
 					continue
@@ -59,13 +60,18 @@ func Draw(window *app.Window, state *engine.State) {
 
 			// click search
 			if searchClickable.Clicked(gtx) {
-				state.Url = srcInput.Text()
+				state.Url = searchEditor.Text()
 				state.Notifier <- engine.Search
 			}
 
 			flexChildren := []layout.FlexChild{
-				ui.SearchBar(thm, srcInput, searchClickable),
+				ui.SearchBar(thm, searchEditor, searchClickable),
 				ui.HorizontalLine(thm, unit.Dp(WINDOW_WIDTH)),
+			}
+
+			// from now, handle website rendering
+			if domRenderer.url != state.Url {
+				domRenderer = newDomRenderer(thm, state.Url)
 			}
 
 			siteMargin := layout.Inset{
@@ -73,9 +79,10 @@ func Draw(window *app.Window, state *engine.State) {
 				Right: unit.Dp(25),
 			}
 
+			// TODO: make site margin apply only on site. It also apply to search bar
 			siteMargin.Layout(gtx, func(gtx C) D {
 				// children from DOM rendering
-				flexChildren = append(flexChildren, renderDOM(thm, state.Root)...)
+				flexChildren = append(flexChildren, domRenderer.render(state.Root)...)
 				return layout.Flex{
 					Axis:      layout.Vertical,
 					Alignment: layout.Middle,

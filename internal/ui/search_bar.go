@@ -16,9 +16,9 @@ type (
 	D = layout.Dimensions
 )
 
-// setupSrcInput create a new widget.Editor used as
+// SetupSearchEditor create a new widget.Editor used as
 // input behavior for search component
-func SetupSrcInput() *widget.Editor {
+func SetupSearchEditor() *widget.Editor {
 	srcInput := new(widget.Editor)
 	srcInput.Alignment = text.Start
 	srcInput.SingleLine = true
