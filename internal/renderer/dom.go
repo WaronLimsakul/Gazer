@@ -1,7 +1,6 @@
 package renderer
 
 import (
-	"gioui.org/font"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -58,14 +57,14 @@ func (dr *DomRenderer) renderNode(node *parser.Node) []layout.FlexChild {
 		return res // TODO
 	case parser.Body:
 		// Text child from body should be rendered as body1
-		res = append(res, dr.renderText(ui.Body1, node)...)
+		res = append(res, dr.renderText(ui.P, node)...)
 	case parser.Title:
 		return res // TODO
 	case parser.Meta:
 		return res // TODO
 	case parser.Div:
 		// Text child from div should be rendered as body1
-		res = append(res, dr.renderText(ui.Body1, node)...)
+		res = append(res, dr.renderText(ui.P, node)...)
 	case parser.H1:
 		res = append(res, dr.renderText(ui.H1, node)...)
 	case parser.H2:
@@ -77,15 +76,9 @@ func (dr *DomRenderer) renderNode(node *parser.Node) []layout.FlexChild {
 	case parser.H5:
 		res = append(res, dr.renderText(ui.H5, node)...)
 	case parser.P:
-		res = append(res, dr.renderText(ui.Body1, node)...)
+		res = append(res, dr.renderText(ui.P, node)...)
 	case parser.I:
-		res = append(res, dr.renderText(
-			func(thm *material.Theme, selectable *widget.Selectable, txt string) material.LabelStyle {
-				label := material.Body1(dr.thm, txt)
-				label.Font.Style = font.Italic
-				label.State = selectable
-				return label
-			}, node)...)
+		res = append(res, dr.renderText(ui.I, node)...)
 	case parser.Br:
 		res = append(res, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 			return layout.Spacer{Height: unit.Dp(10)}.Layout(gtx)
@@ -95,11 +88,9 @@ func (dr *DomRenderer) renderNode(node *parser.Node) []layout.FlexChild {
 	return res
 }
 
-type Label = func(*material.Theme, *widget.Selectable, string) material.LabelStyle
-
 // renderText returns flex children needs for rendering node
 // with the direct child node that has Text tag being rendered as textFuc desire.
-func (dr *DomRenderer) renderText(textFunc Label, node *parser.Node) []layout.FlexChild {
+func (dr *DomRenderer) renderText(textFunc ui.Text, node *parser.Node) []layout.FlexChild {
 	res := make([]layout.FlexChild, 0)
 	for _, child := range node.Children {
 		if child.Tag == parser.Text {
