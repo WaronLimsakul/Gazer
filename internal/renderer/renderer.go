@@ -10,7 +10,6 @@ import (
 	"gioui.org/op"
 	"gioui.org/text"
 	"gioui.org/unit"
-	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/WaronLimsakul/Gazer/internal/engine"
 	"github.com/WaronLimsakul/Gazer/internal/ui"
@@ -26,9 +25,7 @@ type (
 	D = layout.Dimensions
 )
 
-type Element = interface {
-	Layout(gtx C) D
-}
+type Element = ui.Element
 
 // Draw takes gio's Window and Gazer's state
 // and keep redrawing according to state
@@ -38,8 +35,7 @@ func Draw(window *app.Window, state *engine.State) {
 	searchBar := ui.NewSearchBar(thm)
 	hLine := ui.HorizontalLine{Thm: thm, Width: WINDOW_WIDTH}
 	domRenderer := newDomRenderer(thm, state.Url)
-	pageWidget := new(widget.List)
-	pageWidget.Axis = layout.Vertical
+	page := ui.NewPage(thm)
 
 	for {
 		switch ev := window.Event().(type) {
@@ -52,42 +48,20 @@ func Draw(window *app.Window, state *engine.State) {
 				state.Notifier <- engine.Search
 			}
 
-			appFlexChildren := []layout.FlexChild{
-				// TODO: write a component that hold its state
-				rigid(searchBar),
-				rigid(hLine),
-			}
+			appFlex := layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}
+			appFlexChildren := []layout.FlexChild{rigid(searchBar), rigid(hLine)}
 
 			// from now, handle website rendering
 			if domRenderer.url != state.Url {
 				domRenderer = newDomRenderer(thm, state.Url)
 			}
 
-			pageMargin := layout.Inset{
-				Left:  unit.Dp(25),
-				Right: unit.Dp(25),
-			}
-
-			// TODO: make it look better than this
 			pageElements := domRenderer.render(state.Root)
-			page := material.List(thm, pageWidget)
 			appFlexChildren = append(appFlexChildren, layout.Rigid(func(gtx C) D {
-				return pageMargin.Layout(gtx, func(gtx C) D {
-					return page.Layout(gtx, len(pageElements), func(gtx C, idx int) D {
-						line := pageElements[idx]
-						if len(line) == 1 {
-							return line[0].Layout(gtx)
-						} else {
-							return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, elementsToFlexChildren(line)...)
-						}
-					})
-				})
+				return page.Layout(gtx, pageElements)
 			}))
 
-			layout.Flex{
-				Axis:      layout.Vertical,
-				Alignment: layout.Middle,
-			}.Layout(gtx, appFlexChildren...)
+			appFlex.Layout(gtx, appFlexChildren...)
 
 			ev.Frame(gtx.Ops)
 		case app.DestroyEvent:
@@ -126,15 +100,4 @@ func newTheme() *material.Theme {
 	}
 
 	return thm
-}
-
-// elementsToFlexChildren wrap each element in elements with layout.Rigid and return
-func elementsToFlexChildren(elements []Element) []layout.FlexChild {
-	res := make([]layout.FlexChild, len(elements))
-	for i, elem := range elements {
-		res[i] = layout.Rigid(func(gtx C) D {
-			return elem.Layout(gtx)
-		})
-	}
-	return res
 }
