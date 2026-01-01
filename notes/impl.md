@@ -50,3 +50,9 @@ At first, I only use how to use `Flex` container but I see `List` is a better ch
 2. It supports scrolling
 
 However, I will try to use `Flex` when rendering text inline e.g. `<p>hello <i>world</i></p>` should be same line.
+
+Therefore, now `DomRenderer.render` return `[][]Element` (`Element` is `interface {Layout(gtx C) D}`)
+outer layer is rendering row, inner layer is each element in a row from left to right.
+
+We use `List` to render the row and `Flex` to render each one from left to right.
+

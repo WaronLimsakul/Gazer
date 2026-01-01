@@ -5,10 +5,10 @@
 - [x] Update default font
 - [x] Has text rendering custom component
 - [x] `<h1><i>hello</i></h1>` has to be big and italic
-- [ ] Lay the texts out vertically using `List` because
+- [x] Lay the texts out vertically using `List` because
     1. It only lays what is visible
     2. Scrollable default
-- [ ] Use flex for inline text e.g. `<p>hello <i>world</i></p>` should be same line
+- [x] Use flex for inline text e.g. `<p>hello <i>world</i></p>` should be same line
 
 ### HTML tags support
 - [ ] A 

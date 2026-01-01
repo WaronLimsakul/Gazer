@@ -107,6 +107,7 @@ var VoidElements = map[Tag]bool{
 	Meta: true,
 }
 
+// text elements = tag that is rendered as a string
 var TextElements = map[Tag]bool{
 	H1:   true,
 	H2:   true,
@@ -114,6 +115,15 @@ var TextElements = map[Tag]bool{
 	H4:   true,
 	H5:   true,
 	P:    true,
+	I:    true,
+	B:    true,
+	A:    true,
+	Text: true,
+}
+
+// inline-text elements = text element that will not break line when
+// being child of another text element. E.g. <p>hello, <i>world</i></p> is one line
+var InlineTextElements = map[Tag]bool{
 	I:    true,
 	B:    true,
 	A:    true,
