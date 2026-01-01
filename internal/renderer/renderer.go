@@ -36,6 +36,7 @@ func Draw(window *app.Window, state *engine.State) {
 	ops := op.Ops{}
 	thm := newTheme()
 	searchBar := ui.NewSearchBar(thm)
+	hLine := ui.HorizontalLine{Thm: thm, Width: WINDOW_WIDTH}
 	domRenderer := newDomRenderer(thm, state.Url)
 	pageWidget := new(widget.List)
 	pageWidget.Axis = layout.Vertical
@@ -54,7 +55,7 @@ func Draw(window *app.Window, state *engine.State) {
 			appFlexChildren := []layout.FlexChild{
 				// TODO: write a component that hold its state
 				rigid(searchBar),
-				ui.HorizontalLine(thm, unit.Dp(WINDOW_WIDTH)),
+				rigid(hLine),
 			}
 
 			// from now, handle website rendering

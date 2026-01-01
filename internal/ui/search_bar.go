@@ -79,6 +79,7 @@ func (s *SearchBar) Layout(gtx C) D {
 	})
 }
 
+// Searched return a bool whether user click or press "enter" to search
 func (s *SearchBar) Searched(gtx C) bool {
 	for {
 		editorEv, ok := s.editor.Update(gtx)
@@ -98,11 +99,13 @@ func (s *SearchBar) Searched(gtx C) bool {
 	return s.clickable.Clicked(gtx)
 }
 
-func (s *SearchBar) Text() string {
+// Text gets the text inside the search bar
+func (s SearchBar) Text() string {
 	return s.editor.Text()
 }
 
-func (s *SearchBar) Update(gtx C) {
+// Update updates the ui when search bar is hovered
+func (s SearchBar) Update(gtx C) {
 	if s.clickable.Hovered() {
 		pointer.CursorPointer.Add(gtx.Ops)
 	}
