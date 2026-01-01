@@ -113,7 +113,24 @@ func (dr *DomRenderer) renderText(node *parser.Node) [][]ui.Label {
 
 	}
 
-	// recursive case: decorate
+	// recursive case: decorate the children
+
+	// tag "A" decorator has different signature, check first
+	if node.Tag == parser.A {
+		clickable, ok := dr.clickables[node]
+		if !ok {
+			clickable = new(widget.Clickable)
+			dr.clickables[node] = clickable
+		}
+		for _, line := range res {
+			for i := range line {
+				line[i] = ui.A(clickable, line[i])
+			}
+		}
+		return res
+	}
+
+	// other tags
 	dec := ui.P
 	switch node.Tag {
 	case parser.H1:
@@ -134,23 +151,9 @@ func (dr *DomRenderer) renderText(node *parser.Node) [][]ui.Label {
 		dec = ui.B
 	}
 
-	// TODO: make it look better
-	if node.Tag != parser.A {
-		for _, line := range res {
-			for i := range line {
-				line[i] = dec(dr.thm, line[i])
-			}
-		}
-	} else {
-		clickable, ok := dr.clickables[node]
-		if !ok {
-			clickable = new(widget.Clickable)
-			dr.clickables[node] = clickable
-		}
-		for _, line := range res {
-			for i := range line {
-				line[i] = ui.A(clickable, line[i])
-			}
+	for _, line := range res {
+		for i := range line {
+			line[i] = dec(dr.thm, line[i])
 		}
 	}
 

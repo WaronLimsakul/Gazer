@@ -25,7 +25,8 @@ type Label struct {
 }
 
 func (l Label) Layout(gtx C) D {
-	// this makes the text only takes area it actually needs
+	// LabelStyle.Layout try to takes just what it need by default.
+	// However, passed gtx might just give min = max = max
 	gtx.Constraints.Min = image.Point{}
 
 	if l.clickable != nil {
