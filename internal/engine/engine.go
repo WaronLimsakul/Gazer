@@ -20,8 +20,12 @@ const (
 
 type State struct {
 	Url string
-	// a channel to notify the engine with the event
-	Notifier chan Notification
+	// a channel for client to notify the engine with the event
+	Notifier  chan Notification
+	IsLoading bool
+
+	// a channel for client to check the loading progress
+	LoadProgress chan float32
 
 	// DOM root
 	Root *parser.Node
@@ -29,11 +33,15 @@ type State struct {
 
 var client = &http.Client{Timeout: 3 * time.Second}
 
+// Start starts the engine to watch for notification and serve the request>
 func Start(state *State, window *app.Window) {
 	for noti := range state.Notifier {
 		switch noti {
 		case Search:
+			state.IsLoading = true
+			go reportProgress(state, window)
 			root, err := search(state.Url)
+			state.IsLoading = false
 			if err != nil {
 				fmt.Println("search:", err)
 				continue
@@ -49,6 +57,7 @@ func Start(state *State, window *app.Window) {
 func NewState() *State {
 	s := State{}
 	s.Notifier = make(chan Notification)
+	s.LoadProgress = make(chan float32)
 	return &s
 }
 
@@ -98,4 +107,21 @@ func fetch(url string) (*http.Response, error) {
 		return nil, fmt.Errorf("client.Do: %v", err)
 	}
 	return res, nil
+}
+
+// reportProgress keep reporting synthetic progress to the channel in the state
+// and also keep invalidating the window intending to rerender the progress ui.
+func reportProgress(s *State, w *app.Window) {
+	var progress float32 = 0.0
+	const rate = 0.1
+
+	for s.IsLoading {
+		time.Sleep(25 * time.Millisecond)
+		progress += (1 - progress) * rate
+		s.LoadProgress <- progress
+		w.Invalidate()
+	}
+
+	s.LoadProgress <- 1.0
+	w.Invalidate()
 }

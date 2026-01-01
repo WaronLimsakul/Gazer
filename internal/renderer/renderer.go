@@ -59,6 +59,11 @@ func Draw(window *app.Window, state *engine.State) {
 
 			appFlex := layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}
 			appFlexChildren := []layout.FlexChild{rigid(searchBar), rigid(hLine)}
+			// if loading the page, replace horizontal line with progress bar
+			if state.IsLoading {
+				progress := <-state.LoadProgress
+				appFlexChildren[1] = rigid(material.ProgressBar(thm, progress))
+			}
 
 			// from now, handle website rendering
 			if domRenderer.url != state.Url {
