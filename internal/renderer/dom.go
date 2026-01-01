@@ -1,6 +1,7 @@
 package renderer
 
 import (
+	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -15,10 +16,14 @@ type DomRenderer struct {
 	// All Texts' selectables elements based on its pointer.
 	// NOTE: we can use pointer because it is one url per DomRenderer
 	selectables map[*parser.Node]*widget.Selectable
+	clickables  map[*parser.Node]*widget.Clickable
 }
 
 func newDomRenderer(thm *material.Theme, url string) *DomRenderer {
-	return &DomRenderer{thm, url, make(map[*parser.Node]*widget.Selectable)}
+	return &DomRenderer{thm: thm, url: url,
+		selectables: make(map[*parser.Node]*widget.Selectable),
+		clickables:  make(map[*parser.Node]*widget.Clickable),
+	}
 }
 
 // renderDOM takes a DOM root node and return a slice of FlexChild
@@ -49,10 +54,6 @@ func (dr *DomRenderer) renderNode(node *parser.Node) [][]Element {
 	res := make([][]Element, 0)
 	switch node.Tag {
 	// Ignore root or html tag
-	case parser.Root:
-		break
-	case parser.Html:
-		break
 	case parser.Head:
 		return res // TODO
 	case parser.Body:
@@ -81,7 +82,7 @@ func (dr *DomRenderer) renderNode(node *parser.Node) [][]Element {
 // renderText returns [][]LabelStyle needs for rendering node and its children.
 // First layer (outer) is each horizontal line of rendering.
 // Second layer (inner) is each element in that line from left to right.
-func (dr *DomRenderer) renderText(node *parser.Node) [][]material.LabelStyle {
+func (dr *DomRenderer) renderText(node *parser.Node) [][]ui.Label {
 	// base case
 	if node.Tag == parser.Text {
 		selectable, ok := dr.selectables[node]
@@ -90,11 +91,11 @@ func (dr *DomRenderer) renderText(node *parser.Node) [][]material.LabelStyle {
 			dr.selectables[node] = selectable
 		}
 
-		return [][]material.LabelStyle{{ui.Text(dr.thm, selectable, node.Inner)}}
+		return [][]ui.Label{{ui.Text(dr.thm, selectable, node.Inner)}}
 	}
 
-	res := make([][]material.LabelStyle, 0)
-	// TODO: if inline-text and prev is also inline-text, put it in latest one don't append
+	res := make([][]ui.Label, 0)
+	// if inline-text and prev is also inline-text, put it in latest one don't append
 	for i, child := range node.Children {
 		if parser.InlineTextElements[child.Tag] && len(res) > 0 && i > 0 &&
 			parser.InlineTextElements[node.Children[i-1].Tag] {
@@ -131,20 +132,43 @@ func (dr *DomRenderer) renderText(node *parser.Node) [][]material.LabelStyle {
 		dec = ui.I
 	case parser.B:
 		dec = ui.B
-	case parser.A:
-		dec = ui.A
 	}
 
-	for _, line := range res {
-		for i := range line {
-			line[i] = dec(dr.thm, line[i])
+	// TODO: make it look better
+	if node.Tag != parser.A {
+		for _, line := range res {
+			for i := range line {
+				line[i] = dec(dr.thm, line[i])
+			}
+		}
+	} else {
+		clickable, ok := dr.clickables[node]
+		if !ok {
+			clickable = new(widget.Clickable)
+			dr.clickables[node] = clickable
+		}
+		for _, line := range res {
+			for i := range line {
+				line[i] = ui.A(clickable, line[i])
+			}
 		}
 	}
+
 	return res
 }
 
-// labelsToElements wrap each LabelStyle with Rigid to get [][]FlexChild
-func labelsToElements(labels [][]material.LabelStyle) [][]Element {
+// update updates all elements ui in domrender
+func (dr *DomRenderer) update(gtx C) {
+	for _, clickable := range dr.clickables {
+		clickable.Update(gtx)
+		if clickable.Hovered() {
+			pointer.CursorPointer.Add(gtx.Ops)
+		}
+	}
+}
+
+// labelsToElements just convert [][]ui.Label into [][]Element
+func labelsToElements(labels [][]ui.Label) [][]Element {
 	res := make([][]Element, len(labels))
 	for i, line := range labels {
 		res[i] = make([]Element, len(line))

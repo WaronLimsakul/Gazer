@@ -54,6 +54,8 @@ func Draw(window *app.Window, state *engine.State) {
 			// from now, handle website rendering
 			if domRenderer.url != state.Url {
 				domRenderer = newDomRenderer(thm, state.Url)
+			} else {
+				domRenderer.update(gtx)
 			}
 
 			pageElements := domRenderer.render(state.Root)
