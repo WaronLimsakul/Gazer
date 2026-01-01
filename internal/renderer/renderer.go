@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"gioui.org/app"
-	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/text"
@@ -36,8 +35,7 @@ type Element = interface {
 func Draw(window *app.Window, state *engine.State) {
 	ops := op.Ops{}
 	thm := newTheme()
-	searchEditor := ui.SetupSearchEditor()
-	searchClickable := new(widget.Clickable)
+	searchBar := ui.NewSearchBar(thm)
 	domRenderer := newDomRenderer(thm, state.Url)
 	pageWidget := new(widget.List)
 	pageWidget.Axis = layout.Vertical
@@ -47,38 +45,15 @@ func Draw(window *app.Window, state *engine.State) {
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, ev)
 
-			// Handle user search behavior
-			for {
-				editorEv, ok := searchEditor.Update(gtx)
-				if !ok {
-					break
-				}
-
-				switch editorEv.(type) {
-				// press "enter" search
-				case widget.SubmitEvent:
-					state.Url = searchEditor.Text()
-					state.Notifier <- engine.Search
-				default:
-					continue
-				}
-
-			}
-
-			// click search
-			if searchClickable.Clicked(gtx) {
-				state.Url = searchEditor.Text()
+			searchBar.Update(gtx)
+			if searchBar.Searched(gtx) {
+				state.Url = searchBar.Text()
 				state.Notifier <- engine.Search
-			}
-
-			// change the pointer cursor when hover
-			if searchClickable.Hovered() {
-				pointer.CursorPointer.Add(&ops)
 			}
 
 			appFlexChildren := []layout.FlexChild{
 				// TODO: write a component that hold its state
-				ui.SearchBar(thm, searchEditor, searchClickable),
+				rigid(searchBar),
 				ui.HorizontalLine(thm, unit.Dp(WINDOW_WIDTH)),
 			}
 

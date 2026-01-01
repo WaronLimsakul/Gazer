@@ -3,6 +3,7 @@ package ui
 import (
 	"log"
 
+	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/unit"
@@ -16,22 +17,20 @@ type (
 	D = layout.Dimensions
 )
 
-// SetupSearchEditor create a new widget.Editor used as
-// input behavior for search component
-func SetupSearchEditor() *widget.Editor {
-	srcInput := new(widget.Editor)
-	srcInput.Alignment = text.Start
-	srcInput.SingleLine = true
-	srcInput.Submit = true
-	return srcInput
+type SearchBar struct {
+	thm       *material.Theme
+	editor    *widget.Editor
+	clickable *widget.Clickable
 }
 
-func SearchBar(
-	thm *material.Theme,
-	editor *widget.Editor,
-	searchClickable *widget.Clickable,
-) layout.FlexChild {
-	srcInputUi := material.Editor(thm, editor, "search")
+func NewSearchBar(thm *material.Theme) *SearchBar {
+	editor := setupSearchBarEditor()
+	clickable := new(widget.Clickable)
+	return &SearchBar{thm, editor, clickable}
+}
+
+func (s *SearchBar) Layout(gtx C) D {
+	srcInputUi := material.Editor(s.thm, s.editor, "search")
 	srcInputUi.TextSize = unit.Sp(20)
 
 	// search bar spacing
@@ -43,7 +42,7 @@ func SearchBar(
 		Right: unit.Dp(400),
 	}
 	border := widget.Border{
-		Color:        thm.Fg,
+		Color:        s.thm.Fg,
 		CornerRadius: unit.Dp(2),
 		Width:        unit.Dp(1),
 	}
@@ -59,25 +58,62 @@ func SearchBar(
 	if err != nil {
 		log.Fatal("Couldn't create new search icon")
 	}
-	searchButton := material.IconButton(thm, searchClickable, icon, "Search")
+	searchButton := material.IconButton(s.thm, s.clickable, icon, "Search")
 	searchButton.Size = unit.Dp(20)
 
 	// search bar
-	return layout.Rigid(func(gtx C) D {
-		return margin.Layout(gtx, func(gtx C) D {
-			return layout.Flex{Axis: layout.Horizontal, Spacing: 2}.Layout(gtx,
-				layout.Flexed(1, func(gtx C) D {
-					return border.Layout(gtx, func(gtx C) D {
-						return insideBorderMargin.Layout(gtx, srcInputUi.Layout)
-					})
-				}),
-				layout.Rigid(func(gtx C) D {
-					return layout.Spacer{Width: unit.Dp(5)}.Layout(gtx)
-				}),
-				layout.Rigid(func(gtx C) D {
-					return searchButton.Layout(gtx)
-				}),
-			)
-		})
+	return margin.Layout(gtx, func(gtx C) D {
+		return layout.Flex{Axis: layout.Horizontal, Spacing: 2}.Layout(gtx,
+			layout.Flexed(1, func(gtx C) D {
+				return border.Layout(gtx, func(gtx C) D {
+					return insideBorderMargin.Layout(gtx, srcInputUi.Layout)
+				})
+			}),
+			layout.Rigid(func(gtx C) D {
+				return layout.Spacer{Width: unit.Dp(5)}.Layout(gtx)
+			}),
+			layout.Rigid(func(gtx C) D {
+				return searchButton.Layout(gtx)
+			}),
+		)
 	})
+}
+
+func (s *SearchBar) Searched(gtx C) bool {
+	for {
+		editorEv, ok := s.editor.Update(gtx)
+		if !ok {
+			break
+		}
+		switch editorEv.(type) {
+		// press "enter" search
+		case widget.SubmitEvent:
+			return true
+		default:
+			continue
+		}
+	}
+
+	// click search
+	return s.clickable.Clicked(gtx)
+}
+
+func (s *SearchBar) Text() string {
+	return s.editor.Text()
+}
+
+func (s *SearchBar) Update(gtx C) {
+	if s.clickable.Hovered() {
+		pointer.CursorPointer.Add(gtx.Ops)
+	}
+}
+
+// SetupSearchEditor create a new widget.Editor used as
+// input behavior for search component
+func setupSearchBarEditor() *widget.Editor {
+	srcInput := new(widget.Editor)
+	srcInput.Alignment = text.Start
+	srcInput.SingleLine = true
+	srcInput.Submit = true
+	return srcInput
 }
