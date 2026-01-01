@@ -106,6 +106,7 @@ func (s SearchBar) Text() string {
 
 // Update updates the ui when search bar is hovered
 func (s SearchBar) Update(gtx C) {
+	s.clickable.Update(gtx)
 	if s.clickable.Hovered() {
 		pointer.CursorPointer.Add(gtx.Ops)
 	}
