@@ -42,9 +42,18 @@ func Draw(window *app.Window, state *engine.State) {
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, ev)
 
+			// update state if user search something
 			searchBar.Update(gtx)
 			if searchBar.Searched(gtx) {
 				state.Url = searchBar.Text()
+				state.Notifier <- engine.Search
+			}
+
+			// update state if user search click a link
+			jump, url := domRenderer.linkClicked(gtx)
+			if jump {
+				searchBar.SetText(url)
+				state.Url = url
 				state.Notifier <- engine.Search
 			}
 

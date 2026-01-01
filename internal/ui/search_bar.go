@@ -104,6 +104,11 @@ func (s SearchBar) Text() string {
 	return s.editor.Text()
 }
 
+// SetText sets the text inside search bar
+func (s SearchBar) SetText(txt string) {
+	s.editor.SetText(txt)
+}
+
 // Update updates the ui when search bar is hovered
 func (s SearchBar) Update(gtx C) {
 	s.clickable.Update(gtx)

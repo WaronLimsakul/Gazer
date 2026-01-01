@@ -15,14 +15,17 @@ type DomRenderer struct {
 	url string
 	// All Texts' selectables elements based on its pointer.
 	// NOTE: we can use pointer because it is one url per DomRenderer
-	selectables map[*parser.Node]*widget.Selectable
-	clickables  map[*parser.Node]*widget.Clickable
+	selectables    map[*parser.Node]*widget.Selectable
+	linkClickables map[*parser.Node]*widget.Clickable
+}
+
+type link struct {
 }
 
 func newDomRenderer(thm *material.Theme, url string) *DomRenderer {
 	return &DomRenderer{thm: thm, url: url,
-		selectables: make(map[*parser.Node]*widget.Selectable),
-		clickables:  make(map[*parser.Node]*widget.Clickable),
+		selectables:    make(map[*parser.Node]*widget.Selectable),
+		linkClickables: make(map[*parser.Node]*widget.Clickable),
 	}
 }
 
@@ -117,10 +120,10 @@ func (dr *DomRenderer) renderText(node *parser.Node) [][]ui.Label {
 
 	// tag "A" decorator has different signature, check first
 	if node.Tag == parser.A {
-		clickable, ok := dr.clickables[node]
+		clickable, ok := dr.linkClickables[node]
 		if !ok {
 			clickable = new(widget.Clickable)
-			dr.clickables[node] = clickable
+			dr.linkClickables[node] = clickable
 		}
 		for _, line := range res {
 			for i := range line {
@@ -162,12 +165,23 @@ func (dr *DomRenderer) renderText(node *parser.Node) [][]ui.Label {
 
 // update updates all elements ui in domrender
 func (dr *DomRenderer) update(gtx C) {
-	for _, clickable := range dr.clickables {
+	for _, clickable := range dr.linkClickables {
 		clickable.Update(gtx)
 		if clickable.Hovered() {
 			pointer.CursorPointer.Add(gtx.Ops)
 		}
 	}
+}
+
+// linkClicked return whether the link in the page is clicked and
+// if so, what does it linked to.
+func (dr *DomRenderer) linkClicked(gtx C) (bool, string) {
+	for node, clickable := range dr.linkClickables {
+		if clickable.Clicked(gtx) {
+			return true, node.Attrs["href"]
+		}
+	}
+	return false, ""
 }
 
 // labelsToElements just convert [][]ui.Label into [][]Element
