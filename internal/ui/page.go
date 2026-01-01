@@ -16,7 +16,6 @@ type Page struct {
 func NewPage(thm *Theme) *Page {
 	list := new(widget.List)
 	list.Axis = layout.Vertical
-	list.Alignment = layout.Middle
 	return &Page{thm: thm, list: list}
 }
 

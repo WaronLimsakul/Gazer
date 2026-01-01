@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"image"
 	"image/color"
 
 	"gioui.org/font"
@@ -24,6 +25,9 @@ type Label struct {
 }
 
 func (l Label) Layout(gtx C) D {
+	// this makes the text only takes area it actually needs
+	gtx.Constraints.Min = image.Point{}
+
 	if l.clickable != nil {
 		return l.clickable.Layout(gtx, l.style.Layout)
 	}
