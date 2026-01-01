@@ -11,7 +11,7 @@
 - [x] Use flex for inline text e.g. `<p>hello <i>world</i></p>` should be same line
 
 ### HTML tags support
-- [ ] A 
+- [x] A 
 - [ ] Img 
 - [ ] Ul, Ol, LI 
 - [x] B (or Strong) 
