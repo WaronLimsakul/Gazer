@@ -95,7 +95,7 @@ func parseNode(content string) (*Node, error) {
 }
 
 // enum for attribute processing states
-type attrParsingState int
+type attrParsingState uint8
 
 const (
 	Keying    attrParsingState = iota // processing key part

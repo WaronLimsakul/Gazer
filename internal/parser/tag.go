@@ -1,6 +1,6 @@
 package parser
 
-type Tag int
+type Tag uint8
 
 // Legal tag list.
 // If change this part. Then change:

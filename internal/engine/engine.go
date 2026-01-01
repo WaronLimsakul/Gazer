@@ -12,7 +12,7 @@ import (
 	"github.com/WaronLimsakul/Gazer/internal/parser"
 )
 
-type Notification int
+type Notification uint8
 
 const (
 	Search Notification = iota

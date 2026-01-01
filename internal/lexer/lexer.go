@@ -5,7 +5,7 @@ import (
 	"unicode"
 )
 
-type Type int
+type Type uint8
 
 const (
 	Void    Type = iota // initial state
