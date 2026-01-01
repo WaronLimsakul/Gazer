@@ -80,10 +80,7 @@ func (dr *DomRenderer) renderNode(node *parser.Node) []layout.FlexChild {
 	return res
 }
 
-// renderText returns flex children needs for rendering node
-// with the direct child node that has Text tag being rendered as textFuc desire.
-// TODO NOW: have to make the rendering inherited
-// e.g. <i><h1>hello</h1></i>, <h1><i>hello</i></h1> or  has to be big and italic
+// renderText returns []LabelStyle needs for rendering node and its children
 func (dr *DomRenderer) renderText(node *parser.Node) []material.LabelStyle {
 	// base case
 	if node.Tag == parser.Text {
@@ -129,6 +126,7 @@ func (dr *DomRenderer) renderText(node *parser.Node) []material.LabelStyle {
 	return res
 }
 
+// labelsToFlexChildren wrap each LabelStyle with Rigid to get []FlexChild
 func labelsToFlexChildren(labels []material.LabelStyle) []layout.FlexChild {
 	res := make([]layout.FlexChild, len(labels))
 	for i, label := range labels {

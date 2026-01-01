@@ -43,3 +43,10 @@ type in `ui` package.
 - `type LabelDecorator = func(*Theme, LabelStyle) LabelStyle` is a decorated text
 
 Now we can just do `H1(thm, I(thm, Text(thm, "hello")))` for the example node (easy for recursion).
+
+### Use `List` to layout element instead of `Flex`
+At first, I only use how to use `Flex` container but I see `List` is a better choice because
+1. It lays out only what is visible (don't have to waste time computing what we can't see)
+2. It supports scrolling
+
+However, I will try to use `Flex` when rendering text inline e.g. `<p>hello <i>world</i></p>` should be same line.

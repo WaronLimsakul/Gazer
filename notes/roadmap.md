@@ -4,7 +4,11 @@
 - [x] Fix `<!...>` comment style. what if `<!-- <h1>Hello, world</h1> -->`
 - [x] Update default font
 - [x] Has text rendering custom component
-- [ ] `<h1><i>hello</i></h1>` has to be big and italic
+- [x] `<h1><i>hello</i></h1>` has to be big and italic
+- [ ] Lay the texts out vertically using `List` because
+    1. It only lays what is visible
+    2. Scrollable default
+- [ ] Use flex for inline text e.g. `<p>hello <i>world</i></p>` should be same line
 
 ### HTML tags support
 - [ ] A 
