@@ -4,25 +4,25 @@
 stateDiagram-v2
     [*] --> Void
 
-    Void --> Comment : "<!--"
-    Comment --> Return : "-->"
+    Void --> Comment : "&lt;!--"
+    Comment --> Return : "--&gt;"
     Comment --> Comment : else
 
-    Void --> DocType : "<!DOCTYPE"
-    DocType --> Return : ">"
+    Void --> DocType : "&lt;!DOCTYPE"
+    DocType --> Return : "&gt;"
     DocType --> DocType : else
 
-    Void --> Open : "<"
-    Open --> SelfClose : "/>"
+    Void --> Open : "&lt;"
+    Open --> SelfClose : "/&gt;"
     Open --> NoTag_L : else
     SelfClose --> Return
 
-    Void --> Close : "</"
-    Close --> Return : ">"
+    Void --> Close : "&lt;/"
+    Close --> Return : "&gt;"
     Close --> Close : else
 
     Void --> NoTag_R : else
-    NoTag_R --> Return : "<"
+    NoTag_R --> Return : "&lt;"
     NoTag_R --> NoTag_R : else
 
     NoTag_L --> Return
