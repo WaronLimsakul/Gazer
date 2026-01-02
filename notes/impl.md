@@ -36,6 +36,9 @@ Somehow, `p` inside `h1` cannot override `h1` while `h2` can. So I don't want th
 Gio need me to hold the state of "selectable" text separate from the material (nothing unexpected), so I implementd
 `DomRenderer` struct (1 of this per 1 website) so that it can hold any widget state related to that website
 
+#### Update 1: `clickables`
+Now I also have `linkClickables` for storing the state of the clickable anchor inside `DomRenderer`
+
 ### DOM label style inheritance
 A node like this `H1 -> i -> Text` means we want the render text to be big and italic.
 Therefore, we need style inheritance system. Decorator pattern seems like a good idea.
@@ -46,6 +49,11 @@ type in `ui` package.
 - `type LabelDecorator = func(*Theme, LabelStyle) LabelStyle` is a decorated text
 
 Now we can just do `H1(thm, I(thm, Text(thm, "hello")))` for the example node (easy for recursion).
+
+#### Update 1: type check
+I just realize that in case that there is other type of node that is not text node as a child 
+of the text node, I have to call the `renderNode` inside `renderTextNode` anyway. So I might as well
+just let `renderTextNode` return `[][]Element`. Now it's like a lowkey mutual recursion.
 
 ### Use `List` to layout element instead of `Flex`
 At first, I only use how to use `Flex` container but I see `List` is a better choice because
