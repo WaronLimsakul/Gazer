@@ -39,7 +39,8 @@ func (dr *DomRenderer) render(root *parser.Node) [][]Element {
 	}
 
 	// expect root node to only have HTML tag
-	if len(root.Children) != 1 || root.Children[0].Tag != parser.Html {
+	// len(root.Children) != 1 ||
+	if root.Children[0].Tag != parser.Html {
 		return res
 	}
 
@@ -70,8 +71,10 @@ func (dr *DomRenderer) renderNode(node *parser.Node) [][]Element {
 		for _, child := range node.Children {
 			res = append(res, dr.renderNode(child)...)
 		}
+	// TODO NOW: what if br is inside the text node?
 	case parser.Br:
 		res = append(res, []Element{layout.Spacer{Height: unit.Dp(10)}})
+	// TODO NOW: what if img is inside the text node?
 	case parser.Img:
 		img, err := ui.NewImg(node.Attrs["src"])
 		if err != nil {

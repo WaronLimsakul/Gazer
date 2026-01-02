@@ -53,35 +53,35 @@ func Text(thm *Theme, selectable *widget.Selectable, txt string) Label {
 
 func H1(thm *Theme, label Label) Label {
 	label.tags[parser.H1] = true
-	label.style.TextSize = thm.TextSize * 96.0 / 16.0
+	label.style.TextSize = thm.TextSize * 2.25
 	label.style.Font.Weight = font.Bold
 	return label
 }
 
 func H2(thm *Theme, label Label) Label {
 	label.tags[parser.H2] = true
-	label.style.TextSize = thm.TextSize * 60.0 / 16.0
+	label.style.TextSize = thm.TextSize * 1.75
 	label.style.Font.Weight = font.Bold
 	return label
 }
 
 func H3(thm *Theme, label Label) Label {
 	label.tags[parser.H3] = true
-	label.style.TextSize = thm.TextSize * 48.0 / 16.0
+	label.style.TextSize = thm.TextSize * 1.375
 	label.style.Font.Weight = font.Bold
 	return label
 }
 
 func H4(thm *Theme, label Label) Label {
 	label.tags[parser.H4] = true
-	label.style.TextSize = thm.TextSize * 34.0 / 16.0
+	label.style.TextSize = thm.TextSize * 1.125
 	label.style.Font.Weight = font.Bold
 	return label
 }
 
 func H5(thm *Theme, label Label) Label {
 	label.tags[parser.H5] = true
-	label.style.TextSize = thm.TextSize * 24.0 / 16.0
+	label.style.TextSize = thm.TextSize
 	label.style.Font.Weight = font.Bold
 	return label
 }
