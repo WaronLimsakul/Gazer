@@ -12,7 +12,7 @@
 
 ### HTML tags support
 - [x] A 
-- [ ] Img 
+- [x] Img 
 - [x] Ul, LI 
 - [x] Ol
 - [x] B (or Strong) 

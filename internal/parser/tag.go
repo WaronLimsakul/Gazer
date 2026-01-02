@@ -143,11 +143,12 @@ var TextElements = map[Tag]bool{
 	Text: true,
 }
 
-// inline-text elements = text element that will not break line when
+// inline elements = element that will not break line when
 // being child of another text element. E.g. <p>hello, <i>world</i></p> is one line
-var InlineTextElements = map[Tag]bool{
+var InlineElements = map[Tag]bool{
 	I:    true,
 	B:    true,
 	A:    true,
 	Text: true,
+	Img:  true,
 }
