@@ -1,6 +1,8 @@
 package renderer
 
 import (
+	"log"
+
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -70,6 +72,13 @@ func (dr *DomRenderer) renderNode(node *parser.Node) [][]Element {
 		}
 	case parser.Br:
 		res = append(res, []Element{layout.Spacer{Height: unit.Dp(10)}})
+	case parser.Img:
+		img, err := ui.NewImg(node.Attrs["src"])
+		if err != nil {
+			log.Println("ui.NewImg: ", err)
+			break
+		}
+		res = append(res, []Element{img})
 	}
 
 	if parser.TextElements[node.Tag] {

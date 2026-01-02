@@ -34,6 +34,8 @@ const (
 	Ol
 	Li
 
+	Img
+
 	Br
 
 	Text // For no tag content or invalid tag
@@ -63,6 +65,7 @@ var TagMap = map[string]Tag{
 	"li":     Li,
 	"strong": B,
 	"br":     Br,
+	"img":    Img,
 }
 
 func (t Tag) String() string {
@@ -109,6 +112,8 @@ func (t Tag) String() string {
 		return "br"
 	case Text:
 		return "text"
+	case Img:
+		return "img"
 	default:
 		return "unknown"
 	}
@@ -118,6 +123,7 @@ func (t Tag) String() string {
 var VoidElements = map[Tag]bool{
 	Br:   true,
 	Meta: true,
+	Img:  true,
 }
 
 // text elements = tag that is rendered as a string

@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	urlPackage "net/url"
 	"strings"
 	"time"
 
@@ -71,6 +72,12 @@ func search(url string) (*parser.Node, error) {
 	// handle prefix: we want https:// or http://
 	if !strings.HasPrefix(url, "https://") && !strings.HasPrefix(url, "http://") {
 		url = "https://" + url
+	}
+
+	// check valid url
+	_, err := urlPackage.Parse(url)
+	if err != nil {
+		return nil, fmt.Errorf("url.Parse: %v", err)
 	}
 
 	res, err := fetch(url)

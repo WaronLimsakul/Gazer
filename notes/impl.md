@@ -7,6 +7,9 @@ me low-level control but also some widgets to play with.
 ### Testing 
 I just realize don't there is `t.Run()` which makes subtests very clean and easy
 
+### `layout.Context`
+I just realize that I have `gtx.Constraints.Constrain()`, easy way to sneak custom drawing in.
+
 ### Redesign `parser.Node`
 Initially, design a DOM node to have a field `Inner string` as inner content but then I realize that something like
 ```html
@@ -55,4 +58,9 @@ Therefore, now `DomRenderer.render` return `[][]Element` (`Element` is `interfac
 outer layer is rendering row, inner layer is each element in a row from left to right.
 
 We use `List` to render the row and `Flex` to render each one from left to right.
+
+### For rendering inheritance
+Sometimes, renderer has to know the relationship between node to render correct (e.g. `li` will have
+bullet point if and only if it is under `ul`). I solve it by let the custom `Label` widget has `tags map[Tag]bool`
+to record the inhertance of the renderee (because rendering flow down, but the widgets flow up).
 
