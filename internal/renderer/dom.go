@@ -60,17 +60,15 @@ func (dr *DomRenderer) renderNode(node *parser.Node) [][]Element {
 	case parser.Head:
 		return res // TODO
 	case parser.Body:
-		for _, child := range node.Children {
-			res = append(res, dr.renderNode(child)...)
-		}
+		res = dr.gatherElements(node)
 	case parser.Title:
 		return res // TODO
 	case parser.Meta:
 		return res // TODO
 	case parser.Div:
-		for _, child := range node.Children {
-			res = append(res, dr.renderNode(child)...)
-		}
+		res = dr.gatherElements(node)
+	case parser.Span:
+		res = dr.gatherElements(node)
 	case parser.Br:
 		res = append(res, []Element{layout.Spacer{Height: unit.Dp(10)}})
 	case parser.Hr:
@@ -105,27 +103,9 @@ func (dr *DomRenderer) renderText(node *parser.Node) [][]Element {
 	}
 
 	// recursive case [phase 1]: aggregate the children elements
-	res := make([][]Element, 0)
-	// if inline-text and prev is also inline-text, put it in latest one don't append
-	for i, child := range node.Children {
-		if parser.InlineElements[child.Tag] && len(res) > 0 && i > 0 &&
-			parser.InlineElements[node.Children[i-1].Tag] {
-			childElems := dr.renderNode(child)
-			if len(childElems) > 0 {
-				res[len(res)-1] = append(res[len(res)-1], childElems[0]...)
-			}
-			if len(childElems) > 1 {
-				res = append(res, childElems[1:]...)
-			}
-
-		} else {
-			res = append(res, dr.renderNode(child)...)
-		}
-
-	}
+	res := dr.gatherElements(node)
 
 	// recursive case [phase 2]: decorate the children that are Label
-
 	// recursive case [phase 2.1]: take care of a special decorator
 	// tag "A" decorator has different signature
 	if node.Tag == parser.A {
@@ -201,6 +181,30 @@ func (dr *DomRenderer) renderText(node *parser.Node) [][]Element {
 		}
 	}
 
+	return res
+}
+
+// gaterElements recieves a node and gather all elements of the node's children
+// according the tag rule (inline, block)
+func (dr DomRenderer) gatherElements(node *parser.Node) [][]Element {
+	res := make([][]Element, 0)
+	// if inline-text and prev is also inline-text, put it in latest one don't append
+	for i, child := range node.Children {
+		if parser.InlineElements[child.Tag] && len(res) > 0 && i > 0 &&
+			parser.InlineElements[node.Children[i-1].Tag] {
+			childElems := dr.renderNode(child)
+			if len(childElems) > 0 {
+				res[len(res)-1] = append(res[len(res)-1], childElems[0]...)
+			}
+			if len(childElems) > 1 {
+				res = append(res, childElems[1:]...)
+			}
+
+		} else {
+			res = append(res, dr.renderNode(child)...)
+		}
+
+	}
 	return res
 }
 

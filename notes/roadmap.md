@@ -17,9 +17,9 @@
 - [x] Ol
 - [x] B (or Strong) 
 - [x] I (or Em) 
-- [ ] Hr 
+- [x] Hr 
 - [x] Div 
-- [ ] Span
+- [x] Span
 
 ### CSS Support
 - [ ] Text Size

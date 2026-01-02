@@ -19,6 +19,7 @@ const (
 	Meta
 
 	Div
+	Span
 
 	H1
 	H2
@@ -40,8 +41,6 @@ const (
 	Hr
 
 	Text // For no tag content or invalid tag
-
-	// TODO: Hr Span
 )
 
 var TagMap = map[string]Tag{
@@ -51,6 +50,7 @@ var TagMap = map[string]Tag{
 	"title":  Title,
 	"meta":   Meta,
 	"div":    Div,
+	"span":   Span,
 	"h1":     H1,
 	"h2":     H2,
 	"h3":     H3,
@@ -86,6 +86,8 @@ func (t Tag) String() string {
 		return "meta"
 	case Div:
 		return "div"
+	case Span:
+		return "span"
 	case H1:
 		return "h1"
 	case H2:
@@ -156,4 +158,5 @@ var InlineElements = map[Tag]bool{
 	A:    true,
 	Text: true,
 	Img:  true,
+	Span: true,
 }
