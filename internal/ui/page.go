@@ -23,8 +23,9 @@ func (p *Page) Layout(gtx C, elements [][]Element) D {
 	listUi := material.List(p.thm, p.list)
 
 	pageMargin := layout.Inset{
-		Left:  unit.Dp(5),
+		Left:  unit.Dp(10),
 		Right: unit.Dp(5),
+		Top:   unit.Dp(10),
 	}
 	return pageMargin.Layout(gtx, func(gtx C) D {
 		return listUi.Layout(gtx, len(elements), func(gtx C, idx int) D {

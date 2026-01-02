@@ -152,6 +152,10 @@ func (dr *DomRenderer) renderText(node *parser.Node) [][]ui.Label {
 		dec = ui.I
 	case parser.B:
 		dec = ui.B
+	case parser.Ul:
+		dec = ui.Ul
+	case parser.Li:
+		dec = ui.Li
 	}
 
 	for _, line := range res {
