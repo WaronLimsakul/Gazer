@@ -33,7 +33,7 @@ func Draw(window *app.Window, state *engine.State) {
 	ops := op.Ops{}
 	thm := newTheme()
 	searchBar := ui.NewSearchBar(thm)
-	hLine := ui.HorizontalLine{Thm: thm, Width: WINDOW_WIDTH}
+	hLine := ui.HorizontalLine{Thm: thm, Width: WINDOW_WIDTH, Height: unit.Dp(1)}
 	domRenderer := newDomRenderer(thm, state.Url)
 	page := ui.NewPage(thm)
 

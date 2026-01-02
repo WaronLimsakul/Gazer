@@ -37,10 +37,11 @@ const (
 	Img
 
 	Br
+	Hr
 
 	Text // For no tag content or invalid tag
 
-	// TODO: Img Ol Hr Span
+	// TODO: Hr Span
 )
 
 var TagMap = map[string]Tag{
@@ -65,6 +66,7 @@ var TagMap = map[string]Tag{
 	"li":     Li,
 	"strong": B,
 	"br":     Br,
+	"hr":     Hr,
 	"img":    Img,
 }
 
@@ -110,6 +112,8 @@ func (t Tag) String() string {
 		return "li"
 	case Br:
 		return "br"
+	case Hr:
+		return "hr"
 	case Text:
 		return "text"
 	case Img:
@@ -122,6 +126,7 @@ func (t Tag) String() string {
 // void elements = tag that always means self-close
 var VoidElements = map[Tag]bool{
 	Br:   true,
+	Hr:   true,
 	Meta: true,
 	Img:  true,
 }

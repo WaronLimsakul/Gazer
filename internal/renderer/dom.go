@@ -57,7 +57,6 @@ func (dr *DomRenderer) render(root *parser.Node) [][]Element {
 func (dr *DomRenderer) renderNode(node *parser.Node) [][]Element {
 	res := make([][]Element, 0)
 	switch node.Tag {
-	// Ignore root or html tag
 	case parser.Head:
 		return res // TODO
 	case parser.Body:
@@ -74,6 +73,8 @@ func (dr *DomRenderer) renderNode(node *parser.Node) [][]Element {
 		}
 	case parser.Br:
 		res = append(res, []Element{layout.Spacer{Height: unit.Dp(10)}})
+	case parser.Hr:
+		res = append(res, []Element{ui.HorizontalLine{Thm: dr.thm, Width: WINDOW_WIDTH, Height: unit.Dp(1)}})
 	case parser.Img:
 		img, err := ui.NewImg(node.Attrs["src"])
 		if err != nil {
