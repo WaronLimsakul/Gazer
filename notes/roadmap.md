@@ -14,7 +14,7 @@
 - [x] A 
 - [ ] Img 
 - [x] Ul, LI 
-- [ ] Ol
+- [x] Ol
 - [x] B (or Strong) 
 - [x] I (or Em) 
 - [ ] Hr 

@@ -78,6 +78,10 @@ func search(url string) (*parser.Node, error) {
 		return nil, fmt.Errorf("fetch: %v", err)
 	}
 
+	if !strings.HasPrefix(res.Header["Content-Type"][0], "text/html") {
+		return nil, fmt.Errorf("Not HTML")
+	}
+
 	resBody, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, fmt.Errorf("io.ReadAll: %v", err)
