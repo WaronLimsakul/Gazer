@@ -13,7 +13,8 @@
 ### HTML tags support
 - [x] A 
 - [ ] Img 
-- [ ] Ul, Ol, LI 
+- [x] Ul, LI 
+- [ ] Ol
 - [x] B (or Strong) 
 - [x] I (or Em) 
 - [ ] Hr 

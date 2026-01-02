@@ -19,9 +19,6 @@ type DomRenderer struct {
 	linkClickables map[*parser.Node]*widget.Clickable
 }
 
-type link struct {
-}
-
 func newDomRenderer(thm *material.Theme, url string) *DomRenderer {
 	return &DomRenderer{thm: thm, url: url,
 		selectables:    make(map[*parser.Node]*widget.Selectable),
@@ -118,7 +115,7 @@ func (dr *DomRenderer) renderText(node *parser.Node) [][]ui.Label {
 
 	// recursive case: decorate the children
 
-	// tag "A" decorator has different signature, check first
+	// tag "A" decorator has different signature
 	if node.Tag == parser.A {
 		clickable, ok := dr.linkClickables[node]
 		if !ok {
@@ -128,6 +125,27 @@ func (dr *DomRenderer) renderText(node *parser.Node) [][]ui.Label {
 		for _, line := range res {
 			for i := range line {
 				line[i] = ui.A(clickable, line[i])
+			}
+		}
+		return res
+	}
+
+	// tag "ul" and "li" don't wanna apply to everyone in a row
+
+	if node.Tag == parser.Ul {
+		for _, line := range res {
+			if len(line) > 0 {
+				line[0] = ui.Ul(line[0])
+			}
+		}
+		return res
+	}
+
+	if node.Tag == parser.Ol {
+		count := 1
+		for _, line := range res {
+			if len(line) > 0 {
+				line[0] = ui.Ol(line[0], &count)
 			}
 		}
 		return res
@@ -152,8 +170,6 @@ func (dr *DomRenderer) renderText(node *parser.Node) [][]ui.Label {
 		dec = ui.I
 	case parser.B:
 		dec = ui.B
-	case parser.Ul:
-		dec = ui.Ul
 	case parser.Li:
 		dec = ui.Li
 	}

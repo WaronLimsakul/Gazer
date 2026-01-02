@@ -3,6 +3,7 @@ package ui
 import (
 	"image"
 	"image/color"
+	"strconv"
 
 	"gioui.org/font"
 	"gioui.org/layout"
@@ -111,14 +112,25 @@ func A(clickable *widget.Clickable, label Label) Label {
 }
 
 // we don't need thm, but just try to make it like the others
-func Ul(thm *Theme, label Label) Label {
+func Ul(label Label) Label {
 	// give Li label a bullet point of not yet
-	if label.tags[parser.Li] && !label.tags[parser.Ul] {
+	if label.tags[parser.Li] && !label.tags[parser.Ul] && !label.tags[parser.Ol] {
 		label.style.Text = "• " + label.style.Text
 	}
 
 	label.margin.Left += unit.Dp(10)
 	label.tags[parser.Ul] = true
+	return label
+}
+
+func Ol(label Label, count *int) Label {
+	if label.tags[parser.Li] && !label.tags[parser.Ol] && !label.tags[parser.Ul] {
+		label.style.Text = strconv.Itoa(*count) + ". " + label.style.Text
+		*count++
+	}
+
+	label.margin.Left += unit.Dp(10)
+	label.tags[parser.Ol] = true
 	return label
 }
 
