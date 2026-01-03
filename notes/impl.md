@@ -44,6 +44,11 @@ After I introduced a tab system, I am afraid that the ui state that `DomRenderer
 if I use one dom renderer to render all the tabs I have. So I have `domRenderers := map[*ui.Tab]*DomRenderer` to store it.
 I know making a struct that hold both of them looks better, but I feel like that's overkill.
 
+#### Update 3: memory leaks concern
+The `selectables map[*Node]*Selectable` is easy to use but what if the node got cleaned? will it segfault?
+I came to realize that the node will not be cleaned since it map itself refer to it. But this will still be a (lowkey) memory leak until
+the dom renderer itself be freed.
+
 ### DOM label style inheritance
 A node like this `H1 -> i -> Text` means we want the render text to be big and italic.
 Therefore, we need style inheritance system. Decorator pattern seems like a good idea.

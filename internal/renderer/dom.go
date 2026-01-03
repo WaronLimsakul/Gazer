@@ -16,7 +16,7 @@ type DomRenderer struct {
 	thm *material.Theme
 	tab *ui.Tab
 	// All Texts' selectables elements based on its pointer.
-	// NOTE: we can use pointer because it is one url per DomRenderer
+	// Note: these pointers will not be cleaned because the map still refer to it.
 	selectables    map[*parser.Node]*widget.Selectable
 	linkClickables map[*parser.Node]*widget.Clickable
 }
@@ -57,9 +57,6 @@ func (dr *DomRenderer) render(root *parser.Node) [][]Element {
 func (dr *DomRenderer) renderNode(node *parser.Node) [][]Element {
 	res := make([][]Element, 0)
 	switch node.Tag {
-	case parser.Head:
-		dr.handleHead(node)
-		return res
 	case parser.Body:
 		res = dr.gatherElements(node)
 	case parser.Div:
@@ -181,24 +178,48 @@ func (dr *DomRenderer) renderText(node *parser.Node) [][]Element {
 	return res
 }
 
-// handleHead handle a head tag node
-func (dr *DomRenderer) handleHead(head *parser.Node) {
-	if head.Tag != parser.Head {
+// handleHead set the tabview data by processing <head> node in the DOM tree
+func (dr *DomRenderer) handleHead(root *parser.Node) {
+	head := dr.findHead(root)
+	if head == nil {
+		// TODO favicon
+		dr.tab.Title = ""
 		return
 	}
 
+	var titleSet bool
 	for _, child := range head.Children {
 		// handle title tag
 		if child.Tag == parser.Title {
 			for _, titleChild := range child.Children {
 				if titleChild.Tag == parser.Text {
+					titleSet = true
 					dr.tab.Title = titleChild.Inner
 				}
 			}
 		}
 		// TODO: meta tag
-
 	}
+
+	if !titleSet {
+		dr.tab.Title = ""
+	}
+}
+
+func (dr DomRenderer) findHead(node *parser.Node) *parser.Node {
+	if node == nil {
+		return nil
+	}
+	if node.Tag == parser.Head {
+		return node
+	}
+	for _, child := range node.Children {
+		found := dr.findHead(child)
+		if found != nil {
+			return found
+		}
+	}
+	return nil
 }
 
 // gaterElements recieves a node and gather all elements of the node's children

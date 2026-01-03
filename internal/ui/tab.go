@@ -128,9 +128,8 @@ func (t *Tab) Layout(thm *Theme, gtx C, isSelected bool) D {
 
 	title := t.Title
 	if title == "" {
-		title = "New Tab"
+		title = "New Tab" // TODO: any default name
 	}
-
 	tab := material.Button(thm, t.clickable, title)
 	// tab.TextSize = thm.TextSize * 0.75
 	tab.Inset.Left = unit.Dp(15)
