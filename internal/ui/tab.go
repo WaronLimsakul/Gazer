@@ -1,9 +1,12 @@
 package ui
 
 import (
+	"image/color"
 	"log"
 
 	"gioui.org/layout"
+	"gioui.org/op/clip"
+	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -41,6 +44,8 @@ func NewTabs(thm *Theme) *Tabs {
 }
 
 func (t Tabs) Layout(gtx C) D {
+	// TODO: use new theme system
+	tabsBarBg := color.NRGBA{R: 240, G: 240, B: 240, A: 255}
 	tabsMargin := layout.Inset{
 		Left:   unit.Dp(5),
 		Right:  unit.Dp(5),
@@ -48,8 +53,7 @@ func (t Tabs) Layout(gtx C) D {
 		Bottom: unit.Dp(5),
 	}
 	flex := layout.Flex{
-		Axis: layout.Horizontal,
-		// Spacing:   layout.SpaceStart,
+		Axis:      layout.Horizontal,
 		Alignment: layout.Middle,
 	}
 
@@ -73,8 +77,22 @@ func (t Tabs) Layout(gtx C) D {
 		Right:  10,
 	}
 	flexChildren[len(flexChildren)-1] = Rigid(newTabButton)
+	return layout.Background{}.Layout(gtx,
+		func(gtx C) D {
+			// expand horizontal
+			gtx.Constraints.Min.X = gtx.Constraints.Max.X
 
-	return tabsMargin.Layout(gtx, func(gtx C) D { return flex.Layout(gtx, flexChildren...) })
+			defer clip.Rect{Max: gtx.Constraints.Min}.Push(gtx.Ops).Pop()
+			paint.ColorOp{Color: tabsBarBg}.Add(gtx.Ops)
+			paint.PaintOp{}.Add(gtx.Ops)
+			return D{Size: gtx.Constraints.Min}
+		},
+		func(gtx C) D {
+			return tabsMargin.Layout(gtx, func(gtx C) D {
+				return flex.Layout(gtx, flexChildren...)
+			})
+		},
+	)
 }
 
 // AddTab adds a new tab to the Tabs (no select happen)
@@ -127,7 +145,7 @@ func (t *Tab) Layout(thm *Theme, gtx C) D {
 	// tab.TextSize = thm.TextSize * 0.75
 	tab.Inset.Left = unit.Dp(15)
 	tab.Inset.Right = unit.Dp(15)
-	tab.CornerRadius = unit.Dp(3)
+	tab.CornerRadius = unit.Dp(8)
 
 	if t.IsSelected {
 		// TODO: button use ContrastBg by default, so I'm forced to only use Fg.
