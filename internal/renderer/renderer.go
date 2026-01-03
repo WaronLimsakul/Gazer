@@ -35,9 +35,9 @@ func Draw(window *app.Window, state *engine.State) {
 	thm := newTheme()
 
 	hLine := ui.HorizontalLine{Thm: thm, Width: WINDOW_WIDTH, Height: unit.Dp(1)}
-	domRenderer := newDomRenderer(thm, "")
 	page := ui.NewPage(thm)
 	tabsView := ui.NewTabs(thm) // will have another "tabs" from state
+	domRenderers := map[*ui.Tab]*DomRenderer{}
 
 	for {
 		switch ev := window.Event().(type) {
@@ -57,6 +57,13 @@ func Draw(window *app.Window, state *engine.State) {
 				state.Notifier <- Noti{Type: engine.Search, TabIdx: tabsView.Selected}
 			}
 
+			// get the cached dom renderer
+			domRenderer, ok := domRenderers[tabView]
+			if !ok {
+				domRenderer = newDomRenderer(thm)
+				domRenderers[tabView] = domRenderer
+			}
+
 			// update state if user search click a link
 			jump, url := domRenderer.linkClicked(gtx)
 			if jump {
@@ -65,18 +72,21 @@ func Draw(window *app.Window, state *engine.State) {
 				state.Notifier <- Noti{Type: engine.Search, TabIdx: tabsView.Selected}
 			}
 
+			// handle clicking add tab button
 			if tabsView.AddTabClicked(gtx) {
 				tabsView.AddTab()
 				tabsView.Select(len(tabsView.Tabs) - 1)
 				state.Notifier <- Noti{Type: engine.AddTab}
 			}
 
+			// handle clicking tab
 			tabClicked := tabsView.TabClicked(gtx)
 			if tabClicked != -1 {
 				tabsView.Select(tabClicked)
 				window.Invalidate()
 			}
 
+			// start render app
 			appFlex := layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}
 			appFlexChildren := []layout.FlexChild{
 				layout.Rigid(func(gtx C) D { return tabsView.Layout(gtx) }),
@@ -90,14 +100,8 @@ func Draw(window *app.Window, state *engine.State) {
 				appFlexChildren = append(appFlexChildren, ui.Rigid(hLine))
 			}
 
-			// from now, handle website rendering
-			if domRenderer.url != tab.Url {
-				// TODO: move it to tabs or page. don't want to reset it entirely.
-				domRenderer = newDomRenderer(thm, tab.Url)
-			} else {
-				domRenderer.update(gtx)
-			}
-
+			// handle page rendering
+			domRenderer.update(gtx)
 			pageElements := domRenderer.render(tab.Root)
 			appFlexChildren = append(appFlexChildren, layout.Rigid(func(gtx C) D {
 				return page.Layout(gtx, pageElements)

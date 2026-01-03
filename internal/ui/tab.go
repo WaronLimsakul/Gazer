@@ -13,8 +13,6 @@ import (
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
-// TODO: consider further if we want "ui.Tabs" and also "engine.Tabs"
-// cuz I feel like this ui.Tabs kinda do both logic and rendering
 type Tabs struct {
 	Tabs     []*Tab
 	addTab   *widget.Clickable

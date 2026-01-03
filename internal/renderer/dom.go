@@ -14,15 +14,14 @@ import (
 
 type DomRenderer struct {
 	thm *material.Theme
-	url string
 	// All Texts' selectables elements based on its pointer.
 	// NOTE: we can use pointer because it is one url per DomRenderer
 	selectables    map[*parser.Node]*widget.Selectable
 	linkClickables map[*parser.Node]*widget.Clickable
 }
 
-func newDomRenderer(thm *material.Theme, url string) *DomRenderer {
-	return &DomRenderer{thm: thm, url: url,
+func newDomRenderer(thm *material.Theme) *DomRenderer {
+	return &DomRenderer{thm: thm,
 		selectables:    make(map[*parser.Node]*widget.Selectable),
 		linkClickables: make(map[*parser.Node]*widget.Clickable),
 	}
