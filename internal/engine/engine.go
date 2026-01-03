@@ -11,25 +11,24 @@ import (
 
 	"gioui.org/app"
 	"github.com/WaronLimsakul/Gazer/internal/parser"
+	"github.com/WaronLimsakul/Gazer/internal/ui"
 )
 
 type Notification uint8
 
 const (
 	Search Notification = iota
+	AddTab
+	ChangeTab
 )
 
 type State struct {
-	Url string
+	Tabs *ui.Tabs
 	// a channel for client to notify the engine with the event
-	Notifier  chan Notification
-	IsLoading bool
+	Notifier chan Notification
 
 	// a channel for client to check the loading progress
 	LoadProgress chan float32
-
-	// DOM root
-	Root *parser.Node
 }
 
 var client = &http.Client{Timeout: 3 * time.Second}
@@ -39,15 +38,21 @@ func Start(state *State, window *app.Window) {
 	for noti := range state.Notifier {
 		switch noti {
 		case Search:
-			state.IsLoading = true
+			tab := state.Tabs.SelectedTab()
+			tab.IsLoading = true
 			go reportProgress(state, window)
-			root, err := search(state.Url)
-			state.IsLoading = false
+			root, err := search(tab.Url)
+			tab.IsLoading = false
 			if err != nil {
 				fmt.Println("search:", err)
 				continue
 			}
-			state.Root = root
+			tab.Root = root
+			window.Invalidate()
+		case AddTab:
+			tabs := state.Tabs
+			tabs.AddTab("", nil)
+			tabs.Select(len(tabs.Tabs) - 1)
 			window.Invalidate()
 		default:
 			continue
@@ -57,6 +62,7 @@ func Start(state *State, window *app.Window) {
 
 func NewState() *State {
 	s := State{}
+	// NOTE that we have to set the *Tabs inside renderer.Draw()
 	s.Notifier = make(chan Notification)
 	s.LoadProgress = make(chan float32)
 	return &s
@@ -126,7 +132,8 @@ func reportProgress(s *State, w *app.Window) {
 	var progress float32 = 0.0
 	const rate = 0.1
 
-	for s.IsLoading {
+	tab := s.Tabs.SelectedTab()
+	for tab.IsLoading {
 		time.Sleep(25 * time.Millisecond)
 		progress += (1 - progress) * rate
 		s.LoadProgress <- progress

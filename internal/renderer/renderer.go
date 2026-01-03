@@ -32,9 +32,12 @@ type Element = ui.Element
 func Draw(window *app.Window, state *engine.State) {
 	ops := op.Ops{}
 	thm := newTheme()
-	searchBar := ui.NewSearchBar(thm)
+	if state.Tabs == nil {
+		state.Tabs = ui.NewTabs(thm)
+	}
+
 	hLine := ui.HorizontalLine{Thm: thm, Width: WINDOW_WIDTH, Height: unit.Dp(1)}
-	domRenderer := newDomRenderer(thm, state.Url)
+	domRenderer := newDomRenderer(thm, "")
 	page := ui.NewPage(thm)
 
 	for {
@@ -42,10 +45,13 @@ func Draw(window *app.Window, state *engine.State) {
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, ev)
 
-			// update state if user search something
-			searchBar.Update(gtx)
+			tab := state.Tabs.SelectedTab()
+
+			searchBar := ui.NewSearchBar(thm, tab.SearchEditor)
+
+			searchBar.RenderInteraction(gtx)
 			if searchBar.Searched(gtx) {
-				state.Url = searchBar.Text()
+				tab.Url = searchBar.Text()
 				state.Notifier <- engine.Search
 			}
 
@@ -53,26 +59,39 @@ func Draw(window *app.Window, state *engine.State) {
 			jump, url := domRenderer.linkClicked(gtx)
 			if jump {
 				searchBar.SetText(url)
-				state.Url = url
+				tab.Url = url
 				state.Notifier <- engine.Search
 			}
 
+			if state.Tabs.AddTabClicked(gtx) {
+				state.Notifier <- engine.AddTab
+			}
+
+			tabClicked := state.Tabs.TabClicked(gtx)
+			if tabClicked != -1 {
+				// TODO: I want to send the thing to engine to deal with instead
+				state.Tabs.Select(tabClicked)
+				window.Invalidate()
+			}
+
 			appFlex := layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}
-			appFlexChildren := []layout.FlexChild{rigid(searchBar), rigid(hLine)}
+			appFlexChildren := []layout.FlexChild{
+				layout.Rigid(func(gtx C) D { return state.Tabs.Layout(gtx) }),
+				ui.Rigid(searchBar), ui.Rigid(hLine)}
 			// if loading the page, replace horizontal line with progress bar
-			if state.IsLoading {
+			if tab.IsLoading {
 				progress := <-state.LoadProgress
-				appFlexChildren[1] = rigid(material.ProgressBar(thm, progress))
+				appFlexChildren[1] = ui.Rigid(material.ProgressBar(thm, progress))
 			}
 
 			// from now, handle website rendering
-			if domRenderer.url != state.Url {
-				domRenderer = newDomRenderer(thm, state.Url)
+			if domRenderer.url != tab.Url {
+				domRenderer = newDomRenderer(thm, tab.Url)
 			} else {
 				domRenderer.update(gtx)
 			}
 
-			pageElements := domRenderer.render(state.Root)
+			pageElements := domRenderer.render(tab.Root)
 			appFlexChildren = append(appFlexChildren, layout.Rigid(func(gtx C) D {
 				return page.Layout(gtx, pageElements)
 			}))

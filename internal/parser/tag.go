@@ -8,7 +8,8 @@ type Tag uint8
 // 2. Tag.String method
 // 3. VoidElements if appropriate
 // 4. TextElements if appropriate
-// 5. ui.renderNode()
+// 5. InlineElements if appropriate
+// 6. ui.renderNode()
 const (
 	Root Tag = iota // Only for root node
 	Html

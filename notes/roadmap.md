@@ -9,6 +9,7 @@
     1. It only lays what is visible
     2. Scrollable default
 - [x] Use flex for inline text e.g. `<p>hello <i>world</i></p>` should be same line
+- [ ] Tabs inside state is a UI component. It shouldn't be.
 
 ### HTML tags support
 - [x] A 
@@ -32,7 +33,8 @@
 - [ ] Light JavaScript support
 
 ### Other UI features
-- [ ] Search bar's search button 
+- [x] Search bar's search button 
 - [ ] Search bar's suggestion
-- [ ] Tab system
+- [x] Tab system
 - [ ] GioUI normal window is super ugly. Turn-off window decoration and handroll the window.
+- [ ] Custom theme system for Gazer

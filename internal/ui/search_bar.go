@@ -23,8 +23,7 @@ type SearchBar struct {
 	clickable *widget.Clickable
 }
 
-func NewSearchBar(thm *material.Theme) *SearchBar {
-	editor := setupSearchBarEditor()
+func NewSearchBar(thm *material.Theme, editor *widget.Editor) *SearchBar {
 	clickable := new(widget.Clickable)
 	return &SearchBar{thm, editor, clickable}
 }
@@ -69,17 +68,14 @@ func (s *SearchBar) Layout(gtx C) D {
 					return insideBorderMargin.Layout(gtx, srcInputUi.Layout)
 				})
 			}),
-			layout.Rigid(func(gtx C) D {
-				return layout.Spacer{Width: unit.Dp(5)}.Layout(gtx)
-			}),
-			layout.Rigid(func(gtx C) D {
-				return searchButton.Layout(gtx)
-			}),
+			Rigid(layout.Spacer{Width: unit.Dp(5)}),
+			Rigid(searchButton),
 		)
 	})
 }
 
-// Searched return a bool whether user click or press "enter" to search
+// Searched updates the editor and clickable in search bar and
+// returns a bool whether user click or press "enter" to search
 func (s *SearchBar) Searched(gtx C) bool {
 	for {
 		editorEv, ok := s.editor.Update(gtx)
@@ -110,7 +106,7 @@ func (s SearchBar) SetText(txt string) {
 }
 
 // Update updates the ui when search bar is hovered
-func (s SearchBar) Update(gtx C) {
+func (s SearchBar) RenderInteraction(gtx C) {
 	s.clickable.Update(gtx)
 	if s.clickable.Hovered() {
 		pointer.CursorPointer.Add(gtx.Ops)

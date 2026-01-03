@@ -72,3 +72,14 @@ Sometimes, renderer has to know the relationship between node to render correct 
 bullet point if and only if it is under `ul`). I solve it by let the custom `Label` widget has `tags map[Tag]bool`
 to record the inhertance of the renderee (because rendering flow down, but the widgets flow up).
 
+### Tabs system
+This is the part that I think my architecture design is at lowest part. I don't know how to separate
+between the business logic and rendering anymore. When I create `ui.Tabs`, I unintentionally put things like
+`IsSelected`, `IsLoading` and DOM `root` in the `Tab`. That makes me put `tabs` inside the `engine.State`
+and now it becomes that `State` also holds the ui component. I have to solve this
+
+### Theme UI system
+2 problems
+1. The palette that `material.Theme` gives me are not enough, I'm thinking of having `GazerTheme`
+2. If I want my component to be more flexible, I might change the universal `Layout(gtx)` into `Layout(thm, gtx)`
+    Or hybrid (keep the original but talso)

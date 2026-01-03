@@ -43,9 +43,7 @@ func (p *Page) Layout(gtx C, elements [][]Element) D {
 func elementsToFlexChildren(elements []Element) []layout.FlexChild {
 	res := make([]layout.FlexChild, len(elements))
 	for i, elem := range elements {
-		res[i] = layout.Rigid(func(gtx C) D {
-			return elem.Layout(gtx)
-		})
+		res[i] = Rigid(elem)
 	}
 	return res
 }
