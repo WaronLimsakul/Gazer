@@ -26,66 +26,73 @@ type (
 )
 
 type Element = ui.Element
+type Noti = engine.Notification
 
 // Draw takes gio's Window and Gazer's state
 // and keep redrawing according to state
 func Draw(window *app.Window, state *engine.State) {
 	ops := op.Ops{}
 	thm := newTheme()
-	if state.Tabs == nil {
-		state.Tabs = ui.NewTabs(thm)
-	}
 
 	hLine := ui.HorizontalLine{Thm: thm, Width: WINDOW_WIDTH, Height: unit.Dp(1)}
 	domRenderer := newDomRenderer(thm, "")
 	page := ui.NewPage(thm)
+	tabsView := ui.NewTabs(thm) // will have another "tabs" from state
 
 	for {
 		switch ev := window.Event().(type) {
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, ev)
 
-			tab := state.Tabs.SelectedTab()
+			tabView := tabsView.SelectedTab()
 
-			searchBar := ui.NewSearchBar(thm, tab.SearchEditor)
+			tabs := state.Tabs
+			tab := tabs[tabsView.Selected]
+
+			searchBar := ui.NewSearchBar(thm, tabView.SearchEditor)
 
 			searchBar.RenderInteraction(gtx)
 			if searchBar.Searched(gtx) {
-				tab.Url = searchBar.Text()
-				state.Notifier <- engine.Search
+				state.Tabs[tabsView.Selected].Url = searchBar.Text()
+				state.Notifier <- Noti{Type: engine.Search, TabIdx: tabsView.Selected}
 			}
 
 			// update state if user search click a link
 			jump, url := domRenderer.linkClicked(gtx)
 			if jump {
 				searchBar.SetText(url)
-				tab.Url = url
-				state.Notifier <- engine.Search
+				tab.Url = searchBar.Text()
+				state.Notifier <- Noti{Type: engine.Search, TabIdx: tabsView.Selected}
 			}
 
-			if state.Tabs.AddTabClicked(gtx) {
-				state.Notifier <- engine.AddTab
+			if tabsView.AddTabClicked(gtx) {
+				tabsView.AddTab()
+				tabsView.Select(len(tabsView.Tabs) - 1)
+				state.Notifier <- Noti{Type: engine.AddTab}
 			}
 
-			tabClicked := state.Tabs.TabClicked(gtx)
+			tabClicked := tabsView.TabClicked(gtx)
 			if tabClicked != -1 {
-				// TODO: I want to send the thing to engine to deal with instead
-				state.Tabs.Select(tabClicked)
+				tabsView.Select(tabClicked)
 				window.Invalidate()
 			}
 
 			appFlex := layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}
 			appFlexChildren := []layout.FlexChild{
-				layout.Rigid(func(gtx C) D { return state.Tabs.Layout(gtx) }),
-				ui.Rigid(searchBar), ui.Rigid(hLine)}
+				layout.Rigid(func(gtx C) D { return tabsView.Layout(gtx) }),
+				ui.Rigid(searchBar),
+			}
 			// if loading the page, replace horizontal line with progress bar
 			if tab.IsLoading {
 				progress := <-state.LoadProgress
-				appFlexChildren[1] = ui.Rigid(material.ProgressBar(thm, progress))
+				appFlexChildren = append(appFlexChildren, ui.Rigid(material.ProgressBar(thm, progress)))
+			} else {
+				appFlexChildren = append(appFlexChildren, ui.Rigid(hLine))
 			}
 
 			// from now, handle website rendering
 			if domRenderer.url != tab.Url {
+				// TODO: move it to tabs or page. don't want to reset it entirely.
 				domRenderer = newDomRenderer(thm, tab.Url)
 			} else {
 				domRenderer.update(gtx)

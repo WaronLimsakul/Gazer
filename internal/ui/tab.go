@@ -10,32 +10,25 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"github.com/WaronLimsakul/Gazer/internal/parser"
 	"golang.org/x/exp/shiny/materialdesign/icons"
 )
 
 // TODO: consider further if we want "ui.Tabs" and also "engine.Tabs"
 // cuz I feel like this ui.Tabs kinda do both logic and rendering
 type Tabs struct {
-	Tabs   []*Tab
-	addTab *widget.Clickable
-	thm    *Theme
+	Tabs     []*Tab
+	addTab   *widget.Clickable
+	thm      *Theme
+	Selected int // idx of selected tab
 }
 
 type Tab struct {
-	Url  string
-	Root *parser.Node // DOM root
-
-	IsSelected bool
-	IsLoading  bool
-
-	clickable *widget.Clickable
-
+	clickable    *widget.Clickable
 	SearchEditor *widget.Editor
 }
 
 func NewTabs(thm *Theme) *Tabs {
-	firstTab := newTab("", nil)
+	firstTab := newTab()
 	tabs := []*Tab{firstTab}
 	addTab := new(widget.Clickable)
 	res := &Tabs{Tabs: tabs, addTab: addTab, thm: thm}
@@ -60,7 +53,8 @@ func (t Tabs) Layout(gtx C) D {
 	flexChildren := make([]layout.FlexChild, len(t.Tabs)+1)
 	for i, tab := range t.Tabs {
 		flexChildren[i] = layout.Rigid(func(gtx C) D {
-			return tab.Layout(t.thm, gtx)
+			isSelected := i == t.Selected
+			return tab.Layout(t.thm, gtx, isSelected)
 		})
 	}
 
@@ -96,8 +90,8 @@ func (t Tabs) Layout(gtx C) D {
 }
 
 // AddTab adds a new tab to the Tabs (no select happen)
-func (t *Tabs) AddTab(url string, root *parser.Node) {
-	t.Tabs = append(t.Tabs, newTab(url, root))
+func (t *Tabs) AddTab() {
+	t.Tabs = append(t.Tabs, newTab())
 }
 
 func (t *Tabs) Select(idx int) bool {
@@ -105,21 +99,12 @@ func (t *Tabs) Select(idx int) bool {
 		return false
 	}
 
-	for _, tab := range t.Tabs {
-		tab.IsSelected = false
-	}
-
-	t.Tabs[idx].IsSelected = true
+	t.Selected = idx
 	return true
 }
 
 func (t Tabs) SelectedTab() *Tab {
-	for _, tab := range t.Tabs {
-		if tab.IsSelected {
-			return tab
-		}
-	}
-	return nil
+	return t.Tabs[t.Selected]
 }
 
 func (t Tabs) AddTabClicked(gtx C) bool {
@@ -136,7 +121,7 @@ func (t Tabs) TabClicked(gtx C) int {
 	return -1
 }
 
-func (t *Tab) Layout(thm *Theme, gtx C) D {
+func (t *Tab) Layout(thm *Theme, gtx C, isSelected bool) D {
 	// TODO: change the name and icon if not hard
 	tabMargin := layout.Inset{
 		Right: unit.Dp(3),
@@ -147,7 +132,7 @@ func (t *Tab) Layout(thm *Theme, gtx C) D {
 	tab.Inset.Right = unit.Dp(15)
 	tab.CornerRadius = unit.Dp(8)
 
-	if t.IsSelected {
+	if isSelected {
 		// TODO: button use ContrastBg by default, so I'm forced to only use Fg.
 		// I think we should have GazerTheme type. That's a big style revolution.
 		tab.Background = thm.Fg
@@ -156,8 +141,8 @@ func (t *Tab) Layout(thm *Theme, gtx C) D {
 	return tabMargin.Layout(gtx, func(gtx C) D { return tab.Layout(gtx) })
 }
 
-func newTab(url string, root *parser.Node) *Tab {
+func newTab() *Tab {
 	clickable := new(widget.Clickable)
 	searchEditor := setupSearchBarEditor()
-	return &Tab{Url: url, Root: root, clickable: clickable, SearchEditor: searchEditor}
+	return &Tab{clickable: clickable, SearchEditor: searchEditor}
 }

@@ -11,19 +11,23 @@ import (
 
 	"gioui.org/app"
 	"github.com/WaronLimsakul/Gazer/internal/parser"
-	"github.com/WaronLimsakul/Gazer/internal/ui"
 )
 
-type Notification uint8
+type NotificationType uint8
 
 const (
-	Search Notification = iota
+	Search NotificationType = iota
 	AddTab
 	ChangeTab
 )
 
+type Notification struct {
+	Type   NotificationType
+	TabIdx int
+}
+
 type State struct {
-	Tabs *ui.Tabs
+	Tabs []*Tab
 	// a channel for client to notify the engine with the event
 	Notifier chan Notification
 
@@ -36,11 +40,11 @@ var client = &http.Client{Timeout: 3 * time.Second}
 // Start starts the engine to watch for notification and serve the request>
 func Start(state *State, window *app.Window) {
 	for noti := range state.Notifier {
-		switch noti {
+		switch noti.Type {
 		case Search:
-			tab := state.Tabs.SelectedTab()
+			tab := state.Tabs[noti.TabIdx]
 			tab.IsLoading = true
-			go reportProgress(state, window)
+			go reportProgress(tab, window, state.LoadProgress)
 			root, err := search(tab.Url)
 			tab.IsLoading = false
 			if err != nil {
@@ -50,9 +54,7 @@ func Start(state *State, window *app.Window) {
 			tab.Root = root
 			window.Invalidate()
 		case AddTab:
-			tabs := state.Tabs
-			tabs.AddTab("", nil)
-			tabs.Select(len(tabs.Tabs) - 1)
+			state.Tabs = append(state.Tabs, &Tab{})
 			window.Invalidate()
 		default:
 			continue
@@ -62,9 +64,9 @@ func Start(state *State, window *app.Window) {
 
 func NewState() *State {
 	s := State{}
-	// NOTE that we have to set the *Tabs inside renderer.Draw()
 	s.Notifier = make(chan Notification)
 	s.LoadProgress = make(chan float32)
+	s.Tabs = []*Tab{{}}
 	return &s
 }
 
@@ -128,18 +130,17 @@ func fetch(url string) (*http.Response, error) {
 
 // reportProgress keep reporting synthetic progress to the channel in the state
 // and also keep invalidating the window intending to rerender the progress ui.
-func reportProgress(s *State, w *app.Window) {
+func reportProgress(t *Tab, w *app.Window, progressChan chan float32) {
 	var progress float32 = 0.0
 	const rate = 0.1
 
-	tab := s.Tabs.SelectedTab()
-	for tab.IsLoading {
+	for t.IsLoading {
 		time.Sleep(25 * time.Millisecond)
 		progress += (1 - progress) * rate
-		s.LoadProgress <- progress
+		progressChan <- progress
 		w.Invalidate()
 	}
 
-	s.LoadProgress <- 1.0
+	progressChan <- 1.0
 	w.Invalidate()
 }
