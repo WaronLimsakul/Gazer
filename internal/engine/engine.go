@@ -35,6 +35,12 @@ type State struct {
 	LoadProgress chan float32
 }
 
+type Tab struct {
+	Url       string
+	Root      *parser.Node
+	IsLoading bool
+}
+
 var client = &http.Client{Timeout: 3 * time.Second}
 
 // Start starts the engine to watch for notification and serve the request>

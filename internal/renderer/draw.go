@@ -61,7 +61,7 @@ func Draw(window *app.Window, state *engine.State) {
 			// get the cached dom renderer
 			domRenderer, ok := domRenderers[tabView]
 			if !ok {
-				domRenderer = newDomRenderer(thm)
+				domRenderer = newDomRenderer(thm, tabView)
 				domRenderers[tabView] = domRenderer
 			}
 

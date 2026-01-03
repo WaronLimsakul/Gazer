@@ -23,6 +23,7 @@ type Tabs struct {
 type Tab struct {
 	clickable    *widget.Clickable
 	SearchEditor *widget.Editor
+	Title        string
 }
 
 func NewTabs(thm *Theme) *Tabs {
@@ -120,11 +121,17 @@ func (t Tabs) TabClicked(gtx C) int {
 }
 
 func (t *Tab) Layout(thm *Theme, gtx C, isSelected bool) D {
-	// TODO: change the name and icon if not hard
+	// TODO: change icon if not hard
 	tabMargin := layout.Inset{
 		Right: unit.Dp(3),
 	}
-	tab := material.Button(thm, t.clickable, "New Tab")
+
+	title := t.Title
+	if title == "" {
+		title = "New Tab"
+	}
+
+	tab := material.Button(thm, t.clickable, title)
 	// tab.TextSize = thm.TextSize * 0.75
 	tab.Inset.Left = unit.Dp(15)
 	tab.Inset.Right = unit.Dp(15)

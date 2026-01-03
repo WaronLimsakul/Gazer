@@ -14,14 +14,15 @@ import (
 
 type DomRenderer struct {
 	thm *material.Theme
+	tab *ui.Tab
 	// All Texts' selectables elements based on its pointer.
 	// NOTE: we can use pointer because it is one url per DomRenderer
 	selectables    map[*parser.Node]*widget.Selectable
 	linkClickables map[*parser.Node]*widget.Clickable
 }
 
-func newDomRenderer(thm *material.Theme) *DomRenderer {
-	return &DomRenderer{thm: thm,
+func newDomRenderer(thm *material.Theme, tab *ui.Tab) *DomRenderer {
+	return &DomRenderer{thm: thm, tab: tab,
 		selectables:    make(map[*parser.Node]*widget.Selectable),
 		linkClickables: make(map[*parser.Node]*widget.Clickable),
 	}
@@ -57,13 +58,10 @@ func (dr *DomRenderer) renderNode(node *parser.Node) [][]Element {
 	res := make([][]Element, 0)
 	switch node.Tag {
 	case parser.Head:
-		return res // TODO
+		dr.handleHead(node)
+		return res
 	case parser.Body:
 		res = dr.gatherElements(node)
-	case parser.Title:
-		return res // TODO
-	case parser.Meta:
-		return res // TODO
 	case parser.Div:
 		res = dr.gatherElements(node)
 	case parser.Span:
@@ -181,6 +179,26 @@ func (dr *DomRenderer) renderText(node *parser.Node) [][]Element {
 	}
 
 	return res
+}
+
+// handleHead handle a head tag node
+func (dr *DomRenderer) handleHead(head *parser.Node) {
+	if head.Tag != parser.Head {
+		return
+	}
+
+	for _, child := range head.Children {
+		// handle title tag
+		if child.Tag == parser.Title {
+			for _, titleChild := range child.Children {
+				if titleChild.Tag == parser.Text {
+					dr.tab.Title = titleChild.Inner
+				}
+			}
+		}
+		// TODO: meta tag
+
+	}
 }
 
 // gaterElements recieves a node and gather all elements of the node's children
