@@ -39,6 +39,11 @@ Gio need me to hold the state of "selectable" text separate from the material (n
 #### Update 1: `clickables`
 Now I also have `linkClickables` for storing the state of the clickable anchor inside `DomRenderer`
 
+#### Update 2: `domRenderers`
+After I introduced a tab system, I am afraid that the ui state that `DomRenderer` holds will fighting each other
+if I use one dom renderer to render all the tabs I have. So I have `domRenderers := map[*ui.Tab]*DomRenderer` to store it.
+I know making a struct that hold both of them looks better, but I feel like that's overkill.
+
 ### DOM label style inheritance
 A node like this `H1 -> i -> Text` means we want the render text to be big and italic.
 Therefore, we need style inheritance system. Decorator pattern seems like a good idea.
@@ -77,6 +82,13 @@ This is the part that I think my architecture design is at lowest part. I don't 
 between the business logic and rendering anymore. When I create `ui.Tabs`, I unintentionally put things like
 `IsSelected`, `IsLoading` and DOM `root` in the `Tab`. That makes me put `tabs` inside the `engine.State`
 and now it becomes that `State` also holds the ui component. I have to solve this
+
+#### Update 1: separate `ui.Tab` and `engine.Tab`
+I want the state to only hold the business data. So I pull `url` and `root` out of `ui.Tab` and create `engine.Tab` to hold them.
+Now I hold `Tabs []*engine.Tab` in the state and let the `engine.Start` handle it.
+
+One thing I realize is that `ui.Tab` rendering system doesn't depend on those fields I pulled out at all. Good call.
+However, one problem is that I still have to keep the `state.Tabs` and `tabs` inside `renderer.Draw` in sync (e.g. same amount, and same order).
 
 ### Theme UI system
 2 problems

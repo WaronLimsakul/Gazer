@@ -35,7 +35,7 @@ func Draw(window *app.Window, state *engine.State) {
 	thm := newTheme()
 
 	hLine := ui.HorizontalLine{Thm: thm, Width: WINDOW_WIDTH, Height: unit.Dp(1)}
-	page := ui.NewPage(thm)
+	page := ui.NewPage(thm)     // page doesn't depend on the tab
 	tabsView := ui.NewTabs(thm) // will have another "tabs" from state
 	domRenderers := map[*ui.Tab]*DomRenderer{}
 
@@ -51,6 +51,7 @@ func Draw(window *app.Window, state *engine.State) {
 
 			searchBar := ui.NewSearchBar(thm, tabView.SearchEditor)
 
+			// handle search bar event
 			searchBar.RenderInteraction(gtx)
 			if searchBar.Searched(gtx) {
 				state.Tabs[tabsView.Selected].Url = searchBar.Text()
@@ -64,7 +65,7 @@ func Draw(window *app.Window, state *engine.State) {
 				domRenderers[tabView] = domRenderer
 			}
 
-			// update state if user search click a link
+			// handle link clicking event
 			jump, url := domRenderer.linkClicked(gtx)
 			if jump {
 				searchBar.SetText(url)
@@ -92,6 +93,7 @@ func Draw(window *app.Window, state *engine.State) {
 				layout.Rigid(func(gtx C) D { return tabsView.Layout(gtx) }),
 				ui.Rigid(searchBar),
 			}
+
 			// if loading the page, replace horizontal line with progress bar
 			if tab.IsLoading {
 				progress := <-state.LoadProgress
