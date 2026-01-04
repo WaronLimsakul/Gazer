@@ -148,13 +148,15 @@ func (t *Tab) Layout(thm *Theme, gtx C, isSelected bool, url string) D {
 	// get favicon from the cache
 	favicon, ok := t.favIcons[url]
 	if !ok {
-		fetched, err := t.getFavIcon(url)
-		if err != nil {
-			favicon = defaultFavIcon
-		} else {
-			favicon = fetched
-			t.favIcons[url] = fetched
-		}
+		fetched, _ := t.getFavIcon(url)
+		favicon = fetched
+		// even if getFavIcon fail, we still cache nil which means it fail
+		t.favIcons[url] = fetched
+	}
+
+	// if we already try and failed, then use default favicon
+	if favicon == nil {
+		favicon = defaultFavIcon
 	}
 
 	return tabMargin.Layout(gtx, func(gtx C) D {
