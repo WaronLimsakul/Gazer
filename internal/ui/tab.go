@@ -33,7 +33,8 @@ type Tab struct {
 	clickable    *widget.Clickable
 	SearchEditor *widget.Editor
 	Title        string
-	// icon         image.Image
+	// map url to fetched favicon (cache)
+	favIcons map[string]image.Image
 }
 
 func NewTabs(thm *Theme) *Tabs {
@@ -144,9 +145,16 @@ func (t *Tab) Layout(thm *Theme, gtx C, isSelected bool, url string) D {
 		title = "New Tab"
 	}
 
-	favicon, err := t.getFavIcon(url)
-	if err != nil {
-		favicon = defaultFavIcon
+	// get favicon from the cache
+	favicon, ok := t.favIcons[url]
+	if !ok {
+		fetched, err := t.getFavIcon(url)
+		if err != nil {
+			favicon = defaultFavIcon
+		} else {
+			favicon = fetched
+			t.favIcons[url] = fetched
+		}
 	}
 
 	return tabMargin.Layout(gtx, func(gtx C) D {
@@ -237,5 +245,5 @@ func (t Tab) getFavIcon(raw string) (image.Image, error) {
 func newTab() *Tab {
 	clickable := new(widget.Clickable)
 	searchEditor := setupSearchBarEditor()
-	return &Tab{clickable: clickable, SearchEditor: searchEditor}
+	return &Tab{clickable: clickable, SearchEditor: searchEditor, favIcons: make(map[string]image.Image)}
 }

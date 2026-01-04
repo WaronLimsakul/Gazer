@@ -13,8 +13,10 @@ import (
 )
 
 type DomRenderer struct {
-	thm *material.Theme
-	tab *ui.Tab
+	// TODO NOW: make a cache, big website can't be render every single time.
+	thm   *material.Theme
+	tab   *ui.Tab
+	cache map[*parser.Node]*[][]Element
 	// All Texts' selectables elements based on its pointer.
 	// Note: these pointers will not be cleaned because the map still refer to it.
 	selectables    map[*parser.Node]*widget.Selectable
@@ -22,7 +24,7 @@ type DomRenderer struct {
 }
 
 func newDomRenderer(thm *material.Theme, tab *ui.Tab) *DomRenderer {
-	return &DomRenderer{thm: thm, tab: tab,
+	return &DomRenderer{thm: thm, tab: tab, cache: make(map[*parser.Node]*[][]Element),
 		selectables:    make(map[*parser.Node]*widget.Selectable),
 		linkClickables: make(map[*parser.Node]*widget.Clickable),
 	}
@@ -33,10 +35,13 @@ func newDomRenderer(thm *material.Theme, tab *ui.Tab) *DomRenderer {
 // Second layer (inner) is each element in that line from left to right.
 func (dr *DomRenderer) render(root *parser.Node) [][]Element {
 	res := make([][]Element, 0)
-
 	// expect to be Root node
 	if root == nil || root.Tag != parser.Root {
 		return res
+	}
+
+	if cachedRes, ok := dr.cache[root]; ok {
+		return *cachedRes
 	}
 
 	// expect root node to only have HTML tag
@@ -50,6 +55,7 @@ func (dr *DomRenderer) render(root *parser.Node) [][]Element {
 		res = append(res, dr.renderNode(child)...)
 	}
 
+	dr.cache[root] = &res
 	return res
 }
 
