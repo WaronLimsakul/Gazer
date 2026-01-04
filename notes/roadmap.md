@@ -27,6 +27,9 @@
 - [x] Div 
 - [x] Span
 - [ ] Section
+- [ ] Button
+- [ ] Input
+- [ ] Table, Tr, Td, Th
 
 ### CSS Support
 - [ ] Text Size

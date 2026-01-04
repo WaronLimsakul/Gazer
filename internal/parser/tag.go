@@ -21,6 +21,7 @@ const (
 
 	Div
 	Span
+	Section
 
 	H1
 	H2
@@ -45,30 +46,31 @@ const (
 )
 
 var TagMap = map[string]Tag{
-	"html":   Html,
-	"head":   Head,
-	"body":   Body,
-	"title":  Title,
-	"meta":   Meta,
-	"div":    Div,
-	"span":   Span,
-	"h1":     H1,
-	"h2":     H2,
-	"h3":     H3,
-	"h4":     H4,
-	"h5":     H5,
-	"p":      P,
-	"i":      I,
-	"em":     I,
-	"b":      B,
-	"a":      A,
-	"ul":     Ul,
-	"ol":     Ol,
-	"li":     Li,
-	"strong": B,
-	"br":     Br,
-	"hr":     Hr,
-	"img":    Img,
+	"html":    Html,
+	"head":    Head,
+	"body":    Body,
+	"title":   Title,
+	"meta":    Meta,
+	"div":     Div,
+	"span":    Span,
+	"section": Section,
+	"h1":      H1,
+	"h2":      H2,
+	"h3":      H3,
+	"h4":      H4,
+	"h5":      H5,
+	"p":       P,
+	"i":       I,
+	"em":      I,
+	"b":       B,
+	"a":       A,
+	"ul":      Ul,
+	"ol":      Ol,
+	"li":      Li,
+	"strong":  B,
+	"br":      Br,
+	"hr":      Hr,
+	"img":     Img,
 }
 
 func (t Tag) String() string {
@@ -89,6 +91,8 @@ func (t Tag) String() string {
 		return "div"
 	case Span:
 		return "span"
+	case Section:
+		return "section"
 	case H1:
 		return "h1"
 	case H2:
