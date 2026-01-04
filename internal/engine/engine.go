@@ -64,6 +64,7 @@ func Start(state *State, window *app.Window) {
 			cachedRoot, ok := tabCache[tab.Url]
 			if ok {
 				tab.Root = cachedRoot
+				window.Invalidate()
 				continue
 			}
 
@@ -134,7 +135,6 @@ func search(url string) (*parser.Node, error) {
 	root, err := parser.Parse(string(resBody))
 	if err != nil {
 		return nil, fmt.Errorf("parse: %v", err)
-
 	}
 	log.Println("parse:\n", *root)
 	return root, nil

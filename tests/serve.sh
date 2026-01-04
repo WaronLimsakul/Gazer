@@ -1,6 +1,5 @@
 #!/bin/bash
 # serve.sh - Usage: ./serve.sh testResponseBody.txt [port]
-
 BODY_FILE="$1"
 PORT="${2:-1234}"
 
@@ -14,11 +13,11 @@ LENGTH=${#BODY}
 
 while true; do
     (
-        echo "HTTP/1.1 200 OK"
-        echo "Content-Type: text/html"
-        echo "Content-Length: $LENGTH"
-        echo "Connection: close"
-        echo ""
+        echo -e "HTTP/1.1 200 OK\r"
+        echo -e "Content-Type: text/html\r"
+        echo -e "Content-Length: $LENGTH\r"
+        echo -e "Connection: close\r"
+        echo -e "\r"
         echo -n "$BODY"
     ) | nc -l -p "$PORT"
 done
