@@ -90,7 +90,7 @@ func Draw(window *app.Window, state *engine.State) {
 			// start render app
 			appFlex := layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}
 			appFlexChildren := []layout.FlexChild{
-				layout.Rigid(func(gtx C) D { return tabsView.Layout(gtx) }),
+				layout.Rigid(func(gtx C) D { return tabsView.Layout(gtx, tabs) }),
 				ui.Rigid(searchBar),
 			}
 

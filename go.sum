@@ -9,6 +9,8 @@ github.com/go-text/typesetting v0.3.0 h1:OWCgYpp8njoxSRpwrdd1bQOxdjOXDj9Rqart9ML
 github.com/go-text/typesetting v0.3.0/go.mod h1:qjZLkhRgOEYMhU9eHBr3AR4sfnGJvOXNLt8yRAySFuY=
 github.com/go-text/typesetting-utils v0.0.0-20241103174707-87a29e9e6066 h1:qCuYC+94v2xrb1PoS4NIDe7DGYtLnU2wWiQe9a1B1c0=
 github.com/go-text/typesetting-utils v0.0.0-20241103174707-87a29e9e6066/go.mod h1:DDxDdQEnB70R8owOx3LVpEFvpMK9eeH1o2r0yZhFI9o=
+github.com/mat/besticon v3.12.0+incompatible h1:1KTD6wisfjfnX+fk9Kx/6VEZL+MAW1LhCkL9Q47H9Bg=
+github.com/mat/besticon v3.12.0+incompatible/go.mod h1:mA1auQYHt6CW5e7L9HJLmqVQC8SzNk2gVwouO0AbiEU=
 golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0 h1:R84qjqJb5nVJMxqWYb3np9L5ZsaDtB+a39EqjV0JSUM=
 golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0/go.mod h1:S9Xr4PYopiDyqSyp5NjCrhFrqg6A5zA2E/iPHPhqnS8=
 golang.org/x/exp/shiny v0.0.0-20250408133849-7e4ce0ab07d0 h1:tMSqXTK+AQdW3LpCbfatHSRPHeW6+2WuxaVQuHftn80=

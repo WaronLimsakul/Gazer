@@ -46,6 +46,7 @@ func NewImg(src string) (*Img, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
 	img, format, err := image.Decode(res.Body)
 	if err != nil {
@@ -56,7 +57,7 @@ func NewImg(src string) (*Img, error) {
 }
 
 func (i Img) Layout(gtx C) D {
-	// not sure
+	// TODO: rescale a bit to fit (like can't be bigger than screen)
 	imgOp := paint.NewImageOp(i.img)
 	size := imgOp.Size()
 	imgOp.Add(gtx.Ops)

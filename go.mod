@@ -4,6 +4,7 @@ go 1.25.1
 
 require (
 	gioui.org v0.9.0
+	github.com/mat/besticon v3.12.0+incompatible
 	golang.org/x/exp/shiny v0.0.0-20250408133849-7e4ce0ab07d0
 )
 

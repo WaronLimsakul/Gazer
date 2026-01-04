@@ -10,6 +10,11 @@ I just realize don't there is `t.Run()` which makes subtests very clean and easy
 ### `layout.Context`
 I just realize that I have `gtx.Constraints.Constrain()`, easy way to sneak custom drawing in.
 
+### `op.Record(*op.Ops)`
+This one is super OP. I can do `macro := op.Record(gtx.Ops)` then do whatever I want with the `gtx` and all
+the operations will be recorded to `macro`. Then I can do `savedOp := macro.Stop()` to stop recording and have all
+the operations saved into `savedOp`. I use it to check the size of the content of component then draw a background with that size.
+
 ### Redesign `parser.Node`
 Initially, design a DOM node to have a field `Inner string` as inner content but then I realize that something like
 ```html

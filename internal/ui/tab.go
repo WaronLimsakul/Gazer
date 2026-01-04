@@ -1,16 +1,25 @@
 package ui
 
 import (
+	"fmt"
+	"image"
 	"image/color"
 	"log"
+	"net/http"
+	urlPkg "net/url"
+	"strings"
 
 	"gioui.org/layout"
+	"gioui.org/op"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/WaronLimsakul/Gazer/internal/engine"
 	"golang.org/x/exp/shiny/materialdesign/icons"
+
+	_ "github.com/mat/besticon/ico"
 )
 
 type Tabs struct {
@@ -24,6 +33,7 @@ type Tab struct {
 	clickable    *widget.Clickable
 	SearchEditor *widget.Editor
 	Title        string
+	// icon         image.Image
 }
 
 func NewTabs(thm *Theme) *Tabs {
@@ -35,7 +45,7 @@ func NewTabs(thm *Theme) *Tabs {
 	return res
 }
 
-func (t Tabs) Layout(gtx C) D {
+func (t Tabs) Layout(gtx C, stateTabs []*engine.Tab) D {
 	// TODO: use new theme system
 	tabsBarBg := color.NRGBA{R: 240, G: 240, B: 240, A: 255}
 	tabsMargin := layout.Inset{
@@ -53,7 +63,11 @@ func (t Tabs) Layout(gtx C) D {
 	for i, tab := range t.Tabs {
 		flexChildren[i] = layout.Rigid(func(gtx C) D {
 			isSelected := i == t.Selected
-			return tab.Layout(t.thm, gtx, isSelected)
+			var url string
+			if i < len(stateTabs) {
+				url = stateTabs[i].Url
+			}
+			return tab.Layout(t.thm, gtx, isSelected, url)
 		})
 	}
 
@@ -120,29 +134,104 @@ func (t Tabs) TabClicked(gtx C) int {
 	return -1
 }
 
-func (t *Tab) Layout(thm *Theme, gtx C, isSelected bool) D {
-	// TODO: change icon if not hard
+func (t *Tab) Layout(thm *Theme, gtx C, isSelected bool, url string) D {
 	tabMargin := layout.Inset{
 		Right: unit.Dp(3),
 	}
 
 	title := t.Title
 	if title == "" {
-		title = "New Tab" // TODO: any default name
-	}
-	tab := material.Button(thm, t.clickable, title)
-	// tab.TextSize = thm.TextSize * 0.75
-	tab.Inset.Left = unit.Dp(15)
-	tab.Inset.Right = unit.Dp(15)
-	tab.CornerRadius = unit.Dp(8)
-
-	if isSelected {
-		// TODO: button use ContrastBg by default, so I'm forced to only use Fg.
-		// I think we should have GazerTheme type. That's a big style revolution.
-		tab.Background = thm.Fg
+		title = "New Tab"
 	}
 
-	return tabMargin.Layout(gtx, func(gtx C) D { return tab.Layout(gtx) })
+	favicon, err := t.getFavIcon(url)
+	if err != nil {
+		favicon = defaultFavIcon
+	}
+
+	return tabMargin.Layout(gtx, func(gtx C) D {
+		return t.clickable.Layout(gtx, func(gtx C) D {
+			// check the tab content size first
+			macro := op.Record(gtx.Ops)
+			tabContentDim := layout.Inset{
+				Top: unit.Dp(8), Bottom: unit.Dp(8),
+				Left: unit.Dp(15), Right: unit.Dp(15),
+			}.Layout(gtx, func(gtx C) D {
+				return layout.Flex{
+					Axis:      layout.Horizontal,
+					Alignment: layout.Middle,
+				}.Layout(gtx,
+					layout.Rigid(func(gtx C) D {
+						if favicon == nil {
+							return D{}
+						}
+						gtx.Constraints.Max = image.Point{X: gtx.Dp(16), Y: gtx.Dp(16)}
+						img := widget.Image{
+							Src: paint.NewImageOp(favicon),
+							Fit: widget.Contain,
+						}
+						return img.Layout(gtx)
+					}),
+					layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout),
+					layout.Rigid(func(gtx C) D {
+						label := material.Body1(thm, title)
+						if isSelected {
+							label.Color = thm.Bg
+						}
+						return label.Layout(gtx)
+					}),
+				)
+			})
+			tabContentOp := macro.Stop()
+
+			// draw background
+			tabBgColor := thm.Bg
+			if isSelected {
+				tabBgColor = thm.Fg
+			}
+			tabShape := clip.UniformRRect(image.Rectangle{Max: tabContentDim.Size}, gtx.Dp(8))
+			defer tabShape.Push(gtx.Ops).Pop()
+			paint.Fill(gtx.Ops, tabBgColor)
+
+			// draw the content on top
+			tabContentOp.Add(gtx.Ops)
+
+			return tabContentDim
+		})
+	})
+}
+
+func (t Tab) getFavIcon(raw string) (image.Image, error) {
+	if raw == "" {
+		return nil, fmt.Errorf("Empty raw string")
+	}
+
+	if !strings.HasPrefix(raw, "https://") && !strings.HasPrefix(raw, "http://") {
+		raw = "https://" + raw
+	}
+
+	url, err := urlPkg.Parse(raw)
+	if err != nil {
+		return nil, fmt.Errorf("url.Parse: %v", err)
+	}
+
+	url.RawQuery = ""
+	url.RawFragment = ""
+	url.Path = "/favicon.ico"
+
+	reqUrl := url.String()
+	res, err := http.Get(reqUrl)
+	if err != nil {
+		return nil, fmt.Errorf("http.Get: %v", err)
+	}
+	defer res.Body.Close()
+
+	img, _, err := image.Decode(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("image.Decode: %v", err)
+	}
+
+	return img, nil
 }
 
 func newTab() *Tab {
