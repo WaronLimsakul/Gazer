@@ -29,10 +29,14 @@ So in the `for` loop, I `switch` the current character first and then `switch` t
 It works but so hard to read. So I flipped the order to reflect the state machine, easier to read now.
 
 ### High-level Architecture
-
 2 main components (package): `engine` and `renderer`
 - `renderer` (`renderer.Draw`) uses `engine.State.Notifier` channel to notify the engine to do something
 - `engine` (`engine.start`) uses `app.Window.Invalidate` to trigger redraw 
+
+#### Update 1: MVC
+I do further research on what other people have done for architecture. I found that there is something call MVC (Model-View-Controller)
+which I like the idea of letting the Model (business logic processor unit) handles the app main state. Other than that
+my `renderer.Draw` should be View and Controller since I notify the engine directly.
 
 ### DOM rendering: tag heirachy
 Somehow, `p` inside `h1` cannot override `h1` while `h2` can. So I don't want this confusing heirachy. I will just separate

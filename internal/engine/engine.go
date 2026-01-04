@@ -24,6 +24,7 @@ const (
 type Notification struct {
 	Type   NotificationType
 	TabIdx int
+	Url    string
 }
 
 type State struct {
@@ -45,10 +46,27 @@ var client = &http.Client{Timeout: 3 * time.Second}
 
 // Start starts the engine to watch for notification and serve the request>
 func Start(state *State, window *app.Window) {
+	cache := make(map[*Tab]map[string]*parser.Node)
+
 	for noti := range state.Notifier {
+		// TODO: might spin up go routine for each job
 		switch noti.Type {
 		case Search:
 			tab := state.Tabs[noti.TabIdx]
+
+			tabCache, ok := cache[tab]
+			if !ok {
+				tabCache = make(map[string]*parser.Node)
+				cache[tab] = tabCache
+			}
+
+			tab.Url = noti.Url
+			cachedRoot, ok := tabCache[tab.Url]
+			if ok {
+				tab.Root = cachedRoot
+				continue
+			}
+
 			tab.IsLoading = true
 			go reportProgress(tab, window, state.LoadProgress)
 			root, err := search(tab.Url)
@@ -57,6 +75,8 @@ func Start(state *State, window *app.Window) {
 				fmt.Println("search:", err)
 				continue
 			}
+
+			tabCache[tab.Url] = root
 			tab.Root = root
 			window.Invalidate()
 		case AddTab:
@@ -77,7 +97,7 @@ func NewState() *State {
 }
 
 // search fetches the url and parse the DOM tree
-// and the root of DOM tree and error if exists
+// then return the root of DOM tree and error if exists
 func search(url string) (*parser.Node, error) {
 	if len(url) == 0 {
 		return nil, fmt.Errorf("Empty URL")

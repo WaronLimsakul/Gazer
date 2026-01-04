@@ -13,12 +13,14 @@ import (
 )
 
 type DomRenderer struct {
-	// TODO NOW: make a cache, big website can't be render every single time.
-	thm   *material.Theme
-	tab   *ui.Tab
+	thm *material.Theme
+	tab *ui.Tab
+	// Cache the matrix of elements with root node pointer.
+	// Can cache it because engine also cache by pointer
+	// (same url + same tab = same root ptr).
 	cache map[*parser.Node]*[][]Element
 	// All Texts' selectables elements based on its pointer.
-	// Note: these pointers will not be cleaned because the map still refer to it.
+	// These pointers will not be cleaned because the map still refer to it.
 	selectables    map[*parser.Node]*widget.Selectable
 	linkClickables map[*parser.Node]*widget.Clickable
 }
@@ -188,7 +190,6 @@ func (dr *DomRenderer) renderText(node *parser.Node) [][]Element {
 func (dr *DomRenderer) handleHead(root *parser.Node) {
 	head := dr.findHead(root)
 	if head == nil {
-		// TODO favicon
 		dr.tab.Title = ""
 		return
 	}

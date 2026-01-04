@@ -54,8 +54,11 @@ func Draw(window *app.Window, state *engine.State) {
 			// handle search bar event
 			searchBar.RenderInteraction(gtx)
 			if searchBar.Searched(gtx) {
-				state.Tabs[tabsView.Selected].Url = searchBar.Text()
-				state.Notifier <- Noti{Type: engine.Search, TabIdx: tabsView.Selected}
+				state.Notifier <- Noti{
+					Type:   engine.Search,
+					TabIdx: tabsView.Selected,
+					Url:    searchBar.Text(),
+				}
 			}
 
 			// get the cached dom renderer
@@ -69,8 +72,8 @@ func Draw(window *app.Window, state *engine.State) {
 			jump, url := domRenderer.linkClicked(gtx)
 			if jump {
 				searchBar.SetText(url)
-				tab.Url = searchBar.Text()
-				state.Notifier <- Noti{Type: engine.Search, TabIdx: tabsView.Selected}
+				state.Notifier <- Noti{Type: engine.Search,
+					TabIdx: tabsView.Selected, Url: url}
 			}
 
 			// handle clicking add tab button

@@ -9,7 +9,12 @@
     1. It only lays what is visible
     2. Scrollable default
 - [x] Use flex for inline text e.g. `<p>hello <i>world</i></p>` should be same line
-- [ ] Tabs inside state is a UI component. It shouldn't be.
+- [x] Tabs inside state is a UI component. It shouldn't be.
+- [x] Learn the MVC arch
+- [ ] Entire theme set
+- [ ] Some metadata support
+- [ ] Tab tooltip
+- [ ] CSS support structure
 
 ### HTML tags support
 - [x] A 
@@ -21,6 +26,7 @@
 - [x] Hr 
 - [x] Div 
 - [x] Span
+- [ ] Section
 
 ### CSS Support
 - [ ] Text Size
