@@ -74,6 +74,10 @@ I just realize that in case that there is other type of node that is not text no
 of the text node, I have to call the `renderNode` inside `renderTextNode` anyway. So I might as well
 just let `renderTextNode` return `[][]Element`. Now it's like a lowkey mutual recursion.
 
+#### Update 2: prefix
+I used to just sneak "• " in the `Label` content. But sine I introduced button, I can't do that, otherwise the button 
+border will takes the bullet point out of it as well.
+
 ### Use `List` to layout element instead of `Flex`
 At first, I only use how to use `Flex` container but I see `List` is a better choice because
 1. It lays out only what is visible (don't have to waste time computing what we can't see)

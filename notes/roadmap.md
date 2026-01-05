@@ -29,7 +29,7 @@
 - [x] Div 
 - [x] Span
 - [x] Section
-- [ ] Button
+- [x] Button
 - [ ] Input
 - [ ] Table, Tr, Td, Th
 

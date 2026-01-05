@@ -35,36 +35,49 @@ type Label struct {
 	border     widget.Border
 	bgColor    color.NRGBA
 	clickable  *widget.Clickable
-	// hoverCursor
-	style LabelStyle
+	// for <li>: e.g. prefix "•"
+	prefix string
+	style  LabelStyle
 }
 
 func (l Label) Layout(gtx C) D {
 	return l.margin.Layout(gtx, func(gtx C) D {
-		return l.border.Layout(gtx, func(gtx C) D {
-			var contentSize D
-			var contentOp op.CallOp
-			contentWidget := func(gtx C) D {
-				return l.textMargin.Layout(gtx, func(gtx C) D {
-					// LabelStyle.Layout try to takes just what it need by default.
-					// However, passed gtx might just give min = max = max
-					gtx.Constraints.Min = image.Point{}
-					return l.style.Layout(gtx)
-				})
-			}
-			macro := op.Record(gtx.Ops)
-			if l.clickable != nil {
-				contentSize = l.clickable.Layout(gtx, contentWidget)
-			} else {
-				contentSize = contentWidget(gtx)
-			}
-			contentOp = macro.Stop()
-			rrect := clip.UniformRRect(image.Rectangle{Max: contentSize.Size}, gtx.Dp(l.border.CornerRadius))
-			defer rrect.Push(gtx.Ops).Pop()
-			paint.Fill(gtx.Ops, l.bgColor)
-			contentOp.Add(gtx.Ops)
-			return D{Size: contentSize.Size}
-		})
+		normalLabel := func(gtx C) D {
+			return l.border.Layout(gtx, func(gtx C) D {
+				var contentSize D
+				var contentOp op.CallOp
+				contentWidget := func(gtx C) D {
+					return l.textMargin.Layout(gtx, func(gtx C) D {
+						// LabelStyle.Layout try to takes just what it need by default.
+						// However, passed gtx might just give min = max = max
+						gtx.Constraints.Min = image.Point{}
+						return l.style.Layout(gtx)
+					})
+				}
+				macro := op.Record(gtx.Ops)
+				if l.clickable != nil {
+					contentSize = l.clickable.Layout(gtx, contentWidget)
+				} else {
+					contentSize = contentWidget(gtx)
+				}
+				contentOp = macro.Stop()
+				rrect := clip.UniformRRect(image.Rectangle{Max: contentSize.Size}, gtx.Dp(l.border.CornerRadius))
+				defer rrect.Push(gtx.Ops).Pop()
+				paint.Fill(gtx.Ops, l.bgColor)
+				contentOp.Add(gtx.Ops)
+				return D{Size: contentSize.Size}
+			})
+		}
+		if len(l.prefix) == 0 {
+			return normalLabel(gtx)
+		} else {
+			prefixStyle := l.style
+			prefixStyle.Text = l.prefix
+			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
+				Rigid(prefixStyle),
+				layout.Rigid(normalLabel),
+			)
+		}
 	})
 }
 
@@ -140,8 +153,7 @@ func A(clickable *widget.Clickable, label Label) Label {
 func Ul(label Label) Label {
 	// give Li label a bullet point of not yet
 	if label.tags[parser.Li] && !label.tags[parser.Ul] && !label.tags[parser.Ol] {
-		// TODO NOW: it will be in button content if <li><button>hello</button></li>
-		label.style.Text = "• " + label.style.Text
+		label.prefix = "• "
 	}
 
 	label.margin.Left += unit.Dp(10)
@@ -151,7 +163,7 @@ func Ul(label Label) Label {
 
 func Ol(label Label, count *int) Label {
 	if label.tags[parser.Li] && !label.tags[parser.Ol] && !label.tags[parser.Ul] {
-		label.style.Text = strconv.Itoa(*count) + ". " + label.style.Text
+		label.prefix = strconv.Itoa(*count) + ". "
 		*count++
 	}
 
