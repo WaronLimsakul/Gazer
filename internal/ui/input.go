@@ -47,6 +47,7 @@ func NewInput(thm *Theme, inputType InputType, editor *widget.Editor, hint strin
 		editor.InputHint = key.HintPassword
 	case NumberInput:
 		editor.InputHint = key.HintNumeric
+		editor.Filter = "0123456789"
 	}
 
 	return Input{thm: thm, inputType: inputType, editor: editor, hint: hint}
