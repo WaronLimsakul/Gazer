@@ -1,0 +1,50 @@
+package ui
+
+import (
+	"gioui.org/layout"
+	"gioui.org/unit"
+	"gioui.org/widget"
+	"gioui.org/widget/material"
+)
+
+type InputType uint8
+
+const (
+	TextInput InputType = iota
+	PasswordInput
+	// TODO: Email, Number, Checkbox
+)
+
+// for rendering from DOM node
+var InputTypes = map[string]InputType{
+	"text":     TextInput,
+	"password": PasswordInput,
+}
+
+type Input struct {
+	thm       *Theme
+	inputType InputType
+	hint      string
+	editor    *widget.Editor
+	// size?
+	// border?
+	// margin?
+	// min-width?
+}
+
+func NewInput(thm *Theme, inputType InputType, editor *widget.Editor, hint string) Input {
+	return Input{thm: thm, inputType: inputType, editor: editor, hint: hint}
+}
+
+func (i Input) Layout(gtx C) D {
+	border := widget.Border{Color: i.thm.Fg, CornerRadius: unit.Dp(1), Width: unit.Dp(1)}
+	contentMargin := layout.UniformInset(unit.Dp(4))
+	input := material.Editor(i.thm, i.editor, i.hint)
+	minWidth := unit.Dp(100)
+	return border.Layout(gtx, func(gtx C) D {
+		return contentMargin.Layout(gtx, func(gtx C) D {
+			gtx.Constraints.Min.X = gtx.Dp(minWidth)
+			return input.Layout(gtx)
+		})
+	})
+}

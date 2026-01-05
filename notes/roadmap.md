@@ -31,6 +31,8 @@
 - [x] Section
 - [x] Button
 - [ ] Input
+  - [x] type text
+  - [ ] type password
 - [ ] Table, Tr, Td, Th
 
 ### CSS Support

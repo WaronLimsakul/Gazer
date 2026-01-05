@@ -34,6 +34,7 @@ const (
 	A
 
 	Button
+	Input
 
 	Ul
 	Ol
@@ -67,6 +68,7 @@ var TagMap = map[string]Tag{
 	"b":       B,
 	"a":       A,
 	"button":  Button,
+	"input":   Input,
 	"ul":      Ul,
 	"ol":      Ol,
 	"li":      Li,
@@ -116,6 +118,8 @@ func (t Tag) String() string {
 		return "a"
 	case Button:
 		return "button"
+	case Input:
+		return "input"
 	case Ul:
 		return "ul"
 	case Ol:
@@ -137,10 +141,11 @@ func (t Tag) String() string {
 
 // void elements = tag that always means self-close
 var VoidElements = map[Tag]bool{
-	Br:   true,
-	Hr:   true,
-	Meta: true,
-	Img:  true,
+	Br:    true,
+	Hr:    true,
+	Meta:  true,
+	Img:   true,
+	Input: true,
 }
 
 // text elements = tag that is rendered as a string
@@ -168,6 +173,7 @@ var InlineElements = map[Tag]bool{
 	B:      true,
 	A:      true,
 	Button: true,
+	Input:  true,
 	Text:   true,
 	Img:    true,
 	Span:   true,

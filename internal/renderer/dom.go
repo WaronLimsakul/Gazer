@@ -24,6 +24,7 @@ type DomRenderer struct {
 	selectables      map[*parser.Node]*widget.Selectable
 	linkClickables   map[*parser.Node]*widget.Clickable
 	buttonClickables map[*parser.Node]*widget.Clickable
+	inputEditors     map[*parser.Node]*widget.Editor
 }
 
 func newDomRenderer(thm *material.Theme, tab *ui.Tab) *DomRenderer {
@@ -31,6 +32,7 @@ func newDomRenderer(thm *material.Theme, tab *ui.Tab) *DomRenderer {
 		selectables:      make(map[*parser.Node]*widget.Selectable),
 		linkClickables:   make(map[*parser.Node]*widget.Clickable),
 		buttonClickables: make(map[*parser.Node]*widget.Clickable),
+		inputEditors:     make(map[*parser.Node]*widget.Editor),
 	}
 }
 
@@ -80,12 +82,29 @@ func (dr *DomRenderer) renderNode(node *parser.Node) [][]Element {
 	case parser.Hr:
 		res = append(res, []Element{ui.HorizontalLine{Thm: dr.thm, Width: WINDOW_WIDTH, Height: unit.Dp(1)}})
 	case parser.Img:
+		// Img is void element, don't have to gather more
 		img, err := ui.NewImg(node.Attrs["src"])
 		if err != nil {
-			log.Println("point a ui.NewImg: ", err)
+			log.Println("ui.NewImg: ", err)
 			break
 		}
 		res = append(res, []Element{img})
+	case parser.Input:
+		// Input is void  element
+		editor, ok := dr.inputEditors[node]
+		if !ok {
+			editor = new(widget.Editor)
+			dr.inputEditors[node] = editor
+		}
+
+		inputTypeStr := node.Attrs["type"]
+		inputType, ok := ui.InputTypes[inputTypeStr]
+		if !ok {
+			inputType = ui.TextInput
+		}
+
+		hint := node.Attrs["placeholder"]
+		res = append(res, []Element{ui.NewInput(dr.thm, inputType, editor, hint)})
 	}
 
 	if parser.TextElements[node.Tag] {
