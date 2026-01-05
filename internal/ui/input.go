@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -33,6 +34,15 @@ type Input struct {
 }
 
 func NewInput(thm *Theme, inputType InputType, editor *widget.Editor, hint string) Input {
+	editor.SingleLine = true
+	switch inputType {
+	case TextInput:
+		editor.InputHint = key.HintText
+	case PasswordInput:
+		editor.Mask = '●'
+		editor.InputHint = key.HintPassword
+	}
+
 	return Input{thm: thm, inputType: inputType, editor: editor, hint: hint}
 }
 

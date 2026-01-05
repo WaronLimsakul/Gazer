@@ -12,7 +12,7 @@
 - [x] Tabs inside state is a UI component. It shouldn't be.
 - [x] Learn the MVC arch
 - [ ] Entire theme set
-- [ ] Some metadata support
+- [x] Some metadata support
   - [x] title
   - [x] favicon
 - [ ] Tab tooltip
