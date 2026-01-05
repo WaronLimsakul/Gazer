@@ -10,16 +10,20 @@ import (
 
 type InputType uint8
 
+// All supported input type.
+// Change this = change the InputTypes below
 const (
 	TextInput InputType = iota
 	PasswordInput
-	// TODO: Email, Number, Checkbox
+	NumberInput
+	// TODO: Email, Checkbox
 )
 
 // for rendering from DOM node
 var InputTypes = map[string]InputType{
 	"text":     TextInput,
 	"password": PasswordInput,
+	"number":   NumberInput,
 }
 
 type Input struct {
@@ -41,6 +45,8 @@ func NewInput(thm *Theme, inputType InputType, editor *widget.Editor, hint strin
 	case PasswordInput:
 		editor.Mask = '●'
 		editor.InputHint = key.HintPassword
+	case NumberInput:
+		editor.InputHint = key.HintNumeric
 	}
 
 	return Input{thm: thm, inputType: inputType, editor: editor, hint: hint}
