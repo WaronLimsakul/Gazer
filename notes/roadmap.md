@@ -13,6 +13,8 @@
 - [x] Learn the MVC arch
 - [ ] Entire theme set
 - [ ] Some metadata support
+  - [x] title
+  - [x] favicon
 - [ ] Tab tooltip
 - [ ] CSS support structure
 
@@ -26,7 +28,7 @@
 - [x] Hr 
 - [x] Div 
 - [x] Span
-- [ ] Section
+- [x] Section
 - [ ] Button
 - [ ] Input
 - [ ] Table, Tr, Td, Th

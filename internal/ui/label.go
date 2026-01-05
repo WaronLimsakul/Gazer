@@ -7,6 +7,9 @@ import (
 
 	"gioui.org/font"
 	"gioui.org/layout"
+	"gioui.org/op"
+	"gioui.org/op/clip"
+	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
@@ -24,22 +27,44 @@ type LabelFunc = func(*Theme, *widget.Selectable, string) LabelStyle
 type LabelDecorator = func(*Theme, LabelStyle) LabelStyle
 
 type Label struct {
-	tags      map[parser.Tag]bool
-	margin    layout.Inset
-	clickable *widget.Clickable
-	style     LabelStyle
+	tags map[parser.Tag]bool
+	// margin outside border (if exists)
+	margin layout.Inset
+	// margin inside border (if exists)
+	textMargin layout.Inset
+	border     widget.Border
+	bgColor    color.NRGBA
+	clickable  *widget.Clickable
+	// hoverCursor
+	style LabelStyle
 }
 
 func (l Label) Layout(gtx C) D {
 	return l.margin.Layout(gtx, func(gtx C) D {
-		// LabelStyle.Layout try to takes just what it need by default.
-		// However, passed gtx might just give min = max = max
-		gtx.Constraints.Min = image.Point{}
-
-		if l.clickable != nil {
-			return l.clickable.Layout(gtx, l.style.Layout)
-		}
-		return l.style.Layout(gtx)
+		return l.border.Layout(gtx, func(gtx C) D {
+			var contentSize D
+			var contentOp op.CallOp
+			contentWidget := func(gtx C) D {
+				return l.textMargin.Layout(gtx, func(gtx C) D {
+					// LabelStyle.Layout try to takes just what it need by default.
+					// However, passed gtx might just give min = max = max
+					gtx.Constraints.Min = image.Point{}
+					return l.style.Layout(gtx)
+				})
+			}
+			macro := op.Record(gtx.Ops)
+			if l.clickable != nil {
+				contentSize = l.clickable.Layout(gtx, contentWidget)
+			} else {
+				contentSize = contentWidget(gtx)
+			}
+			contentOp = macro.Stop()
+			rrect := clip.UniformRRect(image.Rectangle{Max: contentSize.Size}, gtx.Dp(l.border.CornerRadius))
+			defer rrect.Push(gtx.Ops).Pop()
+			paint.Fill(gtx.Ops, l.bgColor)
+			contentOp.Add(gtx.Ops)
+			return D{Size: contentSize.Size}
+		})
 	})
 }
 
@@ -115,6 +140,7 @@ func A(clickable *widget.Clickable, label Label) Label {
 func Ul(label Label) Label {
 	// give Li label a bullet point of not yet
 	if label.tags[parser.Li] && !label.tags[parser.Ul] && !label.tags[parser.Ol] {
+		// TODO NOW: it will be in button content if <li><button>hello</button></li>
 		label.style.Text = "• " + label.style.Text
 	}
 
@@ -137,5 +163,27 @@ func Ol(label Label, count *int) Label {
 // we don't need thm, but just try to make it like the others
 func Li(thm *Theme, label Label) Label {
 	label.tags[parser.Li] = true
+	return label
+}
+
+func Button(thm *Theme, clickable *widget.Clickable, label Label) Label {
+	label.border = widget.Border{Color: thm.Fg, CornerRadius: unit.Dp(2), Width: unit.Dp(1)}
+
+	// TODO: use the full theme set
+	lightGray := color.NRGBA{R: 240, G: 240, B: 240, A: 255}
+	label.bgColor = lightGray
+
+	label.margin.Left += unit.Dp(1)
+	label.margin.Right += unit.Dp(1)
+	label.margin.Top += unit.Dp(1)
+	label.margin.Bottom += unit.Dp(1)
+
+	label.textMargin.Top += unit.Dp(3)
+	label.textMargin.Bottom += unit.Dp(3)
+	label.textMargin.Left += unit.Dp(6)
+	label.textMargin.Right += unit.Dp(6)
+
+	label.clickable = clickable
+	label.tags[parser.Button] = true
 	return label
 }

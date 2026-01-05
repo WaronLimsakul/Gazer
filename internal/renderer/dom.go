@@ -21,14 +21,16 @@ type DomRenderer struct {
 	cache map[*parser.Node]*[][]Element
 	// All Texts' selectables elements based on its pointer.
 	// These pointers will not be cleaned because the map still refer to it.
-	selectables    map[*parser.Node]*widget.Selectable
-	linkClickables map[*parser.Node]*widget.Clickable
+	selectables      map[*parser.Node]*widget.Selectable
+	linkClickables   map[*parser.Node]*widget.Clickable
+	buttonClickables map[*parser.Node]*widget.Clickable
 }
 
 func newDomRenderer(thm *material.Theme, tab *ui.Tab) *DomRenderer {
 	return &DomRenderer{thm: thm, tab: tab, cache: make(map[*parser.Node]*[][]Element),
-		selectables:    make(map[*parser.Node]*widget.Selectable),
-		linkClickables: make(map[*parser.Node]*widget.Clickable),
+		selectables:      make(map[*parser.Node]*widget.Selectable),
+		linkClickables:   make(map[*parser.Node]*widget.Clickable),
+		buttonClickables: make(map[*parser.Node]*widget.Clickable),
 	}
 }
 
@@ -123,6 +125,24 @@ func (dr *DomRenderer) renderText(node *parser.Node) [][]Element {
 			for i, el := range line {
 				if label, ok := el.(ui.Label); ok {
 					line[i] = ui.A(clickable, label)
+				}
+			}
+		}
+		return res
+	}
+
+	if node.Tag == parser.Button {
+		// TODO: v8 just wrap all text around and treat it like one big button
+		clickable, ok := dr.buttonClickables[node]
+		if !ok {
+			clickable = new(widget.Clickable)
+			dr.buttonClickables[node] = clickable
+		}
+
+		for _, line := range res {
+			for i, el := range line {
+				if label, ok := el.(ui.Label); ok {
+					line[i] = ui.Button(dr.thm, clickable, label)
 				}
 			}
 		}
@@ -260,6 +280,14 @@ func (dr *DomRenderer) update(gtx C) {
 	for _, clickable := range dr.linkClickables {
 		clickable.Update(gtx)
 		if clickable.Hovered() {
+			pointer.CursorPointer.Add(gtx.Ops)
+		}
+	}
+
+	for _, clickable := range dr.buttonClickables {
+		clickable.Update(gtx)
+		if clickable.Hovered() {
+			// NOTE: somehow, can't use default pointer, it got overriden by I-beam.
 			pointer.CursorPointer.Add(gtx.Ops)
 		}
 	}

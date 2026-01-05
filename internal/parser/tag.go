@@ -33,6 +33,8 @@ const (
 	B
 	A
 
+	Button
+
 	Ul
 	Ol
 	Li
@@ -64,6 +66,7 @@ var TagMap = map[string]Tag{
 	"em":      I,
 	"b":       B,
 	"a":       A,
+	"button":  Button,
 	"ul":      Ul,
 	"ol":      Ol,
 	"li":      Li,
@@ -111,6 +114,8 @@ func (t Tag) String() string {
 		return "b"
 	case A:
 		return "a"
+	case Button:
+		return "button"
 	case Ul:
 		return "ul"
 	case Ol:
@@ -140,28 +145,30 @@ var VoidElements = map[Tag]bool{
 
 // text elements = tag that is rendered as a string
 var TextElements = map[Tag]bool{
-	H1:   true,
-	H2:   true,
-	H3:   true,
-	H4:   true,
-	H5:   true,
-	P:    true,
-	I:    true,
-	B:    true,
-	A:    true,
-	Ul:   true,
-	Ol:   true,
-	Li:   true,
-	Text: true,
+	H1:     true,
+	H2:     true,
+	H3:     true,
+	H4:     true,
+	H5:     true,
+	P:      true,
+	I:      true,
+	B:      true,
+	A:      true,
+	Button: true,
+	Ul:     true,
+	Ol:     true,
+	Li:     true,
+	Text:   true,
 }
 
 // inline elements = element that will not break line when
 // being child of another text element. E.g. <p>hello, <i>world</i></p> is one line
 var InlineElements = map[Tag]bool{
-	I:    true,
-	B:    true,
-	A:    true,
-	Text: true,
-	Img:  true,
-	Span: true,
+	I:      true,
+	B:      true,
+	A:      true,
+	Button: true,
+	Text:   true,
+	Img:    true,
+	Span:   true,
 }

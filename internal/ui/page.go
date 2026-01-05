@@ -33,7 +33,7 @@ func (p *Page) Layout(gtx C, elements [][]Element) D {
 			if len(line) == 1 {
 				return line[0].Layout(gtx)
 			} else {
-				return layout.Flex{Axis: layout.Horizontal}.Layout(gtx, elementsToFlexChildren(line)...)
+				return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx, elementsToFlexChildren(line)...)
 			}
 		})
 	})
