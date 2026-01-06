@@ -60,7 +60,7 @@ func (l Label) Layout(gtx C) D {
 						// LabelStyle.Layout try to takes just what it need by default.
 						// However, passed gtx might just give min = max = max
 						gtx.Constraints.Min = image.Point{}
-						// TODO: not sure
+						// TODO NOW: not sure
 						tmpStyle := l.style
 						tmpStyle.Color = l.color
 						return tmpStyle.Layout(gtx)

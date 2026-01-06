@@ -16,13 +16,21 @@
   - [x] title
   - [x] favicon
 - [ ] Set up supporting CSS field in components
+- [ ] Have CSS parser `StyleParser`?: parse CSS string into `Style` struct
+- [ ] `DomRenderer` should have `StyleParser`
+While `RenderDOM`: NOTE, source priority if conflict: inline `style` attr > `style` tag > external css file
+- [ ] If saw`stylesheet`, fetch it, parse and store in the function scope (might consider cache it)[ ] [ ] 
+- [ ] If saw `style` tag, parse it and merge with the old one if exists .
+Call it "global style" for now (in this function term)
+- [ ] Start rendering like normal. But modify the component according to the global style
+- [ ] If saw `style` attr during rendering, apply the global style first, then parse this one and apply after to override (higher priority)
 
 ### HTML tags support
 - [x] A 
 - [x] Img 
 - [x] Ul, LI 
 - [x] Ol
-- [x] B (or Strong) 
+- [ ] B (or Strong) 
 - [x] I (or Em) 
 - [x] Hr 
 - [x] Div 
