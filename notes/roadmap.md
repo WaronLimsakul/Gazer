@@ -15,10 +15,7 @@
 - [x] Some metadata support
   - [x] title
   - [x] favicon
-- [ ] Tab tooltip
-- [ ] Close tab button
-- [ ] Keybinding for manipulating tab
-- [ ] CSS support structure
+- [ ] Set up supporting CSS field in components
 
 ### HTML tags support
 - [x] A 
@@ -45,7 +42,7 @@
 
 ### CSS Support
 [src](https://www.w3schools.com/html/html_css.asp)
-- [ ] CSS frontend processor
+- [ ] CSS front-end processor
   - [ ] Inline: using `style` attr
   - [ ] Internal: using `<style>` elements in `<head>`
   - [ ] External: using `<link>` element
@@ -64,4 +61,9 @@
 - [ ] Search bar's suggestion
 - [x] Tab system
 - [ ] GioUI normal window is super ugly. Turn-off window decoration and handroll the window.
+  - [ ] Wait, I think we can just `Decorate` it. Oh, it's the same way.
 - [ ] Custom theme system for Gazer
+- [ ] Tab tooltip
+- [ ] Close tab button
+- [ ] Keybinding for manipulating tab
+- [ ] CSS support structure

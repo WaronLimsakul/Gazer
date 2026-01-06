@@ -35,6 +35,7 @@ type Label struct {
 	textMargin layout.Inset
 	border     widget.Border
 	bgColor    color.NRGBA
+	color      color.NRGBA // text color TODO: not sure if we needs to check zero value
 	clickable  *widget.Clickable
 	// for <li>: e.g. prefix "•"
 	prefix string
@@ -59,7 +60,10 @@ func (l Label) Layout(gtx C) D {
 						// LabelStyle.Layout try to takes just what it need by default.
 						// However, passed gtx might just give min = max = max
 						gtx.Constraints.Min = image.Point{}
-						return l.style.Layout(gtx)
+						// TODO: not sure
+						tmpStyle := l.style
+						tmpStyle.Color = l.color
+						return tmpStyle.Layout(gtx)
 					})
 				}
 				macro := op.Record(gtx.Ops)

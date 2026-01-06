@@ -6,10 +6,12 @@ import (
 	"os"
 
 	"gioui.org/app"
+	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/text"
 	"gioui.org/unit"
+	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/WaronLimsakul/Gazer/internal/engine"
 	"github.com/WaronLimsakul/Gazer/internal/ui"
@@ -125,9 +127,6 @@ func NewWindow() *app.Window {
 	w := new(app.Window)
 	w.Option(app.Title("Gazer"))
 	w.Option(app.Size(unit.Dp(WINDOW_WIDTH), unit.Dp(WINDOW_HEIGHT)))
-	w.Option(app.MinSize(unit.Dp(WINDOW_WIDTH), unit.Dp(WINDOW_HEIGHT)))
-	w.Option(app.MaxSize(unit.Dp(WINDOW_WIDTH), unit.Dp(WINDOW_HEIGHT)))
-	// w.Option(app.Decorated(false))
 	return w
 }
 
@@ -151,3 +150,10 @@ func newTheme() *material.Theme {
 
 	return thm
 }
+
+// TODO: still needs to enable the decoration option in newWindow and handle all user action
+// func newWindowDec(thm *material.Theme, deco *widget.Decorations) *material.DecorationsStyle {
+// 	actions := system.ActionClose | system.ActionFullscreen | system.ActionMinimize
+// 	decoStyle := material.Decorations(thm, deco, actions, "GGG")
+// 	return &decoStyle
+// }
