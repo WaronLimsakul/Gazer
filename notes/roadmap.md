@@ -35,6 +35,10 @@
   - [x] type password
   - [x] type number
   - [x] type email
+  - [ ] type checkbox
+  - [ ] type radio
+  - [ ] type date
+  - [ ] type submit
 - [ ] Table, Tr, Td, Th
 
 ### CSS Support

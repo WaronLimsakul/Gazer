@@ -1,8 +1,6 @@
 package ui
 
 import (
-	"fmt"
-
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/unit"

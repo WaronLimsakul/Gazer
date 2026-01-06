@@ -48,6 +48,7 @@ const (
 	Text // For no tag content or invalid tag
 )
 
+// TagMap map case-insensitive (lower-case) for parsing html tag string to Tag.
 var TagMap = map[string]Tag{
 	"html":    Html,
 	"head":    Head,

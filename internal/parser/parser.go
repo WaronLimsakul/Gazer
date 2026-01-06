@@ -120,7 +120,8 @@ func assignAttrs(attrs *map[string]string, s string) {
 			if char == '=' {
 				state = Observing
 			} else {
-				key += string(char)
+				// key is case-insensitive
+				key += strings.ToLower(string(char))
 			}
 		case Observing:
 			if unicode.IsSpace(char) {
@@ -168,7 +169,7 @@ func getTagFromContent(content string) Tag {
 
 // getTag return Tag based on the name, if invalid, gives <p>
 func getTag(tagName string) Tag {
-	tag, ok := TagMap[tagName]
+	tag, ok := TagMap[strings.ToLower(tagName)]
 	if !ok {
 		return Text
 	} else {

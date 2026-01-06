@@ -105,8 +105,9 @@ func (s SearchBar) SetText(txt string) {
 	s.editor.SetText(txt)
 }
 
-// Update updates the ui when search bar is hovered
+// Update updates the ui when search button is hovered
 func (s SearchBar) RenderInteraction(gtx C) {
+	// TODO NOW: can move it to Layout
 	s.clickable.Update(gtx)
 	if s.clickable.Hovered() {
 		pointer.CursorPointer.Add(gtx.Ops)

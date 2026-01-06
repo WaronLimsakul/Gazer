@@ -297,6 +297,7 @@ func (dr DomRenderer) gatherElements(node *parser.Node) [][]Element {
 
 // update updates all elements ui in domrender
 func (dr *DomRenderer) update(gtx C) {
+	// TODO NOW: can move this to Layout (let it react to the last frame)
 	for _, clickable := range dr.linkClickables {
 		clickable.Update(gtx)
 		if clickable.Hovered() {
