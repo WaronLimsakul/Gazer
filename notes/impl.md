@@ -15,6 +15,10 @@ This one is super OP. I can do `macro := op.Record(gtx.Ops)` then do whatever I 
 the operations will be recorded to `macro`. Then I can do `savedOp := macro.Stop()` to stop recording and have all
 the operations saved into `savedOp`. I use it to check the size of the content of component then draw a background with that size.
 
+### Render component interaction
+I used to let the component expose the `.Update(gtx)` to let the caller use when got the `gtx`, then handle it separately.
+but I just realize we can just put that in `.Layout(gtx)`, basically let the component update itself from the previous frame.
+
 ### Redesign `parser.Node`
 Initially, design a DOM node to have a field `Inner string` as inner content but then I realize that something like
 ```html

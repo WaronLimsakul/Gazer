@@ -16,6 +16,8 @@
   - [x] title
   - [x] favicon
 - [ ] Tab tooltip
+- [ ] Close tab button
+- [ ] Keybinding for manipulating tab
 - [ ] CSS support structure
 
 ### HTML tags support
@@ -42,11 +44,17 @@
 - [ ] Table, Tr, Td, Th
 
 ### CSS Support
-- [ ] Text Size
-- [ ] Text Color
-- [ ] Element margin size
-- [ ] Element border size
-- [ ] Flex model 
+[src](https://www.w3schools.com/html/html_css.asp)
+- [ ] CSS frontend processor
+  - [ ] Inline: using `style` attr
+  - [ ] Internal: using `<style>` elements in `<head>`
+  - [ ] External: using `<link>` element
+- [ ] CSS rendering process:
+  - [ ] Text Size
+  - [ ] Text Color
+  - [ ] Element margin size
+  - [ ] Element border size
+  - [ ] Flex model 
 
 ### JavaScript support
 - [ ] Light JavaScript support
