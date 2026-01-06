@@ -32,7 +32,9 @@
 - [x] Button
 - [ ] Input
   - [x] type text
-  - [ ] type password
+  - [x] type password
+  - [x] type number
+  - [x] type email
 - [ ] Table, Tr, Td, Th
 
 ### CSS Support

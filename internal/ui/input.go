@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"fmt"
+
 	"gioui.org/io/key"
 	"gioui.org/layout"
 	"gioui.org/unit"
@@ -16,6 +18,7 @@ const (
 	TextInput InputType = iota
 	PasswordInput
 	NumberInput
+	EmailInput
 	// TODO: Email, Checkbox
 )
 
@@ -24,6 +27,7 @@ var InputTypes = map[string]InputType{
 	"text":     TextInput,
 	"password": PasswordInput,
 	"number":   NumberInput,
+	"email":    EmailInput,
 }
 
 type Input struct {
@@ -37,6 +41,8 @@ type Input struct {
 	// min-width?
 }
 
+// NewInput create a new Input
+// require: editor != nil
 func NewInput(thm *Theme, inputType InputType, editor *widget.Editor, hint string) Input {
 	editor.SingleLine = true
 	switch inputType {
@@ -48,12 +54,16 @@ func NewInput(thm *Theme, inputType InputType, editor *widget.Editor, hint strin
 	case NumberInput:
 		editor.InputHint = key.HintNumeric
 		editor.Filter = "0123456789"
+	case EmailInput:
+		// TODO: after supporting form + button/input type submit => needs a way to check email format
+		// Here is some regex it might help: `^[a-zA-Z0-9._%+-]+@`
+		editor.InputHint = key.HintEmail
 	}
-
 	return Input{thm: thm, inputType: inputType, editor: editor, hint: hint}
 }
 
 func (i Input) Layout(gtx C) D {
+	// TODO: make the border thicker when user focus. Harder than you thought...
 	border := widget.Border{Color: i.thm.Fg, CornerRadius: unit.Dp(1), Width: unit.Dp(1)}
 	contentMargin := layout.UniformInset(unit.Dp(4))
 	input := material.Editor(i.thm, i.editor, i.hint)
@@ -65,3 +75,5 @@ func (i Input) Layout(gtx C) D {
 		})
 	})
 }
+
+// TODO: check box type needs another struct.

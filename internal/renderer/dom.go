@@ -2,6 +2,7 @@ package renderer
 
 import (
 	"log"
+	"strings"
 
 	"gioui.org/io/pointer"
 	"gioui.org/layout"
@@ -97,7 +98,7 @@ func (dr *DomRenderer) renderNode(node *parser.Node) [][]Element {
 			dr.inputEditors[node] = editor
 		}
 
-		inputTypeStr := node.Attrs["type"]
+		inputTypeStr := strings.ToLower(node.Attrs["type"])
 		inputType, ok := ui.InputTypes[inputTypeStr]
 		if !ok {
 			inputType = ui.TextInput
