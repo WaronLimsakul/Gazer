@@ -23,12 +23,26 @@ type SearchBar struct {
 	clickable *widget.Clickable
 }
 
+// match pair clickable with editor
+var searchButtonClickables = map[*widget.Editor]*widget.Clickable{}
+
 func NewSearchBar(thm *material.Theme, editor *widget.Editor) *SearchBar {
-	clickable := new(widget.Clickable)
-	return &SearchBar{thm, editor, clickable}
+	clickable, ok := searchButtonClickables[editor]
+	if !ok {
+		clickable = new(widget.Clickable)
+		searchButtonClickables[editor] = clickable
+	}
+	return &SearchBar{thm: thm, editor: editor, clickable: clickable}
 }
 
 func (s *SearchBar) Layout(gtx C) D {
+	// handle ui interaction
+	s.clickable.Update(gtx)
+	if s.clickable.Hovered() {
+		pointer.CursorPointer.Add(gtx.Ops)
+	}
+
+	// editor material
 	srcInputUi := material.Editor(s.thm, s.editor, "search")
 	srcInputUi.TextSize = unit.Sp(20)
 
@@ -103,15 +117,6 @@ func (s SearchBar) Text() string {
 // SetText sets the text inside search bar
 func (s SearchBar) SetText(txt string) {
 	s.editor.SetText(txt)
-}
-
-// Update updates the ui when search button is hovered
-func (s SearchBar) RenderInteraction(gtx C) {
-	// TODO NOW: can move it to Layout
-	s.clickable.Update(gtx)
-	if s.clickable.Hovered() {
-		pointer.CursorPointer.Add(gtx.Ops)
-	}
 }
 
 // SetupSearchEditor create a new widget.Editor used as

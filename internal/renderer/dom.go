@@ -4,7 +4,6 @@ import (
 	"log"
 	"strings"
 
-	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -293,25 +292,6 @@ func (dr DomRenderer) gatherElements(node *parser.Node) [][]Element {
 
 	}
 	return res
-}
-
-// update updates all elements ui in domrender
-func (dr *DomRenderer) update(gtx C) {
-	// TODO NOW: can move this to Layout (let it react to the last frame)
-	for _, clickable := range dr.linkClickables {
-		clickable.Update(gtx)
-		if clickable.Hovered() {
-			pointer.CursorPointer.Add(gtx.Ops)
-		}
-	}
-
-	for _, clickable := range dr.buttonClickables {
-		clickable.Update(gtx)
-		if clickable.Hovered() {
-			// NOTE: somehow, can't use default pointer, it got overriden by I-beam.
-			pointer.CursorPointer.Add(gtx.Ops)
-		}
-	}
 }
 
 // linkClicked return whether the link in the page is clicked and

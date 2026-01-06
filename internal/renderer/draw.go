@@ -52,7 +52,6 @@ func Draw(window *app.Window, state *engine.State) {
 			searchBar := ui.NewSearchBar(thm, tabView.SearchEditor)
 
 			// handle search bar event
-			searchBar.RenderInteraction(gtx)
 			if searchBar.Searched(gtx) {
 				state.Notifier <- Noti{
 					Type:   engine.Search,
@@ -106,7 +105,6 @@ func Draw(window *app.Window, state *engine.State) {
 			}
 
 			// handle page rendering
-			domRenderer.update(gtx)          // update ui interaction
 			domRenderer.handleHead(tab.Root) // set tab data
 			pageElements := domRenderer.render(tab.Root)
 			appFlexChildren = append(appFlexChildren, layout.Rigid(func(gtx C) D {

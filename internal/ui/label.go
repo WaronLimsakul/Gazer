@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"gioui.org/font"
+	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/op/clip"
@@ -41,6 +42,13 @@ type Label struct {
 }
 
 func (l Label) Layout(gtx C) D {
+	// handle ui interaction
+	l.clickable.Update(gtx)
+	if l.clickable.Hovered() {
+		pointer.CursorNone.Add(gtx.Ops)
+	}
+
+	// layout
 	return l.margin.Layout(gtx, func(gtx C) D {
 		normalLabel := func(gtx C) D {
 			return l.border.Layout(gtx, func(gtx C) D {
