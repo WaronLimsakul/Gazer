@@ -31,7 +31,7 @@ type Token struct {
 // NOTE: support comment <!--...-->
 func GetNextToken(raw string, pos int) Token {
 	var res Token
-	idx := skipWhiteSpace(raw, pos)
+	idx := SkipWhiteSpace(raw, pos)
 	for ; idx < len(raw); idx++ {
 		char := raw[idx]
 		switch res.Type {
@@ -115,9 +115,9 @@ func GetNextToken(raw string, pos int) Token {
 	return res
 }
 
-// skipWhiteSpace takes a string s and starting position pos and
+// SkipWhiteSpace takes a string s and starting position pos and
 // returns the position after pos that is not white space.
-func skipWhiteSpace(s string, pos int) int {
+func SkipWhiteSpace(s string, pos int) int {
 	for idx, char := range s[pos:] {
 		if !unicode.IsSpace(char) {
 			return idx + pos

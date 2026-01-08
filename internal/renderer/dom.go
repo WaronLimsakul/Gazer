@@ -8,6 +8,7 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/WaronLimsakul/Gazer/internal/css"
 	"github.com/WaronLimsakul/Gazer/internal/parser"
 	"github.com/WaronLimsakul/Gazer/internal/ui"
 )
@@ -25,6 +26,13 @@ type DomRenderer struct {
 	linkClickables   map[*parser.Node]*widget.Clickable
 	buttonClickables map[*parser.Node]*widget.Clickable
 	inputEditors     map[*parser.Node]*widget.Editor
+}
+
+type DomStyle struct {
+	universal   *css.Style
+	idStyles    map[string]*css.Style
+	classStyles map[string]*css.Style
+	tagStyles   map[string]*css.Style
 }
 
 func newDomRenderer(thm *material.Theme, tab *ui.Tab) *DomRenderer {

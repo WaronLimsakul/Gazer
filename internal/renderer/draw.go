@@ -6,12 +6,10 @@ import (
 	"os"
 
 	"gioui.org/app"
-	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
 	"gioui.org/text"
 	"gioui.org/unit"
-	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"github.com/WaronLimsakul/Gazer/internal/engine"
 	"github.com/WaronLimsakul/Gazer/internal/ui"

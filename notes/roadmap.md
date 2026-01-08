@@ -15,8 +15,8 @@
 - [x] Some metadata support
   - [x] title
   - [x] favicon
-- [ ] Set up supporting CSS field in components
-- [ ] Have CSS parser `StyleParser`?: parse CSS string into `Style` struct
+- [x] Set up supporting CSS field in components
+- [x] Have CSS parser `StyleParser`?: parse CSS string into `Style` struct
 - [ ] `DomRenderer` should have `StyleParser`
 While `RenderDOM`: NOTE, source priority if conflict: inline `style` attr > `style` tag > external css file
 - [ ] If saw`stylesheet`, fetch it, parse and store in the function scope (might consider cache it)[ ] [ ] 
@@ -55,10 +55,13 @@ Call it "global style" for now (in this function term)
   - [ ] Internal: using `<style>` elements in `<head>`
   - [ ] External: using `<link>` element
 - [ ] CSS rendering process:
-  - [ ] Text Size
-  - [ ] Text Color
-  - [ ] Element margin size
-  - [ ] Element border size
+  - [ ] Text Size: `font-size`
+  - [ ] Text Color `color`
+  - [ ] Element margin size `margin top right bot left`: `margin-left` `margin-right` `margin-bottom` `margin-top`
+  - [ ] Element border size : `border-width`, `border-color`, `border-radius`
+    - [ ] `border-style` 
+    - [ ] border shorthand
+  - [ ] Element padding size `padding`
   - [ ] Flex model 
 
 ### JavaScript support
