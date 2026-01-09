@@ -3,7 +3,12 @@ package css
 // TODO NOW
 
 import (
+	"image/color"
 	"testing"
+
+	"gioui.org/layout"
+	"gioui.org/unit"
+	"gioui.org/widget"
 )
 
 /*
@@ -44,7 +49,42 @@ h1 {
 }`,
 			expected: StyleSet{
 				universal: &Style{
-					// TODO
+					margin: &layout.Inset{
+						Top:    unit.Dp(10),
+						Bottom: unit.Dp(10),
+						Left:   unit.Dp(15),
+						Right:  unit.Dp(15),
+					},
+					padding: &layout.Inset{
+						Top:    unit.Dp(10),
+						Right:  unit.Dp(27),
+						Bottom: unit.Dp(18),
+						Left:   unit.Dp(30),
+					},
+				},
+				classStyles: map[string]*Style{
+					"spacer": &Style{
+						margin: &layout.Inset{
+							Top:    unit.Dp(10),
+							Bottom: unit.Dp(10),
+							Left:   unit.Dp(15),
+							Right:  unit.Dp(15),
+						},
+						padding: &layout.Inset{
+							Top:    unit.Dp(10),
+							Right:  unit.Dp(27),
+							Bottom: unit.Dp(18),
+							Left:   unit.Dp(30),
+						},
+					},
+				},
+				idStyles: map[string]*Style{
+					"header": &Style{
+						bgColor: &color.NRGBA{200, 100, 10, 255},
+						border: &widget.Border{
+							Color: color.NRGBA{0, 0, 0, 255},
+						},
+					},
 				},
 			},
 		},

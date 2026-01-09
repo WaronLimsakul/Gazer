@@ -149,11 +149,17 @@ func (s *Style) add(decl map[string]string) {
 			if err != nil {
 				continue
 			}
+			if s.margin == nil {
+				s.margin = new(layout.Inset)
+			}
 			s.margin.Left = length
 		case "margin-right":
 			length, err := s.parseLength(val)
 			if err != nil {
 				continue
+			}
+			if s.margin == nil {
+				s.margin = new(layout.Inset)
 			}
 			s.margin.Right = length
 		case "margin-top":
@@ -161,11 +167,17 @@ func (s *Style) add(decl map[string]string) {
 			if err != nil {
 				continue
 			}
+			if s.margin == nil {
+				s.margin = new(layout.Inset)
+			}
 			s.margin.Top = length
 		case "margin-bottom":
 			length, err := s.parseLength(val)
 			if err != nil {
 				continue
+			}
+			if s.margin == nil {
+				s.margin = new(layout.Inset)
 			}
 			s.margin.Bottom = length
 		case "border-width":
@@ -173,11 +185,17 @@ func (s *Style) add(decl map[string]string) {
 			if err != nil {
 				continue
 			}
+			if s.border == nil {
+				s.border = new(widget.Border)
+			}
 			s.border.Width = width
 		case "border-radius":
 			radius, err := s.parseLength(val)
 			if err != nil {
 				continue
+			}
+			if s.border == nil {
+				s.border = new(widget.Border)
 			}
 			s.border.CornerRadius = radius
 		case "border-color":
@@ -185,11 +203,17 @@ func (s *Style) add(decl map[string]string) {
 			if err != nil {
 				continue
 			}
+			if s.border == nil {
+				s.border = new(widget.Border)
+			}
 			s.border.Color = *c
 		case "padding":
 			inset, err := s.parseInset(val)
 			if err != nil {
 				continue
+			}
+			if s.padding == nil {
+				s.padding = new(layout.Inset)
 			}
 			s.padding = inset
 		case "padding-left":
@@ -197,11 +221,17 @@ func (s *Style) add(decl map[string]string) {
 			if err != nil {
 				continue
 			}
+			if s.padding == nil {
+				s.padding = new(layout.Inset)
+			}
 			s.padding.Left = length
 		case "padding-right":
 			length, err := s.parseLength(val)
 			if err != nil {
 				continue
+			}
+			if s.padding == nil {
+				s.padding = new(layout.Inset)
 			}
 			s.padding.Right = length
 		case "padding-top":
@@ -209,11 +239,17 @@ func (s *Style) add(decl map[string]string) {
 			if err != nil {
 				continue
 			}
+			if s.padding == nil {
+				s.padding = new(layout.Inset)
+			}
 			s.padding.Top = length
 		case "padding-bottom":
 			length, err := s.parseLength(val)
 			if err != nil {
 				continue
+			}
+			if s.padding == nil {
+				s.padding = new(layout.Inset)
 			}
 			s.padding.Left = length
 		}

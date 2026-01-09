@@ -74,12 +74,14 @@ func (l Label) Layout(gtx C) D {
 				}
 				contentOp = macro.Stop()
 				rrect := clip.UniformRRect(image.Rectangle{Max: contentSize.Size}, gtx.Dp(l.border.CornerRadius))
+				// NOTE: can do this or use layout.Background{}
 				defer rrect.Push(gtx.Ops).Pop()
 				paint.Fill(gtx.Ops, l.bgColor)
 				contentOp.Add(gtx.Ops)
 				return D{Size: contentSize.Size}
 			})
 		}
+
 		if len(l.prefix) == 0 {
 			return normalLabel(gtx)
 		} else {

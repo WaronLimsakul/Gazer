@@ -194,6 +194,7 @@ func (t *Tab) Layout(thm *Theme, gtx C, isSelected bool, url string) D {
 			})
 			tabContentOp := macro.Stop()
 
+			// NOTE: can do this or use layout.Background{}
 			// draw background
 			tabBgColor := thm.Bg
 			if isSelected {
