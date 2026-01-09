@@ -10,17 +10,6 @@ import (
 	"github.com/WaronLimsakul/Gazer/internal/parser"
 )
 
-/*
-	type Style struct {
-		color    *color.NRGBA
-		bgColor  *color.NRGBA
-		margin   *layout.Inset
-		padding  *layout.Inset
-		border   *widget.Border
-		fontSize *unit.Dp // TODO: might have to change after supporting other type
-	}
-*/
-
 type testParseCase struct {
 	name     string
 	input    string
@@ -102,7 +91,7 @@ h1 {
 
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
-			actual, err := Parse(testCase.input)
+			actual, err := StyleParser{}.Parse(testCase.input)
 			if err != nil {
 				t.Errorf("Parse error: %v", err)
 			} else if !styleSetEq(*actual, testCase.expected) {
