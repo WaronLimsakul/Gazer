@@ -1,7 +1,5 @@
 package css
 
-// TODO NOW
-
 import (
 	"fmt"
 	"testing"

@@ -73,7 +73,6 @@ func AddStyle(sHigh Style, sLow Style) Style {
 	return res
 }
 
-// TODO NOW:
 // applyRule applies the css rule to the style set
 func (s *StyleSet) applyRule(r rule) {
 	for _, selector := range r.selectors {
@@ -124,75 +123,99 @@ func newStyleSet() *StyleSet {
 
 // add adds the CSS declaration into the style struct
 func (s *Style) add(decl map[string]string) {
-	/*
-		color    *color.NRGBA
-		bgColor  *color.NRGBA
-		margin   *layout.Inset
-		border   *widget.Border
-		fontSize *unit.Dp
-	*/
 	for prop, val := range decl {
 		switch prop {
 		case "color":
+			c, err := s.parseColor(val)
+			if err != nil {
+				continue
+			}
+			s.color = c
 		case "background-color":
+			c, err := s.parseColor(val)
+			if err != nil {
+				continue
+			}
+			s.bgColor = c
 		case "margin":
 			// TODO: "auto" value of margin is very interesting
-			vals := strings.Fields(val)
-			length := len(vals)
-			if length > 4 || length < 1 {
-				continue // skip invalid number of vales
+			inset, err := s.parseInset(val)
+			if err != nil {
+				continue
 			}
-			// I have OCD
-			for i, v := range vals {
-				vals[i] = strings.TrimSpace(v)
-			}
-			switch length {
-			case 4: // top right bottom left
-				t, errT := s.parseLength(vals[0])
-				r, errR := s.parseLength(vals[1])
-				b, errB := s.parseLength(vals[2])
-				l, errL := s.parseLength(vals[3])
-				if errT != nil || errR != nil || errB != nil || errL != nil {
-					continue
-				}
-				s.margin = &layout.Inset{Top: t, Right: r, Bottom: b, Left: l}
-
-			case 3: // top left-right bottom
-				t, errT := s.parseLength(vals[0])
-				lr, errLR := s.parseLength(vals[1])
-				b, errB := s.parseLength(vals[2])
-				if errT != nil || errLR != nil || errB != nil {
-					continue
-				}
-				s.margin = &layout.Inset{Top: t, Right: lr, Bottom: b, Left: lr}
-			case 2: // top-bottom left-right
-				tb, errTB := s.parseLength(vals[0])
-				lr, errLR := s.parseLength(vals[1])
-				if errTB != nil || errLR != nil {
-					continue
-				}
-				s.margin = &layout.Inset{Top: tb, Bottom: tb, Left: lr, Right: lr}
-			case 1: // all
-				m, err := s.parseLength(vals[0])
-				if err != nil {
-					continue
-				}
-				res := layout.UniformInset(m)
-				s.margin = &res
-			}
-
+			s.margin = inset
 		case "margin-left":
+			length, err := s.parseLength(val)
+			if err != nil {
+				continue
+			}
+			s.margin.Left = length
 		case "margin-right":
+			length, err := s.parseLength(val)
+			if err != nil {
+				continue
+			}
+			s.margin.Right = length
 		case "margin-top":
+			length, err := s.parseLength(val)
+			if err != nil {
+				continue
+			}
+			s.margin.Top = length
 		case "margin-bottom":
+			length, err := s.parseLength(val)
+			if err != nil {
+				continue
+			}
+			s.margin.Bottom = length
 		case "border-width":
+			width, err := s.parseLength(val)
+			if err != nil {
+				continue
+			}
+			s.border.Width = width
 		case "border-radius":
+			radius, err := s.parseLength(val)
+			if err != nil {
+				continue
+			}
+			s.border.CornerRadius = radius
 		case "border-color":
+			c, err := s.parseColor(val)
+			if err != nil {
+				continue
+			}
+			s.border.Color = *c
 		case "padding":
+			inset, err := s.parseInset(val)
+			if err != nil {
+				continue
+			}
+			s.padding = inset
 		case "padding-left":
+			length, err := s.parseLength(val)
+			if err != nil {
+				continue
+			}
+			s.padding.Left = length
 		case "padding-right":
+			length, err := s.parseLength(val)
+			if err != nil {
+				continue
+			}
+			s.padding.Right = length
 		case "padding-top":
+			length, err := s.parseLength(val)
+			if err != nil {
+				continue
+			}
+			s.padding.Top = length
 		case "padding-bottom":
+			length, err := s.parseLength(val)
+			if err != nil {
+				continue
+			}
+			s.padding.Left = length
 		}
 
 	}
@@ -213,6 +236,139 @@ func (s Style) parseLength(raw string) (unit.Dp, error) {
 	}
 
 	return unit.Dp(float32(res)), nil
+}
+
+func (s Style) parseColor(raw string) (*color.NRGBA, error) {
+	// keyword color
+	c, ok := colors[raw]
+	if ok {
+		return &c, nil
+	}
+
+	// rgb
+	if strings.HasPrefix(raw, "rgb(") && raw[len(raw)-1] == ')' {
+		content := raw[4 : len(raw)-1]
+		params := strings.Split(content, ",")
+		if len(params) != 3 {
+			return nil, fmt.Errorf("Invalid input %v", params)
+		}
+		for i, param := range params {
+			params[i] = strings.TrimSpace(param)
+		}
+
+		r, errR := strconv.ParseInt(params[0], 16, 64)
+		g, errG := strconv.ParseInt(params[1], 16, 64)
+		b, errB := strconv.ParseInt(params[2], 16, 64)
+		if errR != nil || errG != nil || errB != nil {
+			return nil, fmt.Errorf("Parse number error; r: %v, g: %v, b: %v", errR, errG, errB)
+		}
+
+		return &color.NRGBA{R: uint8(r), G: uint8(g), B: uint8(b), A: 255}, nil
+	}
+
+	// rgba
+	if strings.HasPrefix(raw, "rgba(") && raw[len(raw)-1] == ')' {
+		content := raw[4 : len(raw)-1]
+		params := strings.Split(content, ",")
+		if len(params) != 4 {
+			return &color.NRGBA{}, fmt.Errorf("Invalid input %v", params)
+		}
+		for i, param := range params {
+			params[i] = strings.TrimSpace(param)
+		}
+
+		r, errR := strconv.ParseInt(params[0], 16, 64)
+		g, errG := strconv.ParseInt(params[1], 16, 64)
+		b, errB := strconv.ParseInt(params[2], 16, 64)
+		a, errA := strconv.ParseInt(params[3], 16, 64)
+		if errR != nil || errG != nil || errB != nil || errA != nil {
+			return nil, fmt.Errorf(
+				"Parse number error; r: %v, g: %v, b: %v, a: %v", errR, errG, errB, errA)
+		}
+		return &color.NRGBA{R: uint8(r), G: uint8(g), B: uint8(b), A: uint8(a)}, nil
+	}
+
+	// #RRGGBB
+	if raw[0] == '#' && len(raw) == 7 {
+		r, errR := strconv.ParseInt(raw[1:3], 16, 64)
+		g, errG := strconv.ParseInt(raw[3:5], 16, 64)
+		b, errB := strconv.ParseInt(raw[5:7], 16, 64)
+		if errR != nil || errG != nil || errB != nil {
+			return nil, fmt.Errorf("Parse number error; r: %v, g: %v, b: %v", errR, errG, errB)
+		}
+		return &color.NRGBA{R: uint8(r), G: uint8(g), B: uint8(b), A: 255}, nil
+	}
+
+	// #RGB
+	if raw[0] == '#' && len(raw) == 4 {
+		r, errR := strconv.ParseInt(string(raw[1])+string(raw[1]), 16, 64)
+		g, errG := strconv.ParseInt(string(raw[2])+string(raw[2]), 16, 64)
+		b, errB := strconv.ParseInt(string(raw[3])+string(raw[3]), 16, 64)
+		if errR != nil || errG != nil || errB != nil {
+			return nil, fmt.Errorf("Parse number error; r: %v, g: %v, b: %v", errR, errG, errB)
+		}
+		return &color.NRGBA{R: uint8(r), G: uint8(g), B: uint8(b), A: 255}, nil
+	}
+
+	return nil, fmt.Errorf("Invalid format: %v", raw)
+}
+
+// parseInset parses raw css string value that represent inset (e.g. margin, padding)
+func (s Style) parseInset(raw string) (*layout.Inset, error) {
+	vals := strings.Fields(raw)
+	length := len(vals)
+	if length > 4 || length < 1 {
+		return nil, fmt.Errorf("Invalid format: %v", vals)
+	}
+	// I have OCD
+	for i, v := range vals {
+		vals[i] = strings.TrimSpace(v)
+	}
+	switch length {
+	case 4: // top right bottom left
+		t, errT := s.parseLength(vals[0])
+		r, errR := s.parseLength(vals[1])
+		b, errB := s.parseLength(vals[2])
+		l, errL := s.parseLength(vals[3])
+		if errT != nil || errR != nil || errB != nil || errL != nil {
+			return nil, fmt.Errorf(
+				"Parse length error; t: %v | r: %v | b: %v | l: %v",
+				errT, errR, errB, errL,
+			)
+		}
+		return &layout.Inset{Top: t, Right: r, Bottom: b, Left: l}, nil
+
+	case 3: // top left-right bottom
+		t, errT := s.parseLength(vals[0])
+		lr, errLR := s.parseLength(vals[1])
+		b, errB := s.parseLength(vals[2])
+		if errT != nil || errLR != nil || errB != nil {
+			return nil, fmt.Errorf(
+				"Parse length error; t: %v | lr: %v | b: %v",
+				errT, errLR, errB,
+			)
+		}
+		return &layout.Inset{Top: t, Right: lr, Bottom: b, Left: lr}, nil
+	case 2: // top-bottom left-right
+		tb, errTB := s.parseLength(vals[0])
+		lr, errLR := s.parseLength(vals[1])
+		if errTB != nil || errLR != nil {
+			return nil, fmt.Errorf(
+				"Parse length error; tb: %v | lr: %v",
+				errTB, errLR,
+			)
+		}
+		return &layout.Inset{Top: tb, Bottom: tb, Left: lr, Right: lr}, nil
+	case 1: // all
+		m, err := s.parseLength(vals[0])
+		if err != nil {
+			return nil, fmt.Errorf("Parse length error: %v", err)
+		}
+		res := layout.UniformInset(m)
+		return &res, nil
+	}
+
+	return nil, fmt.Errorf("Invalid format: %v", vals)
 }
 
 func styleSetEq(a, b StyleSet) bool {
