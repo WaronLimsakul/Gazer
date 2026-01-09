@@ -33,6 +33,7 @@ mainLoop: // first time in my life using this. Haha
 		case Selector:
 			if state == Value {
 				res.applyRule(curRule)
+				curRule.reset() // after finish processing one rule, reset the current rule
 			}
 			state = Selector
 			content := strings.TrimSpace(token.Content)
@@ -59,4 +60,9 @@ mainLoop: // first time in my life using this. Haha
 
 func newRule() rule {
 	return rule{make([]string, 0), make(map[string]string)}
+}
+
+func (r *rule) reset() {
+	r.selectors = make([]string, 0)
+	clear(r.styles)
 }

@@ -89,7 +89,7 @@ func (s *StyleSet) applyRule(r rule) {
 			}
 			style.registerDecl(r.styles)
 		} else if class, ok := strings.CutPrefix(selector, "."); ok {
-			// TODO: support tag.clas syntax
+			// TODO: support tag.class syntax
 			style, ok := s.classStyles[class]
 			if !ok {
 				style = new(Style)
@@ -158,6 +158,9 @@ func (s Style) String() string {
 		fmt.Fprintf(&builder, "margin: %v ", *s.margin)
 	}
 	if s.padding != nil {
+		fmt.Fprintf(&builder, "padding: %v ", *s.padding)
+	}
+	if s.border != nil {
 		fmt.Fprintf(&builder, "border: %v ", *s.border)
 	}
 	if s.fontSize != nil {
@@ -258,9 +261,6 @@ func (s *Style) registerDecl(decl map[string]string) {
 			if err != nil {
 				continue
 			}
-			if s.padding == nil {
-				s.padding = new(layout.Inset)
-			}
 			s.padding = inset
 		case "padding-left":
 			length, err := s.parseLength(val)
@@ -298,6 +298,12 @@ func (s *Style) registerDecl(decl map[string]string) {
 				s.padding = new(layout.Inset)
 			}
 			s.padding.Left = length
+		case "font-size":
+			size, err := s.parseLength(val)
+			if err != nil {
+				continue
+			}
+			s.fontSize = &size
 		}
 
 	}

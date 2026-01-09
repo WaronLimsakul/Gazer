@@ -43,7 +43,7 @@ h1 {
 }
 
 #header {
-	color: #123abc
+	color: #123abc;
 	background-color: rgb(200, 100, 10);
 	border-color: #000;
 }
@@ -108,7 +108,6 @@ h1 {
 			if err != nil {
 				t.Errorf("Parse error: %v", err)
 			} else if !styleSetEq(*actual, testCase.expected) {
-				// TODO NOW: debug this
 				t.Errorf("Expected: %v | Got: %v", testCase.expected, *actual)
 			}
 		})
