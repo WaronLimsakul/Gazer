@@ -1,7 +1,5 @@
 package css
 
-// TODO NOW
-
 import (
 	"image/color"
 	"testing"
@@ -108,6 +106,7 @@ h1 {
 			if err != nil {
 				t.Errorf("Parse error: %v", err)
 			} else if !styleSetEq(*actual, testCase.expected) {
+				// TODO: use go-cmp package to diff string instead.
 				t.Errorf("Expected: %v | Got: %v", testCase.expected, *actual)
 			}
 		})

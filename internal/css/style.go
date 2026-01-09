@@ -344,9 +344,9 @@ func (s Style) parseColor(raw string) (*color.NRGBA, error) {
 			params[i] = strings.TrimSpace(param)
 		}
 
-		r, errR := strconv.ParseInt(params[0], 16, 64)
-		g, errG := strconv.ParseInt(params[1], 16, 64)
-		b, errB := strconv.ParseInt(params[2], 16, 64)
+		r, errR := strconv.ParseInt(params[0], 10, 64)
+		g, errG := strconv.ParseInt(params[1], 10, 64)
+		b, errB := strconv.ParseInt(params[2], 10, 64)
 		if errR != nil || errG != nil || errB != nil {
 			return nil, fmt.Errorf("Parse number error; r: %v, g: %v, b: %v", errR, errG, errB)
 		}
@@ -365,10 +365,10 @@ func (s Style) parseColor(raw string) (*color.NRGBA, error) {
 			params[i] = strings.TrimSpace(param)
 		}
 
-		r, errR := strconv.ParseInt(params[0], 16, 64)
-		g, errG := strconv.ParseInt(params[1], 16, 64)
-		b, errB := strconv.ParseInt(params[2], 16, 64)
-		a, errA := strconv.ParseInt(params[3], 16, 64)
+		r, errR := strconv.ParseInt(params[0], 10, 64)
+		g, errG := strconv.ParseInt(params[1], 10, 64)
+		b, errB := strconv.ParseInt(params[2], 10, 64)
+		a, errA := strconv.ParseInt(params[3], 10, 64)
 		if errR != nil || errG != nil || errB != nil || errA != nil {
 			return nil, fmt.Errorf(
 				"Parse number error; r: %v, g: %v, b: %v, a: %v", errR, errG, errB, errA)
@@ -376,7 +376,7 @@ func (s Style) parseColor(raw string) (*color.NRGBA, error) {
 		return &color.NRGBA{R: uint8(r), G: uint8(g), B: uint8(b), A: uint8(a)}, nil
 	}
 
-	// #RRGGBB
+	// #RRGGBB (hex)
 	if raw[0] == '#' && len(raw) == 7 {
 		r, errR := strconv.ParseInt(raw[1:3], 16, 64)
 		g, errG := strconv.ParseInt(raw[3:5], 16, 64)
@@ -387,7 +387,7 @@ func (s Style) parseColor(raw string) (*color.NRGBA, error) {
 		return &color.NRGBA{R: uint8(r), G: uint8(g), B: uint8(b), A: 255}, nil
 	}
 
-	// #RGB
+	// #RGB (hex)
 	if raw[0] == '#' && len(raw) == 4 {
 		r, errR := strconv.ParseInt(string(raw[1])+string(raw[1]), 16, 64)
 		g, errG := strconv.ParseInt(string(raw[2])+string(raw[2]), 16, 64)
