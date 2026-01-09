@@ -9,6 +9,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
+	"github.com/WaronLimsakul/Gazer/internal/parser"
 )
 
 /*
@@ -29,6 +30,9 @@ type testParseCase struct {
 }
 
 func TestParse(t *testing.T) {
+	red, _ := colors["red"]
+	size10dp := unit.Dp(10)
+
 	cases := []testParseCase{
 		{
 			name: "normal",
@@ -39,6 +43,7 @@ h1 {
 }
 
 #header {
+	color: #123abc
 	background-color: rgb(200, 100, 10);
 	border-color: #000;
 }
@@ -63,7 +68,7 @@ h1 {
 					},
 				},
 				classStyles: map[string]*Style{
-					"spacer": &Style{
+					"spacer": {
 						margin: &layout.Inset{
 							Top:    unit.Dp(10),
 							Bottom: unit.Dp(10),
@@ -79,14 +84,33 @@ h1 {
 					},
 				},
 				idStyles: map[string]*Style{
-					"header": &Style{
+					"header": {
+						color:   &color.NRGBA{R: 1*16 + 2, G: 3*16 + 10, B: 11*16 + 12, A: 255},
 						bgColor: &color.NRGBA{200, 100, 10, 255},
 						border: &widget.Border{
 							Color: color.NRGBA{0, 0, 0, 255},
 						},
 					},
 				},
+				tagStyles: map[parser.Tag]*Style{
+					parser.H1: {
+						color:    &red,
+						fontSize: &size10dp,
+					},
+				},
 			},
 		},
 	}
+
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			actual, err := Parse(testCase.input)
+			if err != nil {
+				t.Errorf("Parse error: %v", err)
+			} else if !styleSetEq(*actual, testCase.expected) {
+				t.Errorf("Expected: %v | Got: %v", testCase.expected, *actual)
+			}
+		})
+	}
+
 }

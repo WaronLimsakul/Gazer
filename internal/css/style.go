@@ -121,6 +121,12 @@ func newStyleSet() *StyleSet {
 	}
 }
 
+// for debugging
+func (s StyleSet) String() string {
+	// TODO NOW:
+	return ""
+}
+
 // add adds the CSS declaration into the style struct
 func (s *Style) add(decl map[string]string) {
 	for prop, val := range decl {
