@@ -80,14 +80,14 @@ func (s *StyleSet) applyRule(r rule) {
 			if s.universal == nil {
 				s.universal = new(Style)
 			}
-			s.universal.add(r.styles)
+			s.universal.registerDecl(r.styles)
 		} else if id, ok := strings.CutPrefix(selector, "#"); ok {
 			style, ok := s.idStyles[id]
 			if !ok {
 				style = new(Style)
 				s.idStyles[id] = style
 			}
-			style.add(r.styles)
+			style.registerDecl(r.styles)
 		} else if class, ok := strings.CutPrefix(selector, "."); ok {
 			// TODO: support tag.clas syntax
 			style, ok := s.classStyles[class]
@@ -95,7 +95,7 @@ func (s *StyleSet) applyRule(r rule) {
 				style = new(Style)
 				s.classStyles[class] = style
 			}
-			style.add(r.styles)
+			style.registerDecl(r.styles)
 		} else {
 			// tag name is case-insensitive
 			tag, ok := parser.TagMap[strings.ToLower(selector)]
@@ -107,14 +107,14 @@ func (s *StyleSet) applyRule(r rule) {
 				style = new(Style)
 				s.tagStyles[tag] = style
 			}
-			style.add(r.styles)
+			style.registerDecl(r.styles)
 		}
 	}
 }
 
 func newStyleSet() *StyleSet {
 	return &StyleSet{
-		universal:   nil,
+		universal:   new(Style),
 		idStyles:    make(map[string]*Style),
 		classStyles: make(map[string]*Style),
 		tagStyles:   make(map[parser.Tag]*Style),
@@ -123,12 +123,52 @@ func newStyleSet() *StyleSet {
 
 // for debugging
 func (s StyleSet) String() string {
-	// TODO NOW:
-	return ""
+	var builder strings.Builder
+
+	builder.WriteString("{\n")
+	builder.WriteString("\t" + "universal: " + s.universal.String() + "\n")
+
+	builder.WriteString("\t" + "ids: " + "\n")
+	for selector, style := range s.idStyles {
+		builder.WriteString("\t\t" + selector + ": " + style.String() + "\n")
+	}
+	builder.WriteString("\t" + "classes: " + "\n")
+	for selector, style := range s.classStyles {
+		builder.WriteString("\t\t" + selector + ": " + style.String() + "\n")
+	}
+	builder.WriteString("\t" + "tags: " + "\n")
+	for tag, style := range s.tagStyles {
+		builder.WriteString("\t\t" + tag.String() + ": " + style.String() + "\n")
+	}
+
+	return builder.String()
 }
 
-// add adds the CSS declaration into the style struct
-func (s *Style) add(decl map[string]string) {
+func (s Style) String() string {
+	var builder strings.Builder
+
+	builder.WriteString("{ ")
+	if s.color != nil {
+		fmt.Fprintf(&builder, "color: %v ", *s.color)
+	}
+	if s.bgColor != nil {
+		fmt.Fprintf(&builder, "bgColor: %v ", *s.bgColor)
+	}
+	if s.margin != nil {
+		fmt.Fprintf(&builder, "margin: %v ", *s.margin)
+	}
+	if s.padding != nil {
+		fmt.Fprintf(&builder, "border: %v ", *s.border)
+	}
+	if s.fontSize != nil {
+		fmt.Fprintf(&builder, "fontSize: %v ", *s.fontSize)
+	}
+	builder.WriteString("}")
+	return builder.String()
+}
+
+// registerDecl register a CSS declaration (e.g. "color: red" is a register) into the style struct
+func (s *Style) registerDecl(decl map[string]string) {
 	for prop, val := range decl {
 		switch prop {
 		case "color":

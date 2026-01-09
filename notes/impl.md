@@ -117,3 +117,11 @@ However, one problem is that I still have to keep the `state.Tabs` and `tabs` in
 1. The palette that `material.Theme` gives me are not enough, I'm thinking of having `GazerTheme`
 2. If I want my component to be more flexible, I might change the universal `Layout(gtx)` into `Layout(thm, gtx)`
     Or hybrid (keep the original but talso)
+
+### `strings.Builder` struct
+When implement `String() string` method, I did lots of `res += something` (e.g. in a loop), lsp said it's inefficient, I agree,
+because string in Go is just immutable []char reallocate repeatedly is not a good idea. Thus, I search up some soln and found `string.Builder` struct.
+
+`Builder` have it's own resizable buffer, we can do `.WriteString()` or `.Fprintf()` into its address to append whatever we want.
+Then at the end, I do `.String()` to get the result. More efficient.
+

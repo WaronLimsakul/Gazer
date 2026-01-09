@@ -5,8 +5,8 @@ import "strings"
 // rule represent CSS rule: think of one block in CSS file
 // e.g. p, h1 { color: green; margin: 10px; }
 type rule struct {
-	selectors []string
-	styles    map[string]string
+	selectors []string          // e.g. p, h1, #class
+	styles    map[string]string // map property->value of the style
 }
 
 // Parse parses raw CSS content string into a StyleSet
