@@ -1,6 +1,7 @@
 package renderer
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -20,37 +21,33 @@ type DomRenderer struct {
 	// Cache the matrix of elements with root node pointer.
 	// Can cache it because engine also cache by pointer
 	// (same url + same tab = same root ptr).
-	cache map[*parser.Node]*[][]Element
+	cache map[*Node]*[][]Element
 	// CSS style we have to know when render
 	styles *css.StyleSet
 	// All Texts' selectables elements based on its pointer.
 	// These pointers will not be cleaned because the map still refer to it.
-	selectables      map[*parser.Node]*widget.Selectable
-	linkClickables   map[*parser.Node]*widget.Clickable
-	buttonClickables map[*parser.Node]*widget.Clickable
-	inputEditors     map[*parser.Node]*widget.Editor
+	selectables      map[*Node]*widget.Selectable
+	linkClickables   map[*Node]*widget.Clickable
+	buttonClickables map[*Node]*widget.Clickable
+	inputEditors     map[*Node]*widget.Editor
 }
 
-type DomStyle struct {
-	universal   *css.Style
-	idStyles    map[string]*css.Style
-	classStyles map[string]*css.Style
-	tagStyles   map[string]*css.Style
-}
+type StyleSet = css.StyleSet
+type Node = parser.Node
 
 func newDomRenderer(thm *material.Theme, tab *ui.Tab) *DomRenderer {
-	return &DomRenderer{thm: thm, tab: tab, cache: make(map[*parser.Node]*[][]Element),
-		selectables:      make(map[*parser.Node]*widget.Selectable),
-		linkClickables:   make(map[*parser.Node]*widget.Clickable),
-		buttonClickables: make(map[*parser.Node]*widget.Clickable),
-		inputEditors:     make(map[*parser.Node]*widget.Editor),
+	return &DomRenderer{thm: thm, tab: tab, cache: make(map[*Node]*[][]Element),
+		selectables:      make(map[*Node]*widget.Selectable),
+		linkClickables:   make(map[*Node]*widget.Clickable),
+		buttonClickables: make(map[*Node]*widget.Clickable),
+		inputEditors:     make(map[*Node]*widget.Editor),
 	}
 }
 
 // renderDOM takes a DOM root node and return [][]Element
 // First layer (outer) is each horizontal line of rendering.
 // Second layer (inner) is each element in that line from left to right.
-func (dr *DomRenderer) render(root *parser.Node) [][]Element {
+func (dr *DomRenderer) render(root *Node) [][]Element {
 	res := make([][]Element, 0)
 	// expect to be Root node
 	if root == nil || root.Tag != parser.Root {
@@ -77,7 +74,7 @@ func (dr *DomRenderer) render(root *parser.Node) [][]Element {
 }
 
 // renderNodes returns flex children needs for render a node and its children.
-func (dr *DomRenderer) renderNode(node *parser.Node) [][]Element {
+func (dr *DomRenderer) renderNode(node *Node) [][]Element {
 	res := make([][]Element, 0)
 	switch node.Tag {
 	case parser.Body:
@@ -93,29 +90,13 @@ func (dr *DomRenderer) renderNode(node *parser.Node) [][]Element {
 	case parser.Hr:
 		res = append(res, []Element{ui.HorizontalLine{Thm: dr.thm, Width: WINDOW_WIDTH, Height: unit.Dp(1)}})
 	case parser.Img:
-		// Img is void element, don't have to gather more
-		img, err := ui.NewImg(node.Attrs["src"])
+		img, err := dr.renderImg(node)
 		if err != nil {
-			log.Println("ui.NewImg: ", err)
 			break
 		}
 		res = append(res, []Element{img})
 	case parser.Input:
-		// Input is void  element
-		editor, ok := dr.inputEditors[node]
-		if !ok {
-			editor = new(widget.Editor)
-			dr.inputEditors[node] = editor
-		}
-
-		inputTypeStr := strings.ToLower(node.Attrs["type"])
-		inputType, ok := ui.InputTypes[inputTypeStr]
-		if !ok {
-			inputType = ui.TextInput
-		}
-
-		hint := node.Attrs["placeholder"]
-		res = append(res, []Element{ui.NewInput(dr.thm, inputType, editor, hint)})
+		res = append(res, []Element{dr.renderInput(node)})
 	}
 
 	if parser.TextElements[node.Tag] {
@@ -126,7 +107,7 @@ func (dr *DomRenderer) renderNode(node *parser.Node) [][]Element {
 }
 
 // renderText returns [][]Element needs for rendering a text node and its children.
-func (dr *DomRenderer) renderText(node *parser.Node) [][]Element {
+func (dr *DomRenderer) renderText(node *Node) [][]Element {
 	// base case
 	if node.Tag == parser.Text {
 		selectable, ok := dr.selectables[node]
@@ -238,8 +219,44 @@ func (dr *DomRenderer) renderText(node *parser.Node) [][]Element {
 	return res
 }
 
+// renderImg receive Img tag node and return Img ui element.
+// Img is void element, don't have to gather more
+func (dr *DomRenderer) renderImg(node *Node) (Element, error) {
+	if node == nil {
+		return layout.Spacer{}, fmt.Errorf("nil node")
+	}
+	if node.Tag != parser.Img {
+		return layout.Spacer{}, fmt.Errorf("invalid tag: %v", node.Tag.String())
+	}
+	img, err := ui.NewImg(node.Attrs["src"])
+	if err != nil {
+		return layout.Spacer{}, fmt.Errorf("ui.NewImg: %v", err)
+	}
+	return img, nil
+}
+
+// renderInput receive Input tag node and return Input ui element.
+// Input is void element, don't have to gather more.
+// requires: node must not be nil and have input tag
+func (dr *DomRenderer) renderInput(node *Node) Element {
+	editor, ok := dr.inputEditors[node]
+	if !ok {
+		editor = new(widget.Editor)
+		dr.inputEditors[node] = editor
+	}
+
+	inputTypeStr := strings.ToLower(node.Attrs["type"])
+	inputType, ok := ui.InputTypes[inputTypeStr]
+	if !ok {
+		inputType = ui.TextInput
+	}
+
+	hint := node.Attrs["placeholder"]
+	return ui.NewInput(dr.thm, inputType, editor, hint)
+}
+
 // handleHead set the tabview data by processing <head> node in the DOM tree (except css-related)
-func (dr *DomRenderer) handleHead(root *parser.Node) {
+func (dr *DomRenderer) handleHead(root *Node) {
 	head := dr.findHead(root)
 	if head == nil {
 		dr.tab.Title = ""
@@ -266,7 +283,7 @@ func (dr *DomRenderer) handleHead(root *parser.Node) {
 	}
 }
 
-func (dr DomRenderer) findHead(node *parser.Node) *parser.Node {
+func (dr DomRenderer) findHead(node *Node) *Node {
 	if node == nil {
 		return nil
 	}
@@ -284,7 +301,7 @@ func (dr DomRenderer) findHead(node *parser.Node) *parser.Node {
 
 // gaterElements recieves a node and gather all elements of the node's children
 // according the tag rule (inline, block)
-func (dr DomRenderer) gatherElements(node *parser.Node) [][]Element {
+func (dr DomRenderer) gatherElements(node *Node) [][]Element {
 	res := make([][]Element, 0)
 	// if inline-text and prev is also inline-text, put it in latest one don't append
 	for i, child := range node.Children {
