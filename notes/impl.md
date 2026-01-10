@@ -161,6 +161,10 @@ any `Style` the  DR has to add when render the element.
 
 Oh, it also needs some inline parsing for `style` attribute.
 
+#### Update 1: engine
+I feel like the task of parsing something should be with engine, and also we have to fetch something, that convinces
+me to let engine handle the fetch+parse CSS. For now, I'll let it stores the style in the `Styles` field of `Tab`.
+
 ### Pass by value? Wait, or should it be pointer?
 I kinda let my intuition decide these kinda of questions, but to make things rigid. Here are some rules I will try to obey
 

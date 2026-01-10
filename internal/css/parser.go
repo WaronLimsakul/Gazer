@@ -58,6 +58,22 @@ mainLoop: // first time in my life using this. Haha
 	return res, nil
 }
 
+// ParseStyle recieve a raw string of HTML inline "style" attribute and return a css.Style
+func ParseStyle(raw string) (s Style) {
+	raw = strings.TrimSpace(raw)
+	decls := strings.Split(raw, ";")
+	declsMap := make(map[string]string)
+	for _, decl := range decls {
+		kv := strings.Split(decl, ":")
+		if len(kv) != 2 {
+			continue
+		}
+		declsMap[strings.TrimSpace(strings.ToLower(kv[0]))] = strings.TrimSpace(kv[1])
+	}
+	s.registerDecls(declsMap)
+	return s
+}
+
 func newRule() rule {
 	return rule{make([]string, 0), make(map[string]string)}
 }

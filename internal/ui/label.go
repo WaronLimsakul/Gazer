@@ -14,11 +14,13 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"github.com/WaronLimsakul/Gazer/internal/css"
 	"github.com/WaronLimsakul/Gazer/internal/parser"
 )
 
 type LabelStyle = material.LabelStyle
 type Theme = material.Theme
+type Style = css.Style
 
 // label components are supposed to be used as decorator pattern
 // Text() is a base component with LabelFunc type
@@ -29,17 +31,20 @@ type LabelDecorator = func(*Theme, LabelStyle) LabelStyle
 
 type Label struct {
 	tags map[parser.Tag]bool
-	// margin outside border (if exists)
-	margin layout.Inset
-	// margin inside border (if exists)
-	textMargin layout.Inset
-	border     widget.Border
-	bgColor    color.NRGBA
-	color      color.NRGBA // text color TODO: not sure if we needs to check zero value
-	clickable  *widget.Clickable
+
+	margin  layout.Inset // margin outside border (if exists)
+	padding layout.Inset // margin inside border (if exists)
+	border  widget.Border
+	bgColor color.NRGBA
+	color   color.NRGBA // text color
+
+	// for <a> or <button>
+	clickable *widget.Clickable
+
 	// for <li>: e.g. prefix "•"
 	prefix string
-	style  LabelStyle
+
+	style LabelStyle
 }
 
 func (l Label) Layout(gtx C) D {
@@ -51,16 +56,16 @@ func (l Label) Layout(gtx C) D {
 
 	// layout
 	return l.margin.Layout(gtx, func(gtx C) D {
-		normalLabel := func(gtx C) D {
+		nonPrefixLabel := func(gtx C) D {
 			return l.border.Layout(gtx, func(gtx C) D {
 				var contentSize D
 				var contentOp op.CallOp
 				contentWidget := func(gtx C) D {
-					return l.textMargin.Layout(gtx, func(gtx C) D {
+					return l.padding.Layout(gtx, func(gtx C) D {
 						// LabelStyle.Layout try to takes just what it need by default.
 						// However, passed gtx might just give min = max = max
 						gtx.Constraints.Min = image.Point{}
-						// TODO NOW: not sure
+						// TODO NOW: Should we just modify the LabelStyle inside instead?
 						tmpStyle := l.style
 						tmpStyle.Color = l.color
 						return tmpStyle.Layout(gtx)
@@ -73,7 +78,8 @@ func (l Label) Layout(gtx C) D {
 					contentSize = contentWidget(gtx)
 				}
 				contentOp = macro.Stop()
-				rrect := clip.UniformRRect(image.Rectangle{Max: contentSize.Size}, gtx.Dp(l.border.CornerRadius))
+				rrect := clip.UniformRRect(
+					image.Rectangle{Max: contentSize.Size}, gtx.Dp(l.border.CornerRadius))
 				// NOTE: can do this or use layout.Background{}
 				defer rrect.Push(gtx.Ops).Pop()
 				paint.Fill(gtx.Ops, l.bgColor)
@@ -83,13 +89,13 @@ func (l Label) Layout(gtx C) D {
 		}
 
 		if len(l.prefix) == 0 {
-			return normalLabel(gtx)
+			return nonPrefixLabel(gtx)
 		} else {
 			prefixStyle := l.style
 			prefixStyle.Text = l.prefix
 			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
 				Rigid(prefixStyle),
-				layout.Rigid(normalLabel),
+				layout.Rigid(nonPrefixLabel),
 			)
 		}
 	})
@@ -204,12 +210,37 @@ func Button(thm *Theme, clickable *widget.Clickable, label Label) Label {
 	label.margin.Top += unit.Dp(1)
 	label.margin.Bottom += unit.Dp(1)
 
-	label.textMargin.Top += unit.Dp(3)
-	label.textMargin.Bottom += unit.Dp(3)
-	label.textMargin.Left += unit.Dp(6)
-	label.textMargin.Right += unit.Dp(6)
+	label.padding.Top += unit.Dp(3)
+	label.padding.Bottom += unit.Dp(3)
+	label.padding.Left += unit.Dp(6)
+	label.padding.Right += unit.Dp(6)
 
 	label.clickable = clickable
 	label.tags[parser.Button] = true
+	return label
+}
+
+// StyleLabel recieve a Label component and implement the Style struct
+// to apply the style to the label.
+func StyleLabel(style Style, label Label) Label {
+	if style.Color != nil {
+		label.style.Color = *style.Color
+	}
+	if style.BgColor != nil {
+		label.bgColor = *style.BgColor
+	}
+	// TODO NOW: how to just set some of them, not all?
+	if style.Border != nil {
+		label.border = *style.Border
+	}
+	if style.FontSize != nil {
+		label.style.TextSize = unit.Sp(*style.FontSize)
+	}
+	if style.Margin != nil {
+		label.margin = *style.Margin
+	}
+	if style.Padding != nil {
+		label.padding = *style.Padding
+	}
 	return label
 }

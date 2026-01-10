@@ -10,17 +10,15 @@ import (
 	"github.com/WaronLimsakul/Gazer/internal/parser"
 )
 
-type testParseCase struct {
-	name     string
-	input    string
-	expected StyleSet
-}
-
 func TestParse(t *testing.T) {
 	red, _ := colors["red"]
 	size10dp := unit.Dp(10)
 
-	cases := []testParseCase{
+	cases := []struct {
+		name     string
+		input    string
+		expected StyleSet
+	}{
 		{
 			name: "normal",
 			input: `
@@ -41,13 +39,13 @@ h1 {
 }`,
 			expected: StyleSet{
 				universal: &Style{
-					margin: &layout.Inset{
+					Margin: &layout.Inset{
 						Top:    unit.Dp(10),
 						Bottom: unit.Dp(10),
 						Left:   unit.Dp(15),
 						Right:  unit.Dp(15),
 					},
-					padding: &layout.Inset{
+					Padding: &layout.Inset{
 						Top:    unit.Dp(10),
 						Right:  unit.Dp(27),
 						Bottom: unit.Dp(18),
@@ -56,13 +54,13 @@ h1 {
 				},
 				classStyles: map[string]*Style{
 					"spacer": {
-						margin: &layout.Inset{
+						Margin: &layout.Inset{
 							Top:    unit.Dp(10),
 							Bottom: unit.Dp(10),
 							Left:   unit.Dp(15),
 							Right:  unit.Dp(15),
 						},
-						padding: &layout.Inset{
+						Padding: &layout.Inset{
 							Top:    unit.Dp(10),
 							Right:  unit.Dp(27),
 							Bottom: unit.Dp(18),
@@ -72,17 +70,17 @@ h1 {
 				},
 				idStyles: map[string]*Style{
 					"header": {
-						color:   &color.NRGBA{R: 1*16 + 2, G: 3*16 + 10, B: 11*16 + 12, A: 255},
-						bgColor: &color.NRGBA{200, 100, 10, 255},
-						border: &widget.Border{
+						Color:   &color.NRGBA{R: 1*16 + 2, G: 3*16 + 10, B: 11*16 + 12, A: 255},
+						BgColor: &color.NRGBA{200, 100, 10, 255},
+						Border: &widget.Border{
 							Color: color.NRGBA{0, 0, 0, 255},
 						},
 					},
 				},
 				tagStyles: map[parser.Tag]*Style{
 					parser.H1: {
-						color:    &red,
-						fontSize: &size10dp,
+						Color:    &red,
+						FontSize: &size10dp,
 					},
 				},
 			},
@@ -101,4 +99,35 @@ h1 {
 		})
 	}
 
+}
+
+func TestParseStyle(t *testing.T) {
+	red := colors["red"]
+	blue := colors["blue"]
+	margin10 := layout.UniformInset(unit.Dp(10))
+
+	cases := []struct {
+		name     string
+		input    string
+		expected Style
+	}{
+		{
+			name:  "normal",
+			input: "color: red; background-color: blue; margin: 10px",
+			expected: Style{
+				Color:   &red,
+				BgColor: &blue,
+				Margin:  &margin10,
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := ParseStyle(tc.input)
+			if !styleEq(&actual, &tc.expected) {
+				t.Errorf("Expected: %v | Got: %v", tc.expected, actual)
+			}
+		})
+	}
 }

@@ -27,13 +27,14 @@ type StyleSet struct {
 // 2. modify the ui component that support style to have the suppored fields
 // 3. modify the implementation that ui component
 // 4. modify comparison in styleEq function
+// 5. modify how to implement it in ui.StyleLabel
 type Style struct {
-	color    *color.NRGBA
-	bgColor  *color.NRGBA
-	margin   *layout.Inset
-	padding  *layout.Inset
-	border   *widget.Border
-	fontSize *unit.Dp // TODO: might have to change after supporting other type
+	Color    *color.NRGBA
+	BgColor  *color.NRGBA
+	Margin   *layout.Inset
+	Padding  *layout.Inset
+	Border   *widget.Border
+	FontSize *unit.Dp // TODO: might have to change after supporting other type
 }
 
 // AddStyleSet adds 2 style sets with different importance (high/low priority)
@@ -81,34 +82,34 @@ func AddStyle(sHigh *Style, sLow *Style) *Style {
 	}
 
 	res := new(Style)
-	if sHigh.color != nil {
-		res.color = sHigh.color
+	if sHigh.Color != nil {
+		res.Color = sHigh.Color
 	} else {
-		res.color = sLow.color
+		res.Color = sLow.Color
 	}
 
-	if sHigh.bgColor != nil {
-		res.bgColor = sHigh.bgColor
+	if sHigh.BgColor != nil {
+		res.BgColor = sHigh.BgColor
 	} else {
-		res.bgColor = sLow.bgColor
+		res.BgColor = sLow.BgColor
 	}
 
-	if sHigh.margin != nil {
-		res.margin = sHigh.margin
+	if sHigh.Margin != nil {
+		res.Margin = sHigh.Margin
 	} else {
-		res.margin = sLow.margin
+		res.Margin = sLow.Margin
 	}
 
-	if sHigh.border != nil {
-		res.border = sHigh.border
+	if sHigh.Border != nil {
+		res.Border = sHigh.Border
 	} else {
-		res.border = sLow.border
+		res.Border = sLow.Border
 	}
 
-	if sHigh.fontSize != nil {
-		res.fontSize = sHigh.fontSize
+	if sHigh.FontSize != nil {
+		res.FontSize = sHigh.FontSize
 	} else {
-		res.fontSize = sLow.fontSize
+		res.FontSize = sLow.FontSize
 	}
 
 	return res
@@ -121,14 +122,14 @@ func (s *StyleSet) applyRule(r rule) {
 			if s.universal == nil {
 				s.universal = new(Style)
 			}
-			s.universal.registerDecl(r.styles)
+			s.universal.registerDecls(r.styles)
 		} else if id, ok := strings.CutPrefix(selector, "#"); ok {
 			style, ok := s.idStyles[id]
 			if !ok {
 				style = new(Style)
 				s.idStyles[id] = style
 			}
-			style.registerDecl(r.styles)
+			style.registerDecls(r.styles)
 		} else if class, ok := strings.CutPrefix(selector, "."); ok {
 			// TODO: support tag.class syntax
 			style, ok := s.classStyles[class]
@@ -136,7 +137,7 @@ func (s *StyleSet) applyRule(r rule) {
 				style = new(Style)
 				s.classStyles[class] = style
 			}
-			style.registerDecl(r.styles)
+			style.registerDecls(r.styles)
 		} else {
 			// tag name is case-insensitive
 			tag, ok := parser.TagMap[strings.ToLower(selector)]
@@ -148,7 +149,7 @@ func (s *StyleSet) applyRule(r rule) {
 				style = new(Style)
 				s.tagStyles[tag] = style
 			}
-			style.registerDecl(r.styles)
+			style.registerDecls(r.styles)
 		}
 	}
 }
@@ -189,162 +190,162 @@ func (s Style) String() string {
 	var builder strings.Builder
 
 	builder.WriteString("{ ")
-	if s.color != nil {
-		fmt.Fprintf(&builder, "color: %v ", *s.color)
+	if s.Color != nil {
+		fmt.Fprintf(&builder, "Color: %v ", *s.Color)
 	}
-	if s.bgColor != nil {
-		fmt.Fprintf(&builder, "bgColor: %v ", *s.bgColor)
+	if s.BgColor != nil {
+		fmt.Fprintf(&builder, "BgColor: %v ", *s.BgColor)
 	}
-	if s.margin != nil {
-		fmt.Fprintf(&builder, "margin: %v ", *s.margin)
+	if s.Margin != nil {
+		fmt.Fprintf(&builder, "Margin: %v ", *s.Margin)
 	}
-	if s.padding != nil {
-		fmt.Fprintf(&builder, "padding: %v ", *s.padding)
+	if s.Padding != nil {
+		fmt.Fprintf(&builder, "Padding: %v ", *s.Padding)
 	}
-	if s.border != nil {
-		fmt.Fprintf(&builder, "border: %v ", *s.border)
+	if s.Border != nil {
+		fmt.Fprintf(&builder, "Border: %v ", *s.Border)
 	}
-	if s.fontSize != nil {
-		fmt.Fprintf(&builder, "fontSize: %v ", *s.fontSize)
+	if s.FontSize != nil {
+		fmt.Fprintf(&builder, "FontSize: %v ", *s.FontSize)
 	}
 	builder.WriteString("}")
 	return builder.String()
 }
 
-// registerDecl register a CSS declaration (e.g. "color: red" is a register) into the style struct
-func (s *Style) registerDecl(decl map[string]string) {
-	for prop, val := range decl {
+// registerDecls register CSS declarations (e.g. "color: red; fontSize: 10px") into the style struct
+func (s *Style) registerDecls(decls map[string]string) {
+	for prop, val := range decls {
 		switch prop {
 		case "color":
 			c, err := s.parseColor(val)
 			if err != nil {
 				continue
 			}
-			s.color = c
+			s.Color = c
 		case "background-color":
 			c, err := s.parseColor(val)
 			if err != nil {
 				continue
 			}
-			s.bgColor = c
+			s.BgColor = c
 		case "margin":
 			// TODO: "auto" value of margin is very interesting
 			inset, err := s.parseInset(val)
 			if err != nil {
 				continue
 			}
-			s.margin = inset
+			s.Margin = inset
 		case "margin-left":
 			length, err := s.parseLength(val)
 			if err != nil {
 				continue
 			}
-			if s.margin == nil {
-				s.margin = new(layout.Inset)
+			if s.Margin == nil {
+				s.Margin = new(layout.Inset)
 			}
-			s.margin.Left = length
+			s.Margin.Left = length
 		case "margin-right":
 			length, err := s.parseLength(val)
 			if err != nil {
 				continue
 			}
-			if s.margin == nil {
-				s.margin = new(layout.Inset)
+			if s.Margin == nil {
+				s.Margin = new(layout.Inset)
 			}
-			s.margin.Right = length
+			s.Margin.Right = length
 		case "margin-top":
 			length, err := s.parseLength(val)
 			if err != nil {
 				continue
 			}
-			if s.margin == nil {
-				s.margin = new(layout.Inset)
+			if s.Margin == nil {
+				s.Margin = new(layout.Inset)
 			}
-			s.margin.Top = length
+			s.Margin.Top = length
 		case "margin-bottom":
 			length, err := s.parseLength(val)
 			if err != nil {
 				continue
 			}
-			if s.margin == nil {
-				s.margin = new(layout.Inset)
+			if s.Margin == nil {
+				s.Margin = new(layout.Inset)
 			}
-			s.margin.Bottom = length
+			s.Margin.Bottom = length
 		case "border-width":
 			width, err := s.parseLength(val)
 			if err != nil {
 				continue
 			}
-			if s.border == nil {
-				s.border = new(widget.Border)
+			if s.Border == nil {
+				s.Border = new(widget.Border)
 			}
-			s.border.Width = width
+			s.Border.Width = width
 		case "border-radius":
 			radius, err := s.parseLength(val)
 			if err != nil {
 				continue
 			}
-			if s.border == nil {
-				s.border = new(widget.Border)
+			if s.Border == nil {
+				s.Border = new(widget.Border)
 			}
-			s.border.CornerRadius = radius
+			s.Border.CornerRadius = radius
 		case "border-color":
 			c, err := s.parseColor(val)
 			if err != nil {
 				continue
 			}
-			if s.border == nil {
-				s.border = new(widget.Border)
+			if s.Border == nil {
+				s.Border = new(widget.Border)
 			}
-			s.border.Color = *c
+			s.Border.Color = *c
 		case "padding":
 			inset, err := s.parseInset(val)
 			if err != nil {
 				continue
 			}
-			s.padding = inset
+			s.Padding = inset
 		case "padding-left":
 			length, err := s.parseLength(val)
 			if err != nil {
 				continue
 			}
-			if s.padding == nil {
-				s.padding = new(layout.Inset)
+			if s.Padding == nil {
+				s.Padding = new(layout.Inset)
 			}
-			s.padding.Left = length
-		case "padding-right":
+			s.Padding.Left = length
+		case "Padding-right":
 			length, err := s.parseLength(val)
 			if err != nil {
 				continue
 			}
-			if s.padding == nil {
-				s.padding = new(layout.Inset)
+			if s.Padding == nil {
+				s.Padding = new(layout.Inset)
 			}
-			s.padding.Right = length
-		case "padding-top":
+			s.Padding.Right = length
+		case "Padding-top":
 			length, err := s.parseLength(val)
 			if err != nil {
 				continue
 			}
-			if s.padding == nil {
-				s.padding = new(layout.Inset)
+			if s.Padding == nil {
+				s.Padding = new(layout.Inset)
 			}
-			s.padding.Top = length
-		case "padding-bottom":
+			s.Padding.Top = length
+		case "Padding-bottom":
 			length, err := s.parseLength(val)
 			if err != nil {
 				continue
 			}
-			if s.padding == nil {
-				s.padding = new(layout.Inset)
+			if s.Padding == nil {
+				s.Padding = new(layout.Inset)
 			}
-			s.padding.Left = length
+			s.Padding.Left = length
 		case "font-size":
 			size, err := s.parseLength(val)
 			if err != nil {
 				continue
 			}
-			s.fontSize = &size
+			s.FontSize = &size
 		}
 
 	}
@@ -442,7 +443,7 @@ func (s Style) parseColor(raw string) (*color.NRGBA, error) {
 	return nil, fmt.Errorf("Invalid format: %v", raw)
 }
 
-// parseInset parses raw css string value that represent inset (e.g. margin, padding)
+// parseInset parses raw css string value that represent inset (e.g. margin, Padding)
 func (s Style) parseInset(raw string) (*layout.Inset, error) {
 	vals := strings.Fields(raw)
 	length := len(vals)

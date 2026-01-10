@@ -2,7 +2,6 @@ package renderer
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"gioui.org/layout"
@@ -108,6 +107,9 @@ func (dr *DomRenderer) renderNode(node *Node) [][]Element {
 
 // renderText returns [][]Element needs for rendering a text node and its children.
 func (dr *DomRenderer) renderText(node *Node) [][]Element {
+	// TODO NOW: parse inline styles
+	// TODO NOW 2: solve conflict between inline styles and global style we have
+
 	// base case
 	if node.Tag == parser.Text {
 		selectable, ok := dr.selectables[node]

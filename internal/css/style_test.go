@@ -23,24 +23,24 @@ func TestAddStyle(t *testing.T) {
 	}{
 		{
 			name:     "nil handling",
-			input:    [2]*Style{nil, {color: &red}},
-			expected: &Style{color: &red},
+			input:    [2]*Style{nil, {Color: &red}},
+			expected: &Style{Color: &red},
 		},
 		{
 			name: "high priority wins on conflicts",
 			input: [2]*Style{
-				{color: &red, fontSize: &fontSize16},
-				{color: &blue, fontSize: &fontSize12},
+				{Color: &red, FontSize: &fontSize16},
+				{Color: &blue, FontSize: &fontSize12},
 			},
-			expected: &Style{color: &red, fontSize: &fontSize16},
+			expected: &Style{Color: &red, FontSize: &fontSize16},
 		},
 		{
 			name: "low fills gaps in high",
 			input: [2]*Style{
-				{color: &red},
-				{fontSize: &fontSize12, margin: &margin10},
+				{Color: &red},
+				{FontSize: &fontSize12, Margin: &margin10},
 			},
-			expected: &Style{color: &red, fontSize: &fontSize12, margin: &margin10},
+			expected: &Style{Color: &red, FontSize: &fontSize12, Margin: &margin10},
 		},
 	}
 
@@ -67,30 +67,30 @@ func TestMergeStyleMap(t *testing.T) {
 	}{
 		{
 			name:     "nil maps",
-			input:    [2]map[string]*Style{nil, {"a": {color: &red}}},
-			expected: map[string]*Style{"a": {color: &red}},
+			input:    [2]map[string]*Style{nil, {"a": {Color: &red}}},
+			expected: map[string]*Style{"a": {Color: &red}},
 		},
 		{
 			name: "no key conflicts",
 			input: [2]map[string]*Style{
-				{"a": {color: &red}},
-				{"b": {color: &blue}},
+				{"a": {Color: &red}},
+				{"b": {Color: &blue}},
 			},
 			expected: map[string]*Style{
-				"a": {color: &red},
-				"b": {color: &blue},
+				"a": {Color: &red},
+				"b": {Color: &blue},
 			},
 		},
 		{
 			name: "merge on same key",
 			input: [2]map[string]*Style{
-				{"a": {color: &red}, "b": {fontSize: &fontSize16}},
-				{"a": {fontSize: &fontSize12}, "c": {color: &blue}},
+				{"a": {Color: &red}, "b": {FontSize: &fontSize16}},
+				{"a": {FontSize: &fontSize12}, "c": {Color: &blue}},
 			},
 			expected: map[string]*Style{
-				"a": {color: &red, fontSize: &fontSize12},
-				"b": {fontSize: &fontSize16},
-				"c": {color: &blue},
+				"a": {Color: &red, FontSize: &fontSize12},
+				"b": {FontSize: &fontSize16},
+				"c": {Color: &blue},
 			},
 		},
 	}
@@ -118,26 +118,26 @@ func TestAddStyleSet(t *testing.T) {
 	}{
 		{
 			name:     "nil stylesets",
-			input:    [2]*StyleSet{nil, {universal: &Style{color: &red}}},
-			expected: &StyleSet{universal: &Style{color: &red}},
+			input:    [2]*StyleSet{nil, {universal: &Style{Color: &red}}},
+			expected: &StyleSet{universal: &Style{Color: &red}},
 		},
 		{
 			name: "merge universal and id styles",
 			input: [2]*StyleSet{
 				{
-					universal: &Style{color: &red},
-					idStyles:  map[string]*Style{"a": {fontSize: &fontSize16}},
+					universal: &Style{Color: &red},
+					idStyles:  map[string]*Style{"a": {FontSize: &fontSize16}},
 				},
 				{
-					universal: &Style{fontSize: &fontSize12},
-					idStyles:  map[string]*Style{"b": {color: &blue}},
+					universal: &Style{FontSize: &fontSize12},
+					idStyles:  map[string]*Style{"b": {Color: &blue}},
 				},
 			},
 			expected: &StyleSet{
-				universal: &Style{color: &red, fontSize: &fontSize12},
+				universal: &Style{Color: &red, FontSize: &fontSize12},
 				idStyles: map[string]*Style{
-					"a": {fontSize: &fontSize16},
-					"b": {color: &blue},
+					"a": {FontSize: &fontSize16},
+					"b": {Color: &blue},
 				},
 			},
 		},
@@ -145,21 +145,21 @@ func TestAddStyleSet(t *testing.T) {
 			name: "merge all style types with conflicts",
 			input: [2]*StyleSet{
 				{
-					classStyles: map[string]*Style{"c1": {color: &red}},
-					tagStyles:   map[parser.Tag]*Style{parser.Div: {fontSize: &fontSize16}},
+					classStyles: map[string]*Style{"c1": {Color: &red}},
+					tagStyles:   map[parser.Tag]*Style{parser.Div: {FontSize: &fontSize16}},
 				},
 				{
-					classStyles: map[string]*Style{"c1": {fontSize: &fontSize12}},
-					tagStyles:   map[parser.Tag]*Style{parser.Span: {color: &blue}},
+					classStyles: map[string]*Style{"c1": {FontSize: &fontSize12}},
+					tagStyles:   map[parser.Tag]*Style{parser.Span: {Color: &blue}},
 				},
 			},
 			expected: &StyleSet{
 				classStyles: map[string]*Style{
-					"c1": {color: &red, fontSize: &fontSize12},
+					"c1": {Color: &red, FontSize: &fontSize12},
 				},
 				tagStyles: map[parser.Tag]*Style{
-					parser.Div:  {fontSize: &fontSize16},
-					parser.Span: {color: &blue},
+					parser.Div:  {FontSize: &fontSize16},
+					parser.Span: {Color: &blue},
 				},
 			},
 		},
@@ -195,9 +195,9 @@ func styleEq(a, b *Style) bool {
 	} else if a == nil || b == nil {
 		return false
 	}
-	return ptrValEq(a.color, b.color) && ptrValEq(a.bgColor, b.bgColor) &&
-		ptrValEq(a.margin, b.margin) && ptrValEq(a.padding, b.padding) &&
-		ptrValEq(a.border, b.border) && ptrValEq(a.fontSize, b.fontSize)
+	return ptrValEq(a.Color, b.Color) && ptrValEq(a.BgColor, b.BgColor) &&
+		ptrValEq(a.Margin, b.Margin) && ptrValEq(a.Padding, b.Padding) &&
+		ptrValEq(a.Border, b.Border) && ptrValEq(a.FontSize, b.FontSize)
 }
 
 func ptrValEq[T comparable](a *T, b *T) bool {
