@@ -9,11 +9,9 @@ type rule struct {
 	styles    map[string]string // map property->value of the style
 }
 
-type StyleParser struct{}
-
 // Parse parses raw CSS content string into a StyleSet
 // requires: the syntax must be correct.
-func (sp StyleParser) Parse(raw string) (*StyleSet, error) {
+func Parse(raw string) (*StyleSet, error) {
 	lexer := newLexer(raw)
 	res := newStyleSet()
 

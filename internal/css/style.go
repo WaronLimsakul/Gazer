@@ -3,7 +3,6 @@ package css
 import (
 	"fmt"
 	"image/color"
-	"maps"
 	"strconv"
 	"strings"
 
@@ -37,9 +36,51 @@ type Style struct {
 	fontSize *unit.Dp // TODO: might have to change after supporting other type
 }
 
-// AddStyle adds 2 style struct, one with higher priority than another one
-func AddStyle(sHigh Style, sLow Style) Style {
-	var res Style
+// AddStyleSet adds 2 style sets with different importance (high/low priority)
+func AddStyleSet(high, low *StyleSet) *StyleSet {
+	if high == nil {
+		return low
+	} else if low == nil {
+		return high
+	}
+
+	res := new(StyleSet)
+	res.universal = AddStyle(high.universal, low.universal)
+	res.idStyles = AddStyleMap(high.idStyles, low.idStyles)
+	res.classStyles = AddStyleMap(high.classStyles, low.classStyles)
+	res.tagStyles = AddStyleMap(high.tagStyles, low.tagStyles)
+
+	return res
+}
+
+// AddStyleMap adds 2 style map (e.g. idStyles) with different priority into one style map while
+func AddStyleMap[K comparable](high, low map[K]*Style) map[K]*Style {
+	var res map[K]*Style
+	if high != nil {
+		res = high
+		for id, lowStyle := range low {
+			highStyle, conflict := res[id]
+			if conflict {
+				res[id] = AddStyle(highStyle, lowStyle)
+			} else {
+				res[id] = lowStyle
+			}
+		}
+	} else {
+		res = low
+	}
+	return res
+}
+
+// AddStyle adds 2 style, one with higher priority than another one
+func AddStyle(sHigh *Style, sLow *Style) *Style {
+	if sHigh == nil {
+		return sLow
+	} else if sLow == nil {
+		return sHigh
+	}
+
+	res := new(Style)
 	if sHigh.color != nil {
 		res.color = sHigh.color
 	} else {
@@ -457,27 +498,4 @@ func (s Style) parseInset(raw string) (*layout.Inset, error) {
 	}
 
 	return nil, fmt.Errorf("Invalid format: %v", vals)
-}
-
-func styleSetEq(a, b StyleSet) bool {
-	return styleEqual(a.universal, b.universal) &&
-		maps.EqualFunc(a.idStyles, b.idStyles, styleEqual) &&
-		maps.EqualFunc(a.classStyles, b.classStyles, styleEqual) &&
-		maps.EqualFunc(a.tagStyles, b.tagStyles, styleEqual)
-}
-
-func ptrValEq[T comparable](a *T, b *T) bool {
-	if a == nil && b == nil {
-		return true
-	} else if a == nil || b == nil {
-		return false
-	} else {
-		return *a == *b
-	}
-}
-
-func styleEqual(a, b *Style) bool {
-	return ptrValEq(a.color, b.color) && ptrValEq(a.bgColor, b.bgColor) &&
-		ptrValEq(a.margin, b.margin) && ptrValEq(a.border, b.border) &&
-		ptrValEq(a.fontSize, b.fontSize)
 }

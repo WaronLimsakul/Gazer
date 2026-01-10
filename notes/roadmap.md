@@ -17,7 +17,7 @@
   - [x] favicon
 - [x] Set up supporting CSS field in components
 - [x] Have CSS parser `StyleParser`?: parse CSS string into `Style` struct
-- [ ] `DomRenderer` should have `StyleParser`
+- [x] `DomRenderer` should have `StyleParser`
 While `RenderDOM`: NOTE, source priority if conflict: inline `style` attr > `style` tag > external css file
 - [ ] If saw`stylesheet`, fetch it, parse and store in the function scope (might consider cache it)[ ] [ ] 
 - [ ] If saw `style` tag, parse it and merge with the old one if exists .

@@ -125,3 +125,54 @@ because string in Go is just immutable []char reallocate repeatedly is not a goo
 `Builder` have it's own resizable buffer, we can do `.WriteString()` or `.Fprintf()` into its address to append whatever we want.
 Then at the end, I do `.String()` to get the result. More efficient.
 
+### CSS parsing
+I don't wanna really touch the `parser` and `lexer` package so I just add `css` package that do both lexing and parsing css strings.
+
+My idea right now is to represent entire css document in a struct called `StyleSet` which is something like this.
+
+```go
+// StyleSet is a (almost) ready-to-use style set of one CSS file (or more?)
+type StyleSet struct {
+	universal   *Style
+	idStyles    map[string]*Style
+	classStyles map[string]*Style
+	tagStyles   map[parser.Tag]*Style
+}
+```
+
+I merge all possible styling you can do with an element into `Style` struct. I know it's not efficient, but it's easy to deal with.
+
+```go
+// Style is a property to style the rendering of any argument.
+// The responsibility to intepret the struct is on caller.
+type Style struct {
+	color    *color.NRGBA
+	bgColor  *color.NRGBA
+	margin   *layout.Inset
+    ...
+}
+```
+
+There will be a `StyleParser` that can `Parse` string into `StyleSet`. I plan to let my `DomRenderer` (DR) hold a `StyleParser`.
+I will let DR look for `<link rel="styleshee">` and/or `<style></style>` in the `<head>` to get a style set first before render `<body>`.
+
+Then while traversing and rendering a dom-tree, my DR should always test the node against the style set to see if it spit out
+any `Style` the  DR has to add when render the element. 
+
+Oh, it also needs some inline parsing for `style` attribute.
+
+### Pass by value? Wait, or should it be pointer?
+I kinda let my intuition decide these kinda of questions, but to make things rigid. Here are some rules I will try to obey
+
+#### Pass by value when
+1. Type is small
+2. I don't wanna mutate anything
+3. Type is simple and immutable
+4. Clean and simple stupid API
+
+#### Pass by pointer when
+1. Type is big
+2. Type has something mutable (e.g. map, and slice), in that case, there is no point passing by value
+3. I want to mutate something client pass in
+4. I have to represent optionality
+

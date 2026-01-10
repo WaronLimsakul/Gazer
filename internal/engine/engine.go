@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"gioui.org/app"
+	"github.com/WaronLimsakul/Gazer/internal/css"
 	"github.com/WaronLimsakul/Gazer/internal/parser"
 )
 
@@ -140,6 +141,57 @@ func search(url string) (*parser.Node, error) {
 	return root, nil
 }
 
+// getStyle get the CSS StyleSet from the DOM root
+// return nil if not found.
+func parseStyle(root *parser.Node) *css.StyleSet {
+	// TODO NOW: handle:
+	// - <link rel="stylesheet" href="..">
+	// - <style>..</style>
+	head := findHead(root)
+	if head == nil {
+		return nil
+	}
+
+	var internal *css.StyleSet // styleset from <style></style>
+	var external *css.StyleSet // styleset from <link ref="stylesheet" href="..">
+	for _, node := range head.Children {
+		// handle title tag
+		switch node.Tag {
+		case parser.Style:
+			var contentBuilder strings.Builder
+			for _, txt := range node.Children {
+				if txt.Tag == parser.Text {
+					contentBuilder.WriteString(txt.Inner)
+				}
+			}
+			styles, err := css.Parse(contentBuilder.String())
+			if err != nil {
+				break
+			}
+			internal = styles
+		case parser.Link:
+			if rel, ok := node.Attrs["rel"]; ok && rel == "stylesheet" {
+				href, ok := node.Attrs["href"]
+				if !ok {
+					break
+				}
+				_, err := urlPackage.Parse(href)
+				if err != nil {
+					break
+				}
+				res, err := client.Get(href)
+				if err != nil {
+					break
+				}
+
+			}
+		}
+	}
+	if interanl != nil && external != nil {
+		return css.Add
+	}
+}
+
 // fetch uses the url to fetch the response
 func fetch(url string) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -170,4 +222,22 @@ func reportProgress(t *Tab, w *app.Window, progressChan chan float32) {
 
 	progressChan <- 1.0
 	w.Invalidate()
+}
+
+func findHead(root *parser.Node) *parser.Node {
+	if root.Tag != parser.Root {
+		return nil
+	} else if len(root.Children) == 0 {
+		return nil
+	} else if root.Children[0].Tag != parser.Html {
+		return nil
+	}
+
+	html := root.Children[0]
+	for _, child := range html.Children {
+		if child.Tag == parser.Head {
+			return child
+		}
+	}
+	return nil
 }

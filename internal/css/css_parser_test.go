@@ -91,7 +91,7 @@ h1 {
 
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
-			actual, err := StyleParser{}.Parse(testCase.input)
+			actual, err := Parse(testCase.input)
 			if err != nil {
 				t.Errorf("Parse error: %v", err)
 			} else if !styleSetEq(*actual, testCase.expected) {

@@ -18,6 +18,8 @@ const (
 
 	Title
 	Meta
+	Link
+	Style
 
 	Div
 	Span
@@ -55,6 +57,8 @@ var TagMap = map[string]Tag{
 	"body":    Body,
 	"title":   Title,
 	"meta":    Meta,
+	"link":    Link,
+	"style":   Style,
 	"div":     Div,
 	"span":    Span,
 	"section": Section,
@@ -93,6 +97,10 @@ func (t Tag) String() string {
 		return "title"
 	case Meta:
 		return "meta"
+	case Link:
+		return "link"
+	case Style:
+		return "style"
 	case Div:
 		return "div"
 	case Span:
@@ -147,6 +155,7 @@ var VoidElements = map[Tag]bool{
 	Meta:  true,
 	Img:   true,
 	Input: true,
+	Link:  true,
 }
 
 // text elements = tag that is rendered as a string
