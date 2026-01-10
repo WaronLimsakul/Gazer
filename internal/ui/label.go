@@ -47,6 +47,7 @@ type Label struct {
 	style LabelStyle
 }
 
+// TODO NOW: after finish acc recursion, do this
 func (l Label) Layout(gtx C) D {
 	// handle ui interaction
 	l.clickable.Update(gtx)
@@ -65,7 +66,6 @@ func (l Label) Layout(gtx C) D {
 						// LabelStyle.Layout try to takes just what it need by default.
 						// However, passed gtx might just give min = max = max
 						gtx.Constraints.Min = image.Point{}
-						// TODO NOW: Should we just modify the LabelStyle inside instead?
 						tmpStyle := l.style
 						tmpStyle.Color = l.color
 						return tmpStyle.Layout(gtx)
@@ -101,6 +101,7 @@ func (l Label) Layout(gtx C) D {
 	})
 }
 
+// TODO NOW: change this to Label, or something
 func Text(thm *Theme, selectable *widget.Selectable, txt string) Label {
 	text := material.Label(thm, thm.TextSize, txt)
 	text.State = selectable
@@ -109,6 +110,7 @@ func Text(thm *Theme, selectable *widget.Selectable, txt string) Label {
 	return Label{tags: tags, style: text}
 }
 
+// TODO NOW: change all these to Style -> Style
 func H1(thm *Theme, label Label) Label {
 	label.tags[parser.H1] = true
 	label.style.TextSize = thm.TextSize * 2.25
@@ -217,30 +219,5 @@ func Button(thm *Theme, clickable *widget.Clickable, label Label) Label {
 
 	label.clickable = clickable
 	label.tags[parser.Button] = true
-	return label
-}
-
-// StyleLabel recieve a Label component and implement the Style struct
-// to apply the style to the label.
-func StyleLabel(style Style, label Label) Label {
-	if style.Color != nil {
-		label.style.Color = *style.Color
-	}
-	if style.BgColor != nil {
-		label.bgColor = *style.BgColor
-	}
-	// TODO NOW: how to just set some of them, not all?
-	if style.Border != nil {
-		label.border = *style.Border
-	}
-	if style.FontSize != nil {
-		label.style.TextSize = unit.Sp(*style.FontSize)
-	}
-	if style.Margin != nil {
-		label.margin = *style.Margin
-	}
-	if style.Padding != nil {
-		label.padding = *style.Padding
-	}
 	return label
 }

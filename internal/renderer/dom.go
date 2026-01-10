@@ -21,8 +21,6 @@ type DomRenderer struct {
 	// Can cache it because engine also cache by pointer
 	// (same url + same tab = same root ptr).
 	cache map[*Node]*[][]Element
-	// CSS style we have to know when render
-	styles *css.StyleSet
 	// All Texts' selectables elements based on its pointer.
 	// These pointers will not be cleaned because the map still refer to it.
 	selectables      map[*Node]*widget.Selectable
@@ -31,8 +29,9 @@ type DomRenderer struct {
 	inputEditors     map[*Node]*widget.Editor
 }
 
-type StyleSet = css.StyleSet
 type Node = parser.Node
+type StyleSet = css.StyleSet
+type Style = css.Style
 
 func newDomRenderer(thm *material.Theme, tab *ui.Tab) *DomRenderer {
 	return &DomRenderer{thm: thm, tab: tab, cache: make(map[*Node]*[][]Element),
@@ -46,7 +45,7 @@ func newDomRenderer(thm *material.Theme, tab *ui.Tab) *DomRenderer {
 // renderDOM takes a DOM root node and return [][]Element
 // First layer (outer) is each horizontal line of rendering.
 // Second layer (inner) is each element in that line from left to right.
-func (dr *DomRenderer) render(root *Node) [][]Element {
+func (dr *DomRenderer) render(root *Node, styles *StyleSet) [][]Element {
 	res := make([][]Element, 0)
 	// expect to be Root node
 	if root == nil || root.Tag != parser.Root {
@@ -65,7 +64,7 @@ func (dr *DomRenderer) render(root *Node) [][]Element {
 
 	htmlNode := root.Children[0]
 	for _, child := range htmlNode.Children {
-		res = append(res, dr.renderNode(child)...)
+		res = append(res, dr.renderNode(child, styles)...)
 	}
 
 	dr.cache[root] = &res
@@ -73,7 +72,7 @@ func (dr *DomRenderer) render(root *Node) [][]Element {
 }
 
 // renderNodes returns flex children needs for render a node and its children.
-func (dr *DomRenderer) renderNode(node *Node) [][]Element {
+func (dr *DomRenderer) renderNode(node *Node, styles *StyleSet) [][]Element {
 	res := make([][]Element, 0)
 	switch node.Tag {
 	case parser.Body:
@@ -99,16 +98,16 @@ func (dr *DomRenderer) renderNode(node *Node) [][]Element {
 	}
 
 	if parser.TextElements[node.Tag] {
-		res = append(res, dr.renderText(node)...)
+		res = append(res, dr.renderText(node, styles)...)
 	}
 
 	return res
 }
 
 // renderText returns [][]Element needs for rendering a text node and its children.
-func (dr *DomRenderer) renderText(node *Node) [][]Element {
-	// TODO NOW: parse inline styles
-	// TODO NOW 2: solve conflict between inline styles and global style we have
+// requires: node must be of the text type (check by using parser.TextElements)
+func (dr *DomRenderer) renderText(node *Node, styles *StyleSet) [][]Element {
+	// TODO NOW: solve conflict between inline styles and global style we have: use acc rec
 
 	// base case
 	if node.Tag == parser.Text {
@@ -117,15 +116,23 @@ func (dr *DomRenderer) renderText(node *Node) [][]Element {
 			selectable = new(widget.Selectable)
 			dr.selectables[node] = selectable
 		}
-
+		// Text type node is not a real html tag, so it will never be affected by style (base case)
 		return [][]Element{{ui.Text(dr.thm, selectable, node.Inner)}}
 	}
 
 	// recursive case [phase 1]: aggregate the children elements
-	res := dr.gatherElements(node)
+	res := dr.gatherElements(node, styles)
 
 	// recursive case [phase 2]: decorate the children that are Label
 	// recursive case [phase 2.1]: take care of a special decorator
+	var inlineStyle *Style
+	styleStr, ok := node.Attrs["style"]
+	if ok {
+		res := css.ParseStyle(styleStr)
+		inlineStyle = &res
+	}
+
+	// recursive case [phase 2.2]: take care of a special decorator
 	// tag "A" decorator has different signature
 	if node.Tag == parser.A {
 		clickable, ok := dr.linkClickables[node]
@@ -187,7 +194,7 @@ func (dr *DomRenderer) renderText(node *Node) [][]Element {
 		return res
 	}
 
-	// recursive case [phase 2.2]: normal text decorator
+	// recursive case [phase 2.3]: normal text decorator
 	dec := ui.P
 	switch node.Tag {
 	case parser.H1:
@@ -303,13 +310,13 @@ func (dr DomRenderer) findHead(node *Node) *Node {
 
 // gaterElements recieves a node and gather all elements of the node's children
 // according the tag rule (inline, block)
-func (dr DomRenderer) gatherElements(node *Node) [][]Element {
+func (dr DomRenderer) gatherElements(node *Node, styles *StyleSet) [][]Element {
 	res := make([][]Element, 0)
 	// if inline-text and prev is also inline-text, put it in latest one don't append
 	for i, child := range node.Children {
 		if parser.InlineElements[child.Tag] && len(res) > 0 && i > 0 &&
 			parser.InlineElements[node.Children[i-1].Tag] {
-			childElems := dr.renderNode(child)
+			childElems := dr.renderNode(child, styles)
 			if len(childElems) > 0 {
 				res[len(res)-1] = append(res[len(res)-1], childElems[0]...)
 			}
@@ -318,7 +325,7 @@ func (dr DomRenderer) gatherElements(node *Node) [][]Element {
 			}
 
 		} else {
-			res = append(res, dr.renderNode(child)...)
+			res = append(res, dr.renderNode(child, styles)...)
 		}
 
 	}

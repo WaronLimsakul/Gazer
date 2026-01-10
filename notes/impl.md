@@ -165,6 +165,30 @@ Oh, it also needs some inline parsing for `style` attribute.
 I feel like the task of parsing something should be with engine, and also we have to fetch something, that convinces
 me to let engine handle the fetch+parse CSS. For now, I'll let it stores the style in the `Styles` field of `Tab`.
 
+#### Update 2: Dom Renderer
+Since I store a `StyleSet` in the state.tab, dom renderer won't have access to it unless it has been told
+in the function parameter (DR has `ui.Tab`, not `engine.Tab`). So I'm thinking of passing `*StyleSet` into `render` 
+and let all those helper recursive function pass them around as well.
+
+One good thing about this approach is if I found inline `style` that will affect the children of the node, I can just modify 
+my current `style` and pass it to the recursion.
+
+#### Update 3: Wait... Then my decoration and style goes different way?
+Take a look at this:
+```html
+<h2>
+    <h1>101</h1>
+ </h2>
+ <h1>
+     <h2>102</h2>
+ </h1>
+```
+V8 displays the first one as h1 and second one as h2. So I guess my way of decoration flowing up doesn't work.
+Then, instead of using label decorator as `Label -> Label`, I'll do `Style -> Style`, thus my rendering process
+will become accumulative recursion instead of a normal one. At the basecase, `Text()` should takes the style and 
+produce a Label correctly. NOTE: I might rename `Text()` to be something like `Label()`.
+
+
 ### Pass by value? Wait, or should it be pointer?
 I kinda let my intuition decide these kinda of questions, but to make things rigid. Here are some rules I will try to obey
 
