@@ -21,8 +21,6 @@ type DomRenderer struct {
 	// Can cache it because engine also cache by pointer
 	// (same url + same tab = same root ptr).
 	cache map[*parser.Node]*[][]Element
-	// for parsing style (CSS) strings
-	styleParser css.StyleParser
 	// CSS style we have to know when render
 	styles *css.StyleSet
 	// All Texts' selectables elements based on its pointer.
@@ -240,11 +238,8 @@ func (dr *DomRenderer) renderText(node *parser.Node) [][]Element {
 	return res
 }
 
-// handleHead set the tabview data by processing <head> node in the DOM tree
+// handleHead set the tabview data by processing <head> node in the DOM tree (except css-related)
 func (dr *DomRenderer) handleHead(root *parser.Node) {
-	// TODO NOW: handle:
-	// - <link rel="stylesheet" href="..">
-	// - <style>..</style>
 	head := dr.findHead(root)
 	if head == nil {
 		dr.tab.Title = ""
@@ -261,27 +256,6 @@ func (dr *DomRenderer) handleHead(root *parser.Node) {
 					titleSet = true
 					dr.tab.Title = titleChild.Inner
 				}
-			}
-		case parser.Style:
-			var contentBuilder strings.Builder
-			for _, txt := range node.Children {
-				if txt.Tag == parser.Text {
-					contentBuilder.WriteString(txt.Inner)
-				}
-			}
-			styles, err := dr.styleParser.Parse(contentBuilder.String())
-			if err != nil {
-				break
-			}
-			dr.styles = styles
-		case parser.Link:
-			if rel, ok := node.Attrs["rel"]; ok && rel == "stylesheet" {
-				href, ok := node.Attrs["href"]
-				if !ok {
-					break
-				}
-				// should I put it in engine?
-
 			}
 			// TODO: support some other links
 		}

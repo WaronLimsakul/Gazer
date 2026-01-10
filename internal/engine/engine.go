@@ -40,6 +40,7 @@ type State struct {
 type Tab struct {
 	Url       string
 	Root      *parser.Node
+	Styles    *css.StyleSet
 	IsLoading bool
 }
 
@@ -72,6 +73,7 @@ func Start(state *State, window *app.Window) {
 			tab.IsLoading = true
 			go reportProgress(tab, window, state.LoadProgress)
 			root, err := search(tab.Url)
+			styles := getStyles(root)
 			tab.IsLoading = false
 			if err != nil {
 				fmt.Println("search:", err)
@@ -80,6 +82,7 @@ func Start(state *State, window *app.Window) {
 
 			tabCache[tab.Url] = root
 			tab.Root = root
+			tab.Styles = styles
 			window.Invalidate()
 		case AddTab:
 			state.Tabs = append(state.Tabs, &Tab{})
@@ -141,12 +144,8 @@ func search(url string) (*parser.Node, error) {
 	return root, nil
 }
 
-// getStyle get the CSS StyleSet from the DOM root
-// return nil if not found.
-func parseStyle(root *parser.Node) *css.StyleSet {
-	// TODO NOW: handle:
-	// - <link rel="stylesheet" href="..">
-	// - <style>..</style>
+// getStyles get the CSS StyleSet from the DOM root. it returns nil if not found.
+func getStyles(root *parser.Node) *css.StyleSet {
 	head := findHead(root)
 	if head == nil {
 		return nil
@@ -183,12 +182,23 @@ func parseStyle(root *parser.Node) *css.StyleSet {
 				if err != nil {
 					break
 				}
-
+				defer res.Body.Close()
+				content, err := io.ReadAll(res.Body)
+				if err != nil {
+					break
+				}
+				styles, err := css.Parse(string(content))
+				external = styles
 			}
 		}
 	}
-	if interanl != nil && external != nil {
-		return css.Add
+
+	if internal != nil && external != nil {
+		return css.AddStyleSet(internal, external)
+	} else if internal != nil {
+		return internal
+	} else {
+		return external
 	}
 }
 
