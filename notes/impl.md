@@ -188,6 +188,10 @@ Then, instead of using label decorator as `Label -> Label`, I'll do `Style -> St
 will become accumulative recursion instead of a normal one. At the basecase, `Text()` should takes the style and 
 produce a Label correctly. NOTE: I might rename `Text()` to be something like `Label()`.
 
+#### Update 4: `<Ol>`...
+A little special case is this guy. I have to find a way to pass the order count of the `<li>` inside an ol.
+TBD
+
 
 ### Pass by value? Wait, or should it be pointer?
 I kinda let my intuition decide these kinda of questions, but to make things rigid. Here are some rules I will try to obey

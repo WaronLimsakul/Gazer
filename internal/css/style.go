@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"gioui.org/font"
 	"gioui.org/layout"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -23,18 +24,18 @@ type StyleSet struct {
 // Style is a property to style the rendering of any argument.
 // The responsibility to intepret the struct is on caller.
 // Change this =
-// 1. modify how to parse the style name in Style.apply
-// 2. modify the ui component that support style to have the suppored fields
-// 3. modify the implementation that ui component
-// 4. modify comparison in styleEq function
-// 5. modify how to implement it in ui.StyleLabel
+// 1. modify how to parse the style name in Style.registerDecls
+// 2. modify comparison in styleEq function (in style_test.go)
+// 3. modify how to implement it in ui package
 type Style struct {
-	Color    *color.NRGBA
-	BgColor  *color.NRGBA
-	Margin   *layout.Inset
-	Padding  *layout.Inset
-	Border   *widget.Border
-	FontSize *unit.Dp // TODO: might have to change after supporting other type
+	Color      *color.NRGBA
+	BgColor    *color.NRGBA
+	Margin     *layout.Inset
+	Padding    *layout.Inset
+	Border     *widget.Border
+	FontSize   *unit.Sp // TODO: might have to change after supporting other type
+	FontWeight *font.Weight
+	FontStyle  *font.Style
 }
 
 // AddStyleSet adds 2 style sets with different importance (high/low priority)
@@ -208,6 +209,9 @@ func (s Style) String() string {
 	if s.FontSize != nil {
 		fmt.Fprintf(&builder, "FontSize: %v ", *s.FontSize)
 	}
+	if s.FontWeight != nil {
+		fmt.Fprintf(&builder, "FontWeight: %v", *s.FontWeight)
+	}
 	builder.WriteString("}")
 	return builder.String()
 }
@@ -345,7 +349,20 @@ func (s *Style) registerDecls(decls map[string]string) {
 			if err != nil {
 				continue
 			}
-			s.FontSize = &size
+			spSize := unit.Sp(size)
+			s.FontSize = &spSize
+		case "font-weight":
+			weight, ok := fontWeights[val]
+			if !ok {
+				continue
+			}
+			s.FontWeight = &weight
+		case "font-style":
+			fstyle, ok := fontStyles[val]
+			if !ok {
+				continue
+			}
+			s.FontStyle = &fstyle
 		}
 
 	}

@@ -33,6 +33,8 @@ type Node = parser.Node
 type StyleSet = css.StyleSet
 type Style = css.Style
 
+// TODO NOW: DomStyle interface
+
 func newDomRenderer(thm *material.Theme, tab *ui.Tab) *DomRenderer {
 	return &DomRenderer{thm: thm, tab: tab, cache: make(map[*Node]*[][]Element),
 		selectables:      make(map[*Node]*widget.Selectable),
@@ -45,6 +47,7 @@ func newDomRenderer(thm *material.Theme, tab *ui.Tab) *DomRenderer {
 // renderDOM takes a DOM root node and return [][]Element
 // First layer (outer) is each horizontal line of rendering.
 // Second layer (inner) is each element in that line from left to right.
+// TODO: doc
 func (dr *DomRenderer) render(root *Node, styles *StyleSet) [][]Element {
 	res := make([][]Element, 0)
 	// expect to be Root node
@@ -72,7 +75,8 @@ func (dr *DomRenderer) render(root *Node, styles *StyleSet) [][]Element {
 }
 
 // renderNodes returns flex children needs for render a node and its children.
-func (dr *DomRenderer) renderNode(node *Node, styles *StyleSet) [][]Element {
+// TODO: doc
+func (dr *DomRenderer) renderNode(node *Node, styles *StyleSet, localStyle *Style) [][]Element {
 	res := make([][]Element, 0)
 	switch node.Tag {
 	case parser.Body:
@@ -106,7 +110,8 @@ func (dr *DomRenderer) renderNode(node *Node, styles *StyleSet) [][]Element {
 
 // renderText returns [][]Element needs for rendering a text node and its children.
 // requires: node must be of the text type (check by using parser.TextElements)
-func (dr *DomRenderer) renderText(node *Node, styles *StyleSet) [][]Element {
+// TODO: doc
+func (dr *DomRenderer) renderText(node *Node, styles *StyleSet, localStyle *Style) [][]Element {
 	// TODO NOW: solve conflict between inline styles and global style we have: use acc rec
 
 	// base case
@@ -310,7 +315,7 @@ func (dr DomRenderer) findHead(node *Node) *Node {
 
 // gaterElements recieves a node and gather all elements of the node's children
 // according the tag rule (inline, block)
-func (dr DomRenderer) gatherElements(node *Node, styles *StyleSet) [][]Element {
+func (dr DomRenderer) gatherElements(node *Node, styles *StyleSet, localStyle *Style) [][]Element {
 	res := make([][]Element, 0)
 	// if inline-text and prev is also inline-text, put it in latest one don't append
 	for i, child := range node.Children {

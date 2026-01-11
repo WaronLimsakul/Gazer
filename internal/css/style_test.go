@@ -197,7 +197,8 @@ func styleEq(a, b *Style) bool {
 	}
 	return ptrValEq(a.Color, b.Color) && ptrValEq(a.BgColor, b.BgColor) &&
 		ptrValEq(a.Margin, b.Margin) && ptrValEq(a.Padding, b.Padding) &&
-		ptrValEq(a.Border, b.Border) && ptrValEq(a.FontSize, b.FontSize)
+		ptrValEq(a.Border, b.Border) && ptrValEq(a.FontSize, b.FontSize) &&
+		ptrValEq(a.FontWeight, b.FontWeight)
 }
 
 func ptrValEq[T comparable](a *T, b *T) bool {

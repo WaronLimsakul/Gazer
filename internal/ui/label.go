@@ -18,16 +18,21 @@ import (
 	"github.com/WaronLimsakul/Gazer/internal/parser"
 )
 
-type LabelStyle = material.LabelStyle
+// type material.LabelStyle = material.material.LabelStyle
 type Theme = material.Theme
 type Style = css.Style
 
-// label components are supposed to be used as decorator pattern
-// Text() is a base component with LabelFunc type
-type LabelFunc = func(*Theme, *widget.Selectable, string) LabelStyle
+// Labels are supposed to be built using a decorator pattern.
+// Start with empty LabelStyle, pass it around with all LabelStyleDecator and then
+// finish the building with NewLabel()
 
-// Decorate any LabelStyle with LabelDecorator e.g. H1, H2, etc.
-type LabelDecorator = func(*Theme, LabelStyle) LabelStyle
+// NewLabel() is a final function to build a label. Client should have built the LabelStyle
+// as they like before calling this.
+type LabelFunc = func(*Theme, *LabelStyle, *widget.Selectable, string) Label
+
+// Decorate any material.LabelStyle with LabelStyleDecorator e.g. H1, H2, etc.
+// NOTE: some decorator might have a little different signature
+type LabelStyleDecorator = func(*Theme, LabelStyle) LabelStyle
 
 type Label struct {
 	tags map[parser.Tag]bool
@@ -44,7 +49,17 @@ type Label struct {
 	// for <li>: e.g. prefix "•"
 	prefix string
 
-	style LabelStyle
+	style material.LabelStyle
+}
+
+// object passed around in dom tree (top down)
+// TODO NOW NOW: wait, but in the domrender.renderNode(), it's just css.Style, not ui.LabelStyle
+type LabelStyle struct {
+	Style
+	tags      map[parser.Tag]bool
+	clickable *widget.Clickable
+	prefix    string
+	count     *int // for <ol>
 }
 
 // TODO NOW: after finish acc recursion, do this
@@ -63,7 +78,7 @@ func (l Label) Layout(gtx C) D {
 				var contentOp op.CallOp
 				contentWidget := func(gtx C) D {
 					return l.padding.Layout(gtx, func(gtx C) D {
-						// LabelStyle.Layout try to takes just what it need by default.
+						// material.LabelStyle.Layout try to takes just what it need by default.
 						// However, passed gtx might just give min = max = max
 						gtx.Constraints.Min = image.Point{}
 						tmpStyle := l.style
@@ -101,123 +116,173 @@ func (l Label) Layout(gtx C) D {
 	})
 }
 
-// TODO NOW: change this to Label, or something
-func Text(thm *Theme, selectable *widget.Selectable, txt string) Label {
-	text := material.Label(thm, thm.TextSize, txt)
+// NewLabel receives create a new Label element
+func NewLabel(thm *Theme, lstyle *LabelStyle, selectable *widget.Selectable, txt string) Label {
+	var text material.LabelStyle
+	if lstyle.FontSize != nil {
+		text = material.Label(thm, *lstyle.FontSize, txt)
+	} else {
+		text = material.Label(thm, thm.TextSize, txt)
+	}
+
 	text.State = selectable
-	tags := make(map[parser.Tag]bool)
-	tags[parser.Text] = true
-	return Label{tags: tags, style: text}
+	res := Label{tags: lstyle.tags, prefix: lstyle.prefix, style: text}
+	if lstyle.Color != nil {
+		res.color = *lstyle.Color
+	}
+	if lstyle.BgColor != nil {
+		res.bgColor = *lstyle.BgColor
+	}
+	if lstyle.Border != nil {
+		res.border = *lstyle.Border
+	}
+	if lstyle.Margin != nil {
+		res.margin = *lstyle.Margin
+	}
+	if lstyle.Padding != nil {
+		res.padding = *lstyle.Padding
+	}
+
+	return res
 }
 
-// TODO NOW: change all these to Style -> Style
-func H1(thm *Theme, label Label) Label {
-	label.tags[parser.H1] = true
-	label.style.TextSize = thm.TextSize * 2.25
-	label.style.Font.Weight = font.Bold
-	return label
+func H1(thm *Theme, style LabelStyle) LabelStyle {
+	style.tags[parser.H1] = true
+	size := thm.TextSize * 2.25
+	style.FontSize = &size
+	bold := font.Bold
+	style.FontWeight = &bold
+	return style
 }
 
-func H2(thm *Theme, label Label) Label {
-	label.tags[parser.H2] = true
-	label.style.TextSize = thm.TextSize * 1.75
-	label.style.Font.Weight = font.Bold
-	return label
+func H2(thm *Theme, style LabelStyle) LabelStyle {
+	style.tags[parser.H2] = true
+	size := thm.TextSize * 1.75
+	style.FontSize = &size
+	bold := font.Bold
+	style.FontWeight = &bold
+	return style
 }
 
-func H3(thm *Theme, label Label) Label {
-	label.tags[parser.H3] = true
-	label.style.TextSize = thm.TextSize * 1.375
-	label.style.Font.Weight = font.Bold
-	return label
+func H3(thm *Theme, style LabelStyle) LabelStyle {
+	style.tags[parser.H3] = true
+	size := thm.TextSize * 1.375
+	style.FontSize = &size
+	bold := font.Bold
+	style.FontWeight = &bold
+	return style
 }
 
-func H4(thm *Theme, label Label) Label {
-	label.tags[parser.H4] = true
-	label.style.TextSize = thm.TextSize * 1.125
-	label.style.Font.Weight = font.Bold
-	return label
+func H4(thm *Theme, style LabelStyle) LabelStyle {
+	style.tags[parser.H4] = true
+	size := thm.TextSize * 1.125
+	style.FontSize = &size
+	bold := font.Bold
+	style.FontWeight = &bold
+	return style
 }
 
-func H5(thm *Theme, label Label) Label {
-	label.tags[parser.H5] = true
-	label.style.TextSize = thm.TextSize
-	label.style.Font.Weight = font.Bold
-	return label
+func H5(thm *Theme, style LabelStyle) LabelStyle {
+	style.tags[parser.H5] = true
+	size := thm.TextSize
+	style.FontSize = &size
+	bold := font.Bold
+	style.FontWeight = &bold
+	return style
 }
 
-func P(thm *Theme, label Label) Label {
-	label.tags[parser.P] = true
-	label.style.TextSize = thm.TextSize
-	return label
+func P(thm *Theme, style LabelStyle) LabelStyle {
+	style.tags[parser.P] = true
+	return style
 }
 
-func I(thm *Theme, label Label) Label {
-	label.tags[parser.I] = true
-	label.style.Font.Style = font.Italic
-	return label
+func I(thm *Theme, style LabelStyle) LabelStyle {
+	style.tags[parser.I] = true
+	italic := font.Italic
+	style.FontStyle = &italic
+	return style
 }
 
-func B(thm *Theme, label Label) Label {
-	label.tags[parser.B] = true
-	label.style.Font.Weight = font.Bold
-	return label
+func B(thm *Theme, style LabelStyle) LabelStyle {
+	style.tags[parser.B] = true
+	bold := font.Bold
+	style.FontWeight = &bold
+	return style
 }
 
-func A(clickable *widget.Clickable, label Label) Label {
-	label.tags[parser.A] = true
-	label.style.Color = color.NRGBA{R: 0, G: 0, B: 238, A: 255}
-	label.clickable = clickable
-	return label
+func A(clickable *widget.Clickable, style LabelStyle) LabelStyle {
+	style.tags[parser.A] = true
+	style.Color = &color.NRGBA{R: 0, G: 0, B: 238, A: 255}
+	style.clickable = clickable
+	return style
 }
 
 // we don't need thm, but just try to make it like the others
-func Ul(label Label) Label {
-	// give Li label a bullet point of not yet
-	if label.tags[parser.Li] && !label.tags[parser.Ul] && !label.tags[parser.Ol] {
-		label.prefix = "• "
+func Ul(style LabelStyle) LabelStyle {
+	style.tags[parser.Ul] = true
+	if style.Margin == nil {
+		style.Margin = new(layout.Inset)
 	}
-
-	label.margin.Left += unit.Dp(10)
-	label.tags[parser.Ul] = true
-	return label
+	style.Margin.Left += unit.Dp(10)
+	return style
 }
 
-func Ol(label Label, count *int) Label {
-	if label.tags[parser.Li] && !label.tags[parser.Ol] && !label.tags[parser.Ul] {
-		label.prefix = strconv.Itoa(*count) + ". "
-		*count++
+func Ol(style LabelStyle, count *int) LabelStyle {
+	style.tags[parser.Ol] = true
+	if style.Margin == nil {
+		style.Margin = new(layout.Inset)
 	}
-
-	label.margin.Left += unit.Dp(10)
-	label.tags[parser.Ol] = true
-	return label
+	style.Margin.Left += unit.Dp(10)
+	*style.count = 1 // reset the counting to 1
+	return style
 }
 
 // we don't need thm, but just try to make it like the others
-func Li(thm *Theme, label Label) Label {
-	label.tags[parser.Li] = true
-	return label
+func Li(thm *Theme, style LabelStyle) LabelStyle {
+	// if we are a child of ul or ol, add prefix
+	// TODO: find a way to only add prefix of the most inner one
+	if style.tags[parser.Ul] && style.prefix == "" {
+		style.prefix = "• "
+	}
+	if style.tags[parser.Ol] && style.prefix == "" {
+		style.prefix = strconv.Itoa(*style.count) + ". "
+		*style.count++
+	}
+
+	style.tags[parser.Li] = true
+	return style
 }
 
-func Button(thm *Theme, clickable *widget.Clickable, label Label) Label {
-	label.border = widget.Border{Color: thm.Fg, CornerRadius: unit.Dp(2), Width: unit.Dp(1)}
+func Button(thm *Theme, clickable *widget.Clickable, style LabelStyle) LabelStyle {
+	// TODO: not sure if it should be all or none like this
+	if style.Border == nil {
+		style.Border = &widget.Border{Color: thm.Fg, CornerRadius: unit.Dp(2), Width: unit.Dp(1)}
+	}
 
 	// TODO: use the full theme set
-	lightGray := color.NRGBA{R: 240, G: 240, B: 240, A: 255}
-	label.bgColor = lightGray
+	if style.BgColor == nil {
+		lightGray := color.NRGBA{R: 240, G: 240, B: 240, A: 255}
+		style.BgColor = &lightGray
+	}
 
-	label.margin.Left += unit.Dp(1)
-	label.margin.Right += unit.Dp(1)
-	label.margin.Top += unit.Dp(1)
-	label.margin.Bottom += unit.Dp(1)
+	// TODO: v8 just let the margin be 0, but I feel like it's a little weird
+	if style.Margin == nil {
+		buttonMargin := layout.UniformInset(unit.Dp(1))
+		style.Margin = &buttonMargin
+	}
 
-	label.padding.Top += unit.Dp(3)
-	label.padding.Bottom += unit.Dp(3)
-	label.padding.Left += unit.Dp(6)
-	label.padding.Right += unit.Dp(6)
+	// TODO: v8 has separate each padding side so they can have all optional, I have to do all or none for now
+	if style.Padding == nil {
+		buttonPadding := layout.Inset{
+			Top:    unit.Dp(3),
+			Bottom: unit.Dp(3),
+			Left:   unit.Dp(6),
+			Right:  unit.Dp(6),
+		}
+		style.Padding = &buttonPadding
+	}
 
-	label.clickable = clickable
-	label.tags[parser.Button] = true
-	return label
+	style.clickable = clickable
+	style.tags[parser.Button] = true
+	return style
 }
