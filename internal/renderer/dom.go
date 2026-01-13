@@ -31,7 +31,13 @@ type DomRenderer struct {
 
 type Node = parser.Node
 type StyleSet = css.StyleSet
-type Style = css.Style
+
+// Contextual style passed around in renderNode
+type RenderingStyle struct {
+	base  *css.Style
+	label *ui.LabelExtraStyle
+	// NOTE: can add more extra style for other type of node
+}
 
 // TODO NOW: DomStyle interface
 
@@ -74,9 +80,9 @@ func (dr *DomRenderer) render(root *Node, styles *StyleSet) [][]Element {
 	return res
 }
 
-// renderNodes returns flex children needs for render a node and its children.
+// renderNode returns flex children needs for render a node and its children.
 // TODO: doc
-func (dr *DomRenderer) renderNode(node *Node, styles *StyleSet, localStyle *Style) [][]Element {
+func (dr *DomRenderer) renderNode(node *Node, styles *StyleSet, localStyle *RenderingStyle) [][]Element {
 	res := make([][]Element, 0)
 	switch node.Tag {
 	case parser.Body:
@@ -111,7 +117,7 @@ func (dr *DomRenderer) renderNode(node *Node, styles *StyleSet, localStyle *Styl
 // renderText returns [][]Element needs for rendering a text node and its children.
 // requires: node must be of the text type (check by using parser.TextElements)
 // TODO: doc
-func (dr *DomRenderer) renderText(node *Node, styles *StyleSet, localStyle *Style) [][]Element {
+func (dr *DomRenderer) renderText(node *Node, styles *StyleSet, localStyle *RenderingStyle) [][]Element {
 	// TODO NOW: solve conflict between inline styles and global style we have: use acc rec
 
 	// base case
@@ -315,7 +321,7 @@ func (dr DomRenderer) findHead(node *Node) *Node {
 
 // gaterElements recieves a node and gather all elements of the node's children
 // according the tag rule (inline, block)
-func (dr DomRenderer) gatherElements(node *Node, styles *StyleSet, localStyle *Style) [][]Element {
+func (dr DomRenderer) gatherElements(node *Node, styles *StyleSet, localStyle *RenderingStyle) [][]Element {
 	res := make([][]Element, 0)
 	// if inline-text and prev is also inline-text, put it in latest one don't append
 	for i, child := range node.Children {

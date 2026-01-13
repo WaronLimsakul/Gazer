@@ -190,8 +190,39 @@ produce a Label correctly. NOTE: I might rename `Text()` to be something like `L
 
 #### Update 4: `<Ol>`...
 A little special case is this guy. I have to find a way to pass the order count of the `<li>` inside an ol.
-TBD
 
+#### Update 5: I might be a genius
+So my Label component doesn't only need `css.Style` to create a `Label`, it needs some more fields (e.g. some `clickable`, `seletable`).
+So I defined `ui.LabelStyle`. Initially, I just embed `css.Style` into a struct, but then I realize I can pass `ui.LabelStyle` around 
+in the `renderNode` function since we don't know what node are we rendering. Therefore, we need to pass around something that are uniform
+and friendly for all types of node. So I separate `css.Style` with the extra fields I need in label
+
+
+
+```go
+// in ui/label.go
+type LabelStyle struct {
+	base  css.Style
+	extra LabelExtraStyle
+}
+
+type LabelExtraStyle struct {
+	tags      map[parser.Tag]bool
+	clickable *widget.Clickable
+	prefix    string
+	count     *int // for <ol>
+}
+
+// in renderer/dom.go
+// This is what we will use to pass around in RenderNode
+type RenderingStyle struct {
+	base  *css.Style
+	label *ui.LabelExtraStyle
+	// NOTE: can add more extra style for other type of node
+}
+```
+
+Now when we traverse the tree and render, we can just check the node type, then build the style from `RenderingStyle` according to the node type.
 
 ### Pass by value? Wait, or should it be pointer?
 I kinda let my intuition decide these kinda of questions, but to make things rigid. Here are some rules I will try to obey
