@@ -167,6 +167,7 @@ func NewLabelExtraStyle() LabelExtraStyle {
 	return LabelExtraStyle{Tags: make(map[parser.Tag]bool)}
 }
 
+// TODO: FIXME: Bold and italic not rendered
 func H1(thm *Theme, style LabelStyle) LabelStyle {
 	style.Extra.Tags[parser.H1] = true
 	size := thm.TextSize * 2.25
