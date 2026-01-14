@@ -235,7 +235,8 @@ func reportProgress(t *Tab, w *app.Window, progressChan chan float32) {
 }
 
 func findHead(root *parser.Node) *parser.Node {
-	if root.Tag != parser.Root {
+	if root == nil {
+	} else if root.Tag != parser.Root {
 		return nil
 	} else if len(root.Children) == 0 {
 		return nil

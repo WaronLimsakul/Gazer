@@ -106,7 +106,7 @@ func Draw(window *app.Window, state *engine.State) {
 
 			// handle page rendering
 			domRenderer.handleHead(tab.Root) // set tab data
-			pageElements := domRenderer.render(tab.Root)
+			pageElements := domRenderer.render(tab.Root, tab.Styles)
 			appFlexChildren = append(appFlexChildren, layout.Rigid(func(gtx C) D {
 				return page.Layout(gtx, pageElements)
 			}))

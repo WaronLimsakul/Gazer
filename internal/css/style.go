@@ -15,10 +15,10 @@ import (
 
 // StyleSet is a (almost) ready-to-use style set of one CSS file (or more?)
 type StyleSet struct {
-	universal   *Style
-	idStyles    map[string]*Style
-	classStyles map[string]*Style
-	tagStyles   map[parser.Tag]*Style
+	Universal   *Style
+	IdStyles    map[string]*Style
+	ClassStyles map[string]*Style
+	TagStyles   map[parser.Tag]*Style
 }
 
 // Style is a property to style the rendering of any argument.
@@ -47,15 +47,15 @@ func AddStyleSet(high, low *StyleSet) *StyleSet {
 	}
 
 	res := new(StyleSet)
-	res.universal = AddStyle(high.universal, low.universal)
-	res.idStyles = AddStyleMap(high.idStyles, low.idStyles)
-	res.classStyles = AddStyleMap(high.classStyles, low.classStyles)
-	res.tagStyles = AddStyleMap(high.tagStyles, low.tagStyles)
+	res.Universal = AddStylePtr(high.Universal, low.Universal)
+	res.IdStyles = AddStyleMap(high.IdStyles, low.IdStyles)
+	res.ClassStyles = AddStyleMap(high.ClassStyles, low.ClassStyles)
+	res.TagStyles = AddStyleMap(high.TagStyles, low.TagStyles)
 
 	return res
 }
 
-// AddStyleMap adds 2 style map (e.g. idStyles) with different priority into one style map while
+// AddStyleMap adds 2 style map (e.g. IdStyles) with different priority into one style map while
 func AddStyleMap[K comparable](high, low map[K]*Style) map[K]*Style {
 	var res map[K]*Style
 	if high != nil {
@@ -63,7 +63,7 @@ func AddStyleMap[K comparable](high, low map[K]*Style) map[K]*Style {
 		for id, lowStyle := range low {
 			highStyle, conflict := res[id]
 			if conflict {
-				res[id] = AddStyle(highStyle, lowStyle)
+				res[id] = AddStylePtr(highStyle, lowStyle)
 			} else {
 				res[id] = lowStyle
 			}
@@ -74,8 +74,9 @@ func AddStyleMap[K comparable](high, low map[K]*Style) map[K]*Style {
 	return res
 }
 
-// AddStyle adds 2 style, one with higher priority than another one
-func AddStyle(sHigh *Style, sLow *Style) *Style {
+// AddStylePtr take 2 style pointers, and return a new style pointer that are
+// the sum of both style, one with higher priority than another one
+func AddStylePtr(sHigh *Style, sLow *Style) *Style {
 	if sHigh == nil {
 		return sLow
 	} else if sLow == nil {
@@ -116,27 +117,63 @@ func AddStyle(sHigh *Style, sLow *Style) *Style {
 	return res
 }
 
+// AddStyle takes 2 Style and merge 2 styles, one with high priority, one with low
+func AddStyle(sHigh Style, sLow Style) Style {
+	var res Style
+	if sHigh.Color != nil {
+		res.Color = sHigh.Color
+	} else {
+		res.Color = sLow.Color
+	}
+
+	if sHigh.BgColor != nil {
+		res.BgColor = sHigh.BgColor
+	} else {
+		res.BgColor = sLow.BgColor
+	}
+
+	if sHigh.Margin != nil {
+		res.Margin = sHigh.Margin
+	} else {
+		res.Margin = sLow.Margin
+	}
+
+	if sHigh.Border != nil {
+		res.Border = sHigh.Border
+	} else {
+		res.Border = sLow.Border
+	}
+
+	if sHigh.FontSize != nil {
+		res.FontSize = sHigh.FontSize
+	} else {
+		res.FontSize = sLow.FontSize
+	}
+
+	return res
+}
+
 // applyRule applies the css rule to the style set
 func (s *StyleSet) applyRule(r rule) {
 	for _, selector := range r.selectors {
 		if selector == "*" {
-			if s.universal == nil {
-				s.universal = new(Style)
+			if s.Universal == nil {
+				s.Universal = new(Style)
 			}
-			s.universal.registerDecls(r.styles)
+			s.Universal.registerDecls(r.styles)
 		} else if id, ok := strings.CutPrefix(selector, "#"); ok {
-			style, ok := s.idStyles[id]
+			style, ok := s.IdStyles[id]
 			if !ok {
 				style = new(Style)
-				s.idStyles[id] = style
+				s.IdStyles[id] = style
 			}
 			style.registerDecls(r.styles)
 		} else if class, ok := strings.CutPrefix(selector, "."); ok {
 			// TODO: support tag.class syntax
-			style, ok := s.classStyles[class]
+			style, ok := s.ClassStyles[class]
 			if !ok {
 				style = new(Style)
-				s.classStyles[class] = style
+				s.ClassStyles[class] = style
 			}
 			style.registerDecls(r.styles)
 		} else {
@@ -145,10 +182,10 @@ func (s *StyleSet) applyRule(r rule) {
 			if !ok {
 				continue // tag not supported, skip
 			}
-			style, ok := s.tagStyles[tag]
+			style, ok := s.TagStyles[tag]
 			if !ok {
 				style = new(Style)
-				s.tagStyles[tag] = style
+				s.TagStyles[tag] = style
 			}
 			style.registerDecls(r.styles)
 		}
@@ -157,10 +194,10 @@ func (s *StyleSet) applyRule(r rule) {
 
 func newStyleSet() *StyleSet {
 	return &StyleSet{
-		universal:   new(Style),
-		idStyles:    make(map[string]*Style),
-		classStyles: make(map[string]*Style),
-		tagStyles:   make(map[parser.Tag]*Style),
+		Universal:   new(Style),
+		IdStyles:    make(map[string]*Style),
+		ClassStyles: make(map[string]*Style),
+		TagStyles:   make(map[parser.Tag]*Style),
 	}
 }
 
@@ -169,18 +206,18 @@ func (s StyleSet) String() string {
 	var builder strings.Builder
 
 	builder.WriteString("{\n")
-	builder.WriteString("\t" + "universal: " + s.universal.String() + "\n")
+	builder.WriteString("\t" + "Universal: " + s.Universal.String() + "\n")
 
 	builder.WriteString("\t" + "ids: " + "\n")
-	for selector, style := range s.idStyles {
+	for selector, style := range s.IdStyles {
 		builder.WriteString("\t\t" + selector + ": " + style.String() + "\n")
 	}
 	builder.WriteString("\t" + "classes: " + "\n")
-	for selector, style := range s.classStyles {
+	for selector, style := range s.ClassStyles {
 		builder.WriteString("\t\t" + selector + ": " + style.String() + "\n")
 	}
 	builder.WriteString("\t" + "tags: " + "\n")
-	for tag, style := range s.tagStyles {
+	for tag, style := range s.TagStyles {
 		builder.WriteString("\t\t" + tag.String() + ": " + style.String() + "\n")
 	}
 

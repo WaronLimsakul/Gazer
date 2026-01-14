@@ -9,11 +9,11 @@ import (
 	"github.com/WaronLimsakul/Gazer/internal/parser"
 )
 
-func TestAddStyle(t *testing.T) {
+func TestAddStylePtr(t *testing.T) {
 	red := colors["red"]
 	blue := colors["blue"]
-	fontSize12 := unit.Dp(12)
-	fontSize16 := unit.Dp(16)
+	fontSize12 := unit.Sp(12)
+	fontSize16 := unit.Sp(16)
 	margin10 := layout.UniformInset(unit.Dp(10))
 
 	cases := []struct {
@@ -46,7 +46,7 @@ func TestAddStyle(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := AddStyle(tc.input[0], tc.input[1])
+			result := AddStylePtr(tc.input[0], tc.input[1])
 			if !styleEq(result, tc.expected) {
 				t.Errorf("got %+v, want %+v", result, tc.expected)
 			}
@@ -57,8 +57,8 @@ func TestAddStyle(t *testing.T) {
 func TestMergeStyleMap(t *testing.T) {
 	red := colors["red"]
 	blue := colors["blue"]
-	fontSize12 := unit.Dp(12)
-	fontSize16 := unit.Dp(16)
+	fontSize12 := unit.Sp(12)
+	fontSize16 := unit.Sp(16)
 
 	cases := []struct {
 		name     string
@@ -97,7 +97,7 @@ func TestMergeStyleMap(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := AddStyleMap(tc.input[0], tc.input[1])
+			result := AddStylePtrMap(tc.input[0], tc.input[1])
 			if !maps.EqualFunc(result, tc.expected, styleEq) {
 				t.Errorf("got %+v, want %+v", result, tc.expected)
 			}
@@ -105,11 +105,11 @@ func TestMergeStyleMap(t *testing.T) {
 	}
 }
 
-func TestAddStyleSet(t *testing.T) {
+func TestAddStylePtrSet(t *testing.T) {
 	red := colors["red"]
 	blue := colors["blue"]
-	fontSize12 := unit.Dp(12)
-	fontSize16 := unit.Dp(16)
+	fontSize12 := unit.Sp(12)
+	fontSize16 := unit.Sp(16)
 
 	cases := []struct {
 		name     string
@@ -118,24 +118,24 @@ func TestAddStyleSet(t *testing.T) {
 	}{
 		{
 			name:     "nil stylesets",
-			input:    [2]*StyleSet{nil, {universal: &Style{Color: &red}}},
-			expected: &StyleSet{universal: &Style{Color: &red}},
+			input:    [2]*StyleSet{nil, {Universal: &Style{Color: &red}}},
+			expected: &StyleSet{Universal: &Style{Color: &red}},
 		},
 		{
-			name: "merge universal and id styles",
+			name: "merge Universal and id styles",
 			input: [2]*StyleSet{
 				{
-					universal: &Style{Color: &red},
-					idStyles:  map[string]*Style{"a": {FontSize: &fontSize16}},
+					Universal: &Style{Color: &red},
+					IdStyles:  map[string]*Style{"a": {FontSize: &fontSize16}},
 				},
 				{
-					universal: &Style{FontSize: &fontSize12},
-					idStyles:  map[string]*Style{"b": {Color: &blue}},
+					Universal: &Style{FontSize: &fontSize12},
+					IdStyles:  map[string]*Style{"b": {Color: &blue}},
 				},
 			},
 			expected: &StyleSet{
-				universal: &Style{Color: &red, FontSize: &fontSize12},
-				idStyles: map[string]*Style{
+				Universal: &Style{Color: &red, FontSize: &fontSize12},
+				IdStyles: map[string]*Style{
 					"a": {FontSize: &fontSize16},
 					"b": {Color: &blue},
 				},
@@ -145,19 +145,19 @@ func TestAddStyleSet(t *testing.T) {
 			name: "merge all style types with conflicts",
 			input: [2]*StyleSet{
 				{
-					classStyles: map[string]*Style{"c1": {Color: &red}},
-					tagStyles:   map[parser.Tag]*Style{parser.Div: {FontSize: &fontSize16}},
+					ClassStyles: map[string]*Style{"c1": {Color: &red}},
+					TagStyles:   map[parser.Tag]*Style{parser.Div: {FontSize: &fontSize16}},
 				},
 				{
-					classStyles: map[string]*Style{"c1": {FontSize: &fontSize12}},
-					tagStyles:   map[parser.Tag]*Style{parser.Span: {Color: &blue}},
+					ClassStyles: map[string]*Style{"c1": {FontSize: &fontSize12}},
+					TagStyles:   map[parser.Tag]*Style{parser.Span: {Color: &blue}},
 				},
 			},
 			expected: &StyleSet{
-				classStyles: map[string]*Style{
+				ClassStyles: map[string]*Style{
 					"c1": {Color: &red, FontSize: &fontSize12},
 				},
-				tagStyles: map[parser.Tag]*Style{
+				TagStyles: map[parser.Tag]*Style{
 					parser.Div:  {FontSize: &fontSize16},
 					parser.Span: {Color: &blue},
 				},
@@ -167,7 +167,7 @@ func TestAddStyleSet(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := AddStyleSet(tc.input[0], tc.input[1])
+			result := AddStylePtrSet(tc.input[0], tc.input[1])
 			if result == nil && tc.expected == nil {
 				return
 			}
@@ -183,10 +183,10 @@ func TestAddStyleSet(t *testing.T) {
 }
 
 func styleSetEq(a, b StyleSet) bool {
-	return styleEq(a.universal, b.universal) &&
-		maps.EqualFunc(a.idStyles, b.idStyles, styleEq) &&
-		maps.EqualFunc(a.classStyles, b.classStyles, styleEq) &&
-		maps.EqualFunc(a.tagStyles, b.tagStyles, styleEq)
+	return styleEq(a.Universal, b.Universal) &&
+		maps.EqualFunc(a.IdStyles, b.IdStyles, styleEq) &&
+		maps.EqualFunc(a.ClassStyles, b.ClassStyles, styleEq) &&
+		maps.EqualFunc(a.TagStyles, b.TagStyles, styleEq)
 }
 
 func styleEq(a, b *Style) bool {

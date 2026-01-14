@@ -41,12 +41,12 @@ type Label struct {
 	padding layout.Inset // margin inside border (if exists)
 	border  widget.Border
 	bgColor color.NRGBA
-	color   color.NRGBA // text color
+	// color   color.NRGBA // text color
 
 	// for <a> or <button>
 	clickable *widget.Clickable
 
-	// for <li>: e.g. prefix "•"
+	// for <li>: e.g. Prefix "•"
 	prefix string
 
 	style material.LabelStyle
@@ -54,24 +54,25 @@ type Label struct {
 
 // what we need when create/decorate a Label
 type LabelStyle struct {
-	base  css.Style
-	extra LabelExtraStyle
+	Base  css.Style
+	Extra LabelExtraStyle
 }
 
-// extra fields we need apart from css.Style
+// Extra fields we need apart from css.Style
 type LabelExtraStyle struct {
-	tags      map[parser.Tag]bool
-	clickable *widget.Clickable
-	prefix    string
-	count     *int // for <ol>
+	Tags      map[parser.Tag]bool
+	Clickable *widget.Clickable
+	Prefix    string
+	Count     *int // for <ol>
 }
 
-// TODO NOW: after finish acc recursion, do this
 func (l Label) Layout(gtx C) D {
 	// handle ui interaction
-	l.clickable.Update(gtx)
-	if l.clickable.Hovered() {
-		pointer.CursorNone.Add(gtx.Ops)
+	if l.clickable != nil {
+		l.clickable.Update(gtx)
+		if l.clickable.Hovered() {
+			pointer.CursorNone.Add(gtx.Ops)
+		}
 	}
 
 	// layout
@@ -85,9 +86,7 @@ func (l Label) Layout(gtx C) D {
 						// material.LabelStyle.Layout try to takes just what it need by default.
 						// However, passed gtx might just give min = max = max
 						gtx.Constraints.Min = image.Point{}
-						tmpStyle := l.style
-						tmpStyle.Color = l.color
-						return tmpStyle.Layout(gtx)
+						return l.style.Layout(gtx)
 					})
 				}
 				macro := op.Record(gtx.Ops)
@@ -121,172 +120,189 @@ func (l Label) Layout(gtx C) D {
 }
 
 // NewLabel create a new Label element from the theme, labeltyle, selectable and text string
-func NewLabel(thm *Theme, lstyle *LabelStyle, selectable *widget.Selectable, txt string) Label {
+// TODO: make the impl looks better
+func NewLabel(thm *Theme, lstyle LabelStyle, selectable *widget.Selectable, txt string) Label {
 	var text material.LabelStyle
-	if lstyle.base.FontSize != nil {
-		text = material.Label(thm, *lstyle.base.FontSize, txt)
+	if lstyle.Base.FontSize != nil {
+		text = material.Label(thm, *lstyle.Base.FontSize, txt)
 	} else {
 		text = material.Label(thm, thm.TextSize, txt)
 	}
 
 	text.State = selectable
-	res := Label{tags: lstyle.extra.tags, prefix: lstyle.extra.prefix, style: text}
-	if lstyle.base.Color != nil {
-		res.color = *lstyle.base.Color
+	if lstyle.Base.FontStyle != nil {
+		text.Font.Style = *lstyle.Base.FontStyle
 	}
-	if lstyle.base.BgColor != nil {
-		res.bgColor = *lstyle.base.BgColor
+	if lstyle.Base.FontWeight != nil {
+		text.Font.Weight = *lstyle.Base.FontWeight
 	}
-	if lstyle.base.Border != nil {
-		res.border = *lstyle.base.Border
+	if lstyle.Base.Color != nil {
+		text.Color = *lstyle.Base.Color
 	}
-	if lstyle.base.Margin != nil {
-		res.margin = *lstyle.base.Margin
+
+	res := Label{
+		tags:      lstyle.Extra.Tags,
+		prefix:    lstyle.Extra.Prefix,
+		clickable: lstyle.Extra.Clickable,
+		style:     text,
 	}
-	if lstyle.base.Padding != nil {
-		res.padding = *lstyle.base.Padding
+
+	if lstyle.Base.BgColor != nil {
+		res.bgColor = *lstyle.Base.BgColor
+	}
+	if lstyle.Base.Border != nil {
+		res.border = *lstyle.Base.Border
+	}
+	if lstyle.Base.Margin != nil {
+		res.margin = *lstyle.Base.Margin
+	}
+	if lstyle.Base.Padding != nil {
+		res.padding = *lstyle.Base.Padding
 	}
 
 	return res
 }
 
+func NewLabelExtraStyle() LabelExtraStyle {
+	return LabelExtraStyle{Tags: make(map[parser.Tag]bool)}
+}
+
 func H1(thm *Theme, style LabelStyle) LabelStyle {
-	style.extra.tags[parser.H1] = true
+	style.Extra.Tags[parser.H1] = true
 	size := thm.TextSize * 2.25
-	style.base.FontSize = &size
+	style.Base.FontSize = &size
 	bold := font.Bold
-	style.base.FontWeight = &bold
+	style.Base.FontWeight = &bold
 	return style
 }
 
 func H2(thm *Theme, style LabelStyle) LabelStyle {
-	style.extra.tags[parser.H2] = true
+	style.Extra.Tags[parser.H2] = true
 	size := thm.TextSize * 1.75
-	style.base.FontSize = &size
+	style.Base.FontSize = &size
 	bold := font.Bold
-	style.base.FontWeight = &bold
+	style.Base.FontWeight = &bold
 	return style
 }
 
 func H3(thm *Theme, style LabelStyle) LabelStyle {
-	style.extra.tags[parser.H3] = true
+	style.Extra.Tags[parser.H3] = true
 	size := thm.TextSize * 1.375
-	style.base.FontSize = &size
+	style.Base.FontSize = &size
 	bold := font.Bold
-	style.base.FontWeight = &bold
+	style.Base.FontWeight = &bold
 	return style
 }
 
 func H4(thm *Theme, style LabelStyle) LabelStyle {
-	style.extra.tags[parser.H4] = true
+	style.Extra.Tags[parser.H4] = true
 	size := thm.TextSize * 1.125
-	style.base.FontSize = &size
+	style.Base.FontSize = &size
 	bold := font.Bold
-	style.base.FontWeight = &bold
+	style.Base.FontWeight = &bold
 	return style
 }
 
 func H5(thm *Theme, style LabelStyle) LabelStyle {
-	style.extra.tags[parser.H5] = true
+	style.Extra.Tags[parser.H5] = true
 	size := thm.TextSize
-	style.base.FontSize = &size
+	style.Base.FontSize = &size
 	bold := font.Bold
-	style.base.FontWeight = &bold
+	style.Base.FontWeight = &bold
 	return style
 }
 
 func P(thm *Theme, style LabelStyle) LabelStyle {
-	style.extra.tags[parser.P] = true
+	style.Extra.Tags[parser.P] = true
 	return style
 }
 
 func I(thm *Theme, style LabelStyle) LabelStyle {
-	style.extra.tags[parser.I] = true
+	style.Extra.Tags[parser.I] = true
 	italic := font.Italic
-	style.base.FontStyle = &italic
+	style.Base.FontStyle = &italic
 	return style
 }
 
 func B(thm *Theme, style LabelStyle) LabelStyle {
-	style.extra.tags[parser.B] = true
+	style.Extra.Tags[parser.B] = true
 	bold := font.Bold
-	style.base.FontWeight = &bold
+	style.Base.FontWeight = &bold
 	return style
 }
 
-func A(clickable *widget.Clickable, style LabelStyle) LabelStyle {
-	style.extra.tags[parser.A] = true
-	style.base.Color = &color.NRGBA{R: 0, G: 0, B: 238, A: 255}
-	style.extra.clickable = clickable
+func A(Clickable *widget.Clickable, style LabelStyle) LabelStyle {
+	style.Extra.Tags[parser.A] = true
+	style.Base.Color = &color.NRGBA{R: 0, G: 0, B: 238, A: 255}
+	style.Extra.Clickable = Clickable
 	return style
 }
 
-// we don't need thm, but just try to make it like the others
 func Ul(style LabelStyle) LabelStyle {
-	style.extra.tags[parser.Ul] = true
-	if style.base.Margin == nil {
-		style.base.Margin = new(layout.Inset)
+	style.Extra.Tags[parser.Ul] = true
+	if style.Base.Margin == nil {
+		style.Base.Margin = new(layout.Inset)
 	}
-	style.base.Margin.Left += unit.Dp(10)
+	style.Base.Margin.Left += unit.Dp(10)
 	return style
 }
 
-func Ol(style LabelStyle, count *int) LabelStyle {
-	style.extra.tags[parser.Ol] = true
-	if style.base.Margin == nil {
-		style.base.Margin = new(layout.Inset)
+func Ol(style LabelStyle) LabelStyle {
+	style.Extra.Tags[parser.Ol] = true
+	if style.Base.Margin == nil {
+		style.Base.Margin = new(layout.Inset)
 	}
-	style.base.Margin.Left += unit.Dp(10)
-	*style.extra.count = 1 // reset the counting to 1
+	style.Base.Margin.Left += unit.Dp(10)
+	*style.Extra.Count = 1 // reset the counting to 1
 	return style
 }
 
 // we don't need thm, but just try to make it like the others
 func Li(thm *Theme, style LabelStyle) LabelStyle {
-	// if we are a child of ul or ol, add prefix
-	// TODO: find a way to only add prefix of the most inner one
-	if style.extra.tags[parser.Ul] && style.extra.prefix == "" {
-		style.extra.prefix = "• "
+	// if we are a child of ul or ol, add Prefix
+	// TODO: find a way to only add Prefix of the most inner one
+	if style.Extra.Tags[parser.Ul] && style.Extra.Prefix == "" {
+		style.Extra.Prefix = "• "
 	}
-	if style.extra.tags[parser.Ol] && style.extra.prefix == "" {
-		style.extra.prefix = strconv.Itoa(*style.extra.count) + ". "
-		*style.extra.count++
+	if style.Extra.Tags[parser.Ol] && style.Extra.Prefix == "" {
+		style.Extra.Prefix = strconv.Itoa(*style.Extra.Count) + ". "
+		*style.Extra.Count++
 	}
 
-	style.extra.tags[parser.Li] = true
+	style.Extra.Tags[parser.Li] = true
 	return style
 }
 
-func Button(thm *Theme, clickable *widget.Clickable, style LabelStyle) LabelStyle {
+func Button(thm *Theme, Clickable *widget.Clickable, style LabelStyle) LabelStyle {
 	// TODO: not sure if it should be all or none like this
-	if style.base.Border == nil {
-		style.base.Border = &widget.Border{Color: thm.Fg, CornerRadius: unit.Dp(2), Width: unit.Dp(1)}
+	if style.Base.Border == nil {
+		style.Base.Border = &widget.Border{Color: thm.Fg, CornerRadius: unit.Dp(2), Width: unit.Dp(1)}
 	}
 
 	// TODO: use the full theme set
-	if style.base.BgColor == nil {
+	if style.Base.BgColor == nil {
 		lightGray := color.NRGBA{R: 240, G: 240, B: 240, A: 255}
-		style.base.BgColor = &lightGray
+		style.Base.BgColor = &lightGray
 	}
 
 	// TODO: v8 just let the margin be 0, but I feel like it's a little weird
-	if style.base.Margin == nil {
+	if style.Base.Margin == nil {
 		buttonMargin := layout.UniformInset(unit.Dp(1))
-		style.base.Margin = &buttonMargin
+		style.Base.Margin = &buttonMargin
 	}
 
 	// TODO: v8 has separate each padding side so they can have all optional, I have to do all or none for now
-	if style.base.Padding == nil {
+	if style.Base.Padding == nil {
 		buttonPadding := layout.Inset{
 			Top:    unit.Dp(3),
 			Bottom: unit.Dp(3),
 			Left:   unit.Dp(6),
 			Right:  unit.Dp(6),
 		}
-		style.base.Padding = &buttonPadding
+		style.Base.Padding = &buttonPadding
 	}
 
-	style.extra.clickable = clickable
-	style.extra.tags[parser.Button] = true
+	style.Extra.Clickable = Clickable
+	style.Extra.Tags[parser.Button] = true
 	return style
 }

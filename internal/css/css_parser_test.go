@@ -12,7 +12,7 @@ import (
 
 func TestParse(t *testing.T) {
 	red, _ := colors["red"]
-	size10dp := unit.Dp(10)
+	size10dp := unit.Sp(10)
 
 	cases := []struct {
 		name     string
@@ -38,7 +38,7 @@ h1 {
 	padding: 10px 27px 18px 30px;
 }`,
 			expected: StyleSet{
-				universal: &Style{
+				Universal: &Style{
 					Margin: &layout.Inset{
 						Top:    unit.Dp(10),
 						Bottom: unit.Dp(10),
@@ -52,7 +52,7 @@ h1 {
 						Left:   unit.Dp(30),
 					},
 				},
-				classStyles: map[string]*Style{
+				ClassStyles: map[string]*Style{
 					"spacer": {
 						Margin: &layout.Inset{
 							Top:    unit.Dp(10),
@@ -68,7 +68,7 @@ h1 {
 						},
 					},
 				},
-				idStyles: map[string]*Style{
+				IdStyles: map[string]*Style{
 					"header": {
 						Color:   &color.NRGBA{R: 1*16 + 2, G: 3*16 + 10, B: 11*16 + 12, A: 255},
 						BgColor: &color.NRGBA{200, 100, 10, 255},
@@ -77,7 +77,7 @@ h1 {
 						},
 					},
 				},
-				tagStyles: map[parser.Tag]*Style{
+				TagStyles: map[parser.Tag]*Style{
 					parser.H1: {
 						Color:    &red,
 						FontSize: &size10dp,
