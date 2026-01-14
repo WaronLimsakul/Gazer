@@ -253,11 +253,15 @@ func Ol(style LabelStyle) LabelStyle {
 		style.Base.Margin = new(layout.Inset)
 	}
 	style.Base.Margin.Left += unit.Dp(10)
+	if style.Extra.Count == nil {
+		style.Extra.Count = new(int)
+	}
 	*style.Extra.Count = 1 // reset the counting to 1
 	return style
 }
 
 // we don't need thm, but just try to make it like the others
+// TODO NOW: FIXME: Find other way to check if to add prefix, can't use this map anymore
 func Li(thm *Theme, style LabelStyle) LabelStyle {
 	// if we are a child of ul or ol, add Prefix
 	// TODO: find a way to only add Prefix of the most inner one
