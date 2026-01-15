@@ -3,6 +3,7 @@ package css
 import (
 	"fmt"
 	"image/color"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -84,34 +85,20 @@ func AddStylePtr(sHigh *Style, sLow *Style) *Style {
 	}
 
 	res := new(Style)
-	if sHigh.Color != nil {
-		res.Color = sHigh.Color
-	} else {
-		res.Color = sLow.Color
-	}
+	vHigh := reflect.ValueOf(sHigh).Elem()
+	vLow := reflect.ValueOf(sLow).Elem()
+	vRes := reflect.ValueOf(res).Elem()
 
-	if sHigh.BgColor != nil {
-		res.BgColor = sHigh.BgColor
-	} else {
-		res.BgColor = sLow.BgColor
-	}
+	for i := range vHigh.NumField() {
+		fHigh := vHigh.Field(i)
+		fLow := vLow.Field(i)
+		fRes := vRes.Field(i)
 
-	if sHigh.Margin != nil {
-		res.Margin = sHigh.Margin
-	} else {
-		res.Margin = sLow.Margin
-	}
-
-	if sHigh.Border != nil {
-		res.Border = sHigh.Border
-	} else {
-		res.Border = sLow.Border
-	}
-
-	if sHigh.FontSize != nil {
-		res.FontSize = sHigh.FontSize
-	} else {
-		res.FontSize = sLow.FontSize
+		if !fHigh.IsNil() {
+			fRes.Set(fHigh)
+		} else {
+			fRes.Set(fLow)
+		}
 	}
 
 	return res
@@ -119,38 +106,7 @@ func AddStylePtr(sHigh *Style, sLow *Style) *Style {
 
 // AddStyle takes 2 Style and merge 2 styles, one with high priority, one with low
 func AddStyle(sHigh Style, sLow Style) Style {
-	var res Style
-	if sHigh.Color != nil {
-		res.Color = sHigh.Color
-	} else {
-		res.Color = sLow.Color
-	}
-
-	if sHigh.BgColor != nil {
-		res.BgColor = sHigh.BgColor
-	} else {
-		res.BgColor = sLow.BgColor
-	}
-
-	if sHigh.Margin != nil {
-		res.Margin = sHigh.Margin
-	} else {
-		res.Margin = sLow.Margin
-	}
-
-	if sHigh.Border != nil {
-		res.Border = sHigh.Border
-	} else {
-		res.Border = sLow.Border
-	}
-
-	if sHigh.FontSize != nil {
-		res.FontSize = sHigh.FontSize
-	} else {
-		res.FontSize = sLow.FontSize
-	}
-
-	return res
+	return *AddStylePtr(&sHigh, &sLow)
 }
 
 // applyRule applies the css rule to the style set
@@ -206,19 +162,27 @@ func (s StyleSet) String() string {
 	var builder strings.Builder
 
 	builder.WriteString("{\n")
-	builder.WriteString("\t" + "Universal: " + s.Universal.String() + "\n")
+	if s.Universal != nil {
+		builder.WriteString("\t" + "Universal: " + s.Universal.String() + "\n")
+	}
 
 	builder.WriteString("\t" + "ids: " + "\n")
 	for selector, style := range s.IdStyles {
-		builder.WriteString("\t\t" + selector + ": " + style.String() + "\n")
+		if style != nil {
+			builder.WriteString("\t\t" + selector + ": " + style.String() + "\n")
+		}
 	}
 	builder.WriteString("\t" + "classes: " + "\n")
 	for selector, style := range s.ClassStyles {
-		builder.WriteString("\t\t" + selector + ": " + style.String() + "\n")
+		if style != nil {
+			builder.WriteString("\t\t" + selector + ": " + style.String() + "\n")
+		}
 	}
 	builder.WriteString("\t" + "tags: " + "\n")
 	for tag, style := range s.TagStyles {
-		builder.WriteString("\t\t" + tag.String() + ": " + style.String() + "\n")
+		if style != nil {
+			builder.WriteString("\t\t" + tag.String() + ": " + style.String() + "\n")
+		}
 	}
 
 	return builder.String()
@@ -226,29 +190,17 @@ func (s StyleSet) String() string {
 
 func (s Style) String() string {
 	var builder strings.Builder
-
 	builder.WriteString("{ ")
-	if s.Color != nil {
-		fmt.Fprintf(&builder, "Color: %v ", *s.Color)
+
+	v := reflect.ValueOf(s)
+	t := v.Type()
+	for i := range v.NumField() {
+		field := v.Field(i)
+		if !field.IsNil() {
+			fmt.Fprintf(&builder, "%s: %v ", t.Field(i).Name, field.Elem().Interface())
+		}
 	}
-	if s.BgColor != nil {
-		fmt.Fprintf(&builder, "BgColor: %v ", *s.BgColor)
-	}
-	if s.Margin != nil {
-		fmt.Fprintf(&builder, "Margin: %v ", *s.Margin)
-	}
-	if s.Padding != nil {
-		fmt.Fprintf(&builder, "Padding: %v ", *s.Padding)
-	}
-	if s.Border != nil {
-		fmt.Fprintf(&builder, "Border: %v ", *s.Border)
-	}
-	if s.FontSize != nil {
-		fmt.Fprintf(&builder, "FontSize: %v ", *s.FontSize)
-	}
-	if s.FontWeight != nil {
-		fmt.Fprintf(&builder, "FontWeight: %v", *s.FontWeight)
-	}
+
 	builder.WriteString("}")
 	return builder.String()
 }
@@ -354,7 +306,7 @@ func (s *Style) registerDecls(decls map[string]string) {
 				s.Padding = new(layout.Inset)
 			}
 			s.Padding.Left = length
-		case "Padding-right":
+		case "padding-right":
 			length, err := s.parseLength(val)
 			if err != nil {
 				continue
@@ -363,7 +315,7 @@ func (s *Style) registerDecls(decls map[string]string) {
 				s.Padding = new(layout.Inset)
 			}
 			s.Padding.Right = length
-		case "Padding-top":
+		case "padding-top":
 			length, err := s.parseLength(val)
 			if err != nil {
 				continue
@@ -372,7 +324,7 @@ func (s *Style) registerDecls(decls map[string]string) {
 				s.Padding = new(layout.Inset)
 			}
 			s.Padding.Top = length
-		case "Padding-bottom":
+		case "padding-bottom":
 			length, err := s.parseLength(val)
 			if err != nil {
 				continue

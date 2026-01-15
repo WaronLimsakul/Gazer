@@ -236,3 +236,9 @@ except I have to do it, meaning one of this is true:
 - The struct is HUGE. Like HUGE... not just big.
 
 Other than that, F*** it, I'm just gonna pass by value.
+
+### Reflection is just too good..
+`Style` struct in `css` package will grow bigger and bigger, but the way I implement it is just a bunch of `if` statement,
+I mean it's not some slice I can loop over. So I search it up and found `reflect` package in Go. That sh\*\* saves my life.
+You can do `reflect.ValueOf(something)` then get a very OP interface called `Value` which we can get `.Field(i)`, get `.NumField()`
+can even ask for a `Type().Field(i).Name` or if `value.IsNil()`?. Like yeah... I'm good with my life.

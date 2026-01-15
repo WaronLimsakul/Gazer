@@ -149,7 +149,7 @@ func TestAddStylePtrSet(t *testing.T) {
 					TagStyles:   map[parser.Tag]*Style{parser.Div: {FontSize: &fontSize16}},
 				},
 				{
-					ClassStyles: map[string]*Style{"c1": {FontSize: &fontSize12}},
+					ClassStyles: map[string]*Style{"c2": {FontSize: &fontSize12}},
 					TagStyles:   map[parser.Tag]*Style{parser.Span: {Color: &blue}},
 				},
 			},

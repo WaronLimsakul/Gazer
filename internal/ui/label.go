@@ -159,7 +159,6 @@ func NewLabel(thm *Theme, lstyle LabelStyle, selectable *widget.Selectable, txt 
 	return res
 }
 
-// TODO: FIXME: Bold and italic not rendered
 func H1(thm *Theme, style LabelStyle) LabelStyle {
 	size := thm.TextSize * 2.25
 	style.Base.FontSize = &size
