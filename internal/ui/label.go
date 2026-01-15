@@ -35,8 +35,6 @@ type LabelFunc = func(*Theme, *LabelStyle, *widget.Selectable, string) Label
 type LabelStyleDecorator = func(*Theme, LabelStyle) LabelStyle
 
 type Label struct {
-	tags map[parser.Tag]bool
-
 	margin  layout.Inset // margin outside border (if exists)
 	padding layout.Inset // margin inside border (if exists)
 	border  widget.Border
@@ -60,7 +58,6 @@ type LabelStyle struct {
 
 // Extra fields we need apart from css.Style
 type LabelExtraStyle struct {
-	Tags      map[parser.Tag]bool
 	Clickable *widget.Clickable
 	Prefix    string
 	Count     *int // for <ol>
@@ -141,7 +138,6 @@ func NewLabel(thm *Theme, lstyle LabelStyle, selectable *widget.Selectable, txt 
 	}
 
 	res := Label{
-		tags:      lstyle.Extra.Tags,
 		prefix:    lstyle.Extra.Prefix,
 		clickable: lstyle.Extra.Clickable,
 		style:     text,
@@ -163,13 +159,8 @@ func NewLabel(thm *Theme, lstyle LabelStyle, selectable *widget.Selectable, txt 
 	return res
 }
 
-func NewLabelExtraStyle() LabelExtraStyle {
-	return LabelExtraStyle{Tags: make(map[parser.Tag]bool)}
-}
-
 // TODO: FIXME: Bold and italic not rendered
 func H1(thm *Theme, style LabelStyle) LabelStyle {
-	style.Extra.Tags[parser.H1] = true
 	size := thm.TextSize * 2.25
 	style.Base.FontSize = &size
 	bold := font.Bold
@@ -178,7 +169,6 @@ func H1(thm *Theme, style LabelStyle) LabelStyle {
 }
 
 func H2(thm *Theme, style LabelStyle) LabelStyle {
-	style.Extra.Tags[parser.H2] = true
 	size := thm.TextSize * 1.75
 	style.Base.FontSize = &size
 	bold := font.Bold
@@ -187,7 +177,6 @@ func H2(thm *Theme, style LabelStyle) LabelStyle {
 }
 
 func H3(thm *Theme, style LabelStyle) LabelStyle {
-	style.Extra.Tags[parser.H3] = true
 	size := thm.TextSize * 1.375
 	style.Base.FontSize = &size
 	bold := font.Bold
@@ -196,7 +185,6 @@ func H3(thm *Theme, style LabelStyle) LabelStyle {
 }
 
 func H4(thm *Theme, style LabelStyle) LabelStyle {
-	style.Extra.Tags[parser.H4] = true
 	size := thm.TextSize * 1.125
 	style.Base.FontSize = &size
 	bold := font.Bold
@@ -205,7 +193,6 @@ func H4(thm *Theme, style LabelStyle) LabelStyle {
 }
 
 func H5(thm *Theme, style LabelStyle) LabelStyle {
-	style.Extra.Tags[parser.H5] = true
 	size := thm.TextSize
 	style.Base.FontSize = &size
 	bold := font.Bold
@@ -214,33 +201,28 @@ func H5(thm *Theme, style LabelStyle) LabelStyle {
 }
 
 func P(thm *Theme, style LabelStyle) LabelStyle {
-	style.Extra.Tags[parser.P] = true
 	return style
 }
 
 func I(thm *Theme, style LabelStyle) LabelStyle {
-	style.Extra.Tags[parser.I] = true
 	italic := font.Italic
 	style.Base.FontStyle = &italic
 	return style
 }
 
 func B(thm *Theme, style LabelStyle) LabelStyle {
-	style.Extra.Tags[parser.B] = true
 	bold := font.Bold
 	style.Base.FontWeight = &bold
 	return style
 }
 
 func A(Clickable *widget.Clickable, style LabelStyle) LabelStyle {
-	style.Extra.Tags[parser.A] = true
 	style.Base.Color = &color.NRGBA{R: 0, G: 0, B: 238, A: 255}
 	style.Extra.Clickable = Clickable
 	return style
 }
 
 func Ul(style LabelStyle) LabelStyle {
-	style.Extra.Tags[parser.Ul] = true
 	if style.Base.Margin == nil {
 		style.Base.Margin = new(layout.Inset)
 	}
@@ -249,7 +231,6 @@ func Ul(style LabelStyle) LabelStyle {
 }
 
 func Ol(style LabelStyle) LabelStyle {
-	style.Extra.Tags[parser.Ol] = true
 	if style.Base.Margin == nil {
 		style.Base.Margin = new(layout.Inset)
 	}
@@ -263,18 +244,23 @@ func Ol(style LabelStyle) LabelStyle {
 
 // we don't need thm, but just try to make it like the others
 // TODO NOW: FIXME: Find other way to check if to add prefix, can't use this map anymore
-func Li(thm *Theme, style LabelStyle) LabelStyle {
-	// if we are a child of ul or ol, add Prefix
-	// TODO: find a way to only add Prefix of the most inner one
-	if style.Extra.Tags[parser.Ul] && style.Extra.Prefix == "" {
-		style.Extra.Prefix = "• "
-	}
-	if style.Extra.Tags[parser.Ol] && style.Extra.Prefix == "" {
-		style.Extra.Prefix = strconv.Itoa(*style.Extra.Count) + ". "
-		*style.Extra.Count++
+func Li(thm *Theme, style LabelStyle, ancestors []parser.Tag) LabelStyle {
+	if style.Extra.Prefix == "" {
+		for i := len(ancestors) - 1; i >= 0; i-- {
+			anc := ancestors[i]
+			if anc == parser.Ol {
+				style.Extra.Prefix = strconv.Itoa(*style.Extra.Count) + ". "
+				*style.Extra.Count++
+				break
+			}
+
+			if anc == parser.Ul {
+				style.Extra.Prefix = "• "
+				break
+			}
+		}
 	}
 
-	style.Extra.Tags[parser.Li] = true
 	return style
 }
 
@@ -308,6 +294,5 @@ func Button(thm *Theme, Clickable *widget.Clickable, style LabelStyle) LabelStyl
 	}
 
 	style.Extra.Clickable = Clickable
-	style.Extra.Tags[parser.Button] = true
 	return style
 }

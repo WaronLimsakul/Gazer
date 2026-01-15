@@ -197,8 +197,6 @@ So I defined `ui.LabelStyle`. Initially, I just embed `css.Style` into a struct,
 in the `renderNode` function since we don't know what node are we rendering. Therefore, we need to pass around something that are uniform
 and friendly for all types of node. So I separate `css.Style` with the extra fields I need in label
 
-
-
 ```go
 // in ui/label.go
 type LabelStyle struct {
@@ -224,18 +222,11 @@ type RenderingStyle struct {
 
 Now when we traverse the tree and render, we can just check the node type, then build the style from `RenderingStyle` according to the node type.
 
-### Pass by value? Wait, or should it be pointer?
-I kinda let my intuition decide these kinda of questions, but to make things rigid. Here are some rules I will try to obey
+### I have pass-by-pointer-o-phobia...
+It's so annoying checking for `nil` everytime I write a pass-by-pointer function. I'm just gonna stick to pass-by-value
+except I have to do it, meaning one of this is true:
+- I have map or slice in the struct: essentially, it's just as mutatable as pass-by-value
+- I have to mutate something passed into me 
+- I want "optionality" meaning I want caller to have a choice not to provide the value.
 
-#### Pass by value when
-1. Type is small
-2. I don't wanna mutate anything
-3. Type is simple and immutable
-4. Clean and simple stupid API
-
-#### Pass by pointer when
-1. Type is big
-2. Type has something mutable (e.g. map, and slice), in that case, there is no point passing by value
-3. I want to mutate something client pass in
-4. I have to represent optionality
-
+Other than that, F*** it, I'm just gonna pass by value.

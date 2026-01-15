@@ -65,7 +65,7 @@ func (dr *DomRenderer) render(root *Node, styles *StyleSet) [][]Element {
 
 	htmlNode := root.Children[0]
 	for _, child := range htmlNode.Children {
-		res = append(res, dr.renderNode(child, styles, newRenderingStyle())...)
+		res = append(res, dr.renderNode(child, styles, newRenderingContext())...)
 	}
 
 	dr.cache[root] = &res
@@ -74,19 +74,19 @@ func (dr *DomRenderer) render(root *Node, styles *StyleSet) [][]Element {
 
 // renderNode returns flex children needs for render a node and its children.
 // TODO: doc
-// NOTE: might change RenderingStyle to RenderingContext
-// if we need something that is not style in the future
-func (dr *DomRenderer) renderNode(node *Node, styles *StyleSet, localStyle RenderingStyle) [][]Element {
+func (dr *DomRenderer) renderNode(node *Node, styles *StyleSet, rctx RenderingContext) [][]Element {
+	rctx.ancestors = append(rctx.ancestors, node.Tag) // show the kid who is there pop
+
 	res := make([][]Element, 0)
 	switch node.Tag {
 	case parser.Body:
-		res = dr.gatherElements(node, styles, localStyle)
+		res = dr.gatherElements(node, styles, rctx)
 	case parser.Div:
-		res = dr.gatherElements(node, styles, localStyle)
+		res = dr.gatherElements(node, styles, rctx)
 	case parser.Span:
-		res = dr.gatherElements(node, styles, localStyle)
+		res = dr.gatherElements(node, styles, rctx)
 	case parser.Section:
-		res = dr.gatherElements(node, styles, localStyle)
+		res = dr.gatherElements(node, styles, rctx)
 	case parser.Br:
 		res = append(res, []Element{layout.Spacer{Height: unit.Dp(10)}})
 	case parser.Hr:
@@ -102,17 +102,19 @@ func (dr *DomRenderer) renderNode(node *Node, styles *StyleSet, localStyle Rende
 	}
 
 	if parser.TextElements[node.Tag] {
-		res = append(res, dr.renderText(node, styles, localStyle)...)
+		res = append(res, dr.renderText(node, styles, rctx)...)
 	}
 
+	// pop from ancestors stack, done with this node
+	rctx.ancestors = rctx.ancestors[:len(rctx.ancestors)-1]
 	return res
 }
 
 // renderText returns [][]Element needs for rendering a text node and its children.
 // requires: node must be of the text type (check by using parser.TextElements)
 // TODO: doc
-// TODO: should we pass localStyle by pointer or value?
-func (dr *DomRenderer) renderText(node *Node, styles *StyleSet, localStyle RenderingStyle) [][]Element {
+// TODO: should we pass rctx by pointer or value?
+func (dr *DomRenderer) renderText(node *Node, styles *StyleSet, rctx RenderingContext) [][]Element {
 	// base case
 	if node.Tag == parser.Text {
 		selectable, ok := dr.selectables[node]
@@ -121,7 +123,7 @@ func (dr *DomRenderer) renderText(node *Node, styles *StyleSet, localStyle Rende
 			dr.selectables[node] = selectable
 		}
 
-		return [][]Element{{ui.NewLabel(dr.thm, localStyle.getLabelStyle(), selectable, node.Inner)}}
+		return [][]Element{{ui.NewLabel(dr.thm, rctx.getLabelStyle(), selectable, node.Inner)}}
 	}
 
 	// recursive case: decorate the label style
@@ -133,7 +135,7 @@ func (dr *DomRenderer) renderText(node *Node, styles *StyleSet, localStyle Rende
 			clickable = new(widget.Clickable)
 			dr.linkClickables[node] = clickable
 		}
-		localStyle.updateLabelStyle(ui.A(clickable, localStyle.getLabelStyle()))
+		rctx.updateLabelStyle(ui.A(clickable, rctx.getLabelStyle()))
 	case parser.Button:
 		// TODO: v8 just wrap all text around and treat it like one big button
 		clickable, ok := dr.buttonClickables[node]
@@ -141,29 +143,29 @@ func (dr *DomRenderer) renderText(node *Node, styles *StyleSet, localStyle Rende
 			clickable = new(widget.Clickable)
 			dr.buttonClickables[node] = clickable
 		}
-		localStyle.updateLabelStyle(ui.Button(dr.thm, clickable, localStyle.getLabelStyle()))
+		rctx.updateLabelStyle(ui.Button(dr.thm, clickable, rctx.getLabelStyle()))
 	case parser.Ul:
-		localStyle.updateLabelStyle(ui.Ul(localStyle.getLabelStyle()))
+		rctx.updateLabelStyle(ui.Ul(rctx.getLabelStyle()))
 	case parser.Ol:
-		localStyle.updateLabelStyle(ui.Ol(localStyle.getLabelStyle()))
+		rctx.updateLabelStyle(ui.Ol(rctx.getLabelStyle()))
 	case parser.H1:
-		localStyle.updateLabelStyle(ui.H1(dr.thm, localStyle.getLabelStyle()))
+		rctx.updateLabelStyle(ui.H1(dr.thm, rctx.getLabelStyle()))
 	case parser.H2:
-		localStyle.updateLabelStyle(ui.H2(dr.thm, localStyle.getLabelStyle()))
+		rctx.updateLabelStyle(ui.H2(dr.thm, rctx.getLabelStyle()))
 	case parser.H3:
-		localStyle.updateLabelStyle(ui.H3(dr.thm, localStyle.getLabelStyle()))
+		rctx.updateLabelStyle(ui.H3(dr.thm, rctx.getLabelStyle()))
 	case parser.H4:
-		localStyle.updateLabelStyle(ui.H4(dr.thm, localStyle.getLabelStyle()))
+		rctx.updateLabelStyle(ui.H4(dr.thm, rctx.getLabelStyle()))
 	case parser.H5:
-		localStyle.updateLabelStyle(ui.H5(dr.thm, localStyle.getLabelStyle()))
+		rctx.updateLabelStyle(ui.H5(dr.thm, rctx.getLabelStyle()))
 	case parser.P:
-		localStyle.updateLabelStyle(ui.P(dr.thm, localStyle.getLabelStyle()))
+		rctx.updateLabelStyle(ui.P(dr.thm, rctx.getLabelStyle()))
 	case parser.I:
-		localStyle.updateLabelStyle(ui.I(dr.thm, localStyle.getLabelStyle()))
+		rctx.updateLabelStyle(ui.I(dr.thm, rctx.getLabelStyle()))
 	case parser.B:
-		localStyle.updateLabelStyle(ui.B(dr.thm, localStyle.getLabelStyle()))
+		rctx.updateLabelStyle(ui.B(dr.thm, rctx.getLabelStyle()))
 	case parser.Li:
-		localStyle.updateLabelStyle(ui.Li(dr.thm, localStyle.getLabelStyle()))
+		rctx.updateLabelStyle(ui.Li(dr.thm, rctx.getLabelStyle(), rctx.ancestors))
 	}
 
 	// phase 2: update local style with CSS
@@ -180,10 +182,10 @@ func (dr *DomRenderer) renderText(node *Node, styles *StyleSet, localStyle Rende
 	}
 
 	// priority: inline > external > inherit
-	localStyle.base = css.AddStyle(inlineStyle, css.AddStyle(externalStyle, localStyle.base))
+	rctx.base = css.AddStyle(inlineStyle, css.AddStyle(externalStyle, rctx.base))
 
-	// after modify the localStyle, pass it up and gather elements
-	return dr.gatherElements(node, styles, localStyle)
+	// after modify the rctx, pass it up and gather elements
+	return dr.gatherElements(node, styles, rctx)
 }
 
 // renderImg receive Img tag node and return Img ui element.
@@ -268,13 +270,13 @@ func (dr DomRenderer) findHead(node *Node) *Node {
 
 // gaterElements recieves a node and gather all elements of the node's children
 // according the tag rule (inline, block)
-func (dr DomRenderer) gatherElements(node *Node, styles *StyleSet, localStyle RenderingStyle) [][]Element {
+func (dr DomRenderer) gatherElements(node *Node, styles *StyleSet, rctx RenderingContext) [][]Element {
 	res := make([][]Element, 0)
 	// if inline-text and prev is also inline-text, put it in latest one don't append
 	for i, child := range node.Children {
 		if parser.InlineElements[child.Tag] && len(res) > 0 && i > 0 &&
 			parser.InlineElements[node.Children[i-1].Tag] {
-			childElems := dr.renderNode(child, styles, localStyle)
+			childElems := dr.renderNode(child, styles, rctx)
 			if len(childElems) > 0 {
 				res[len(res)-1] = append(res[len(res)-1], childElems[0]...)
 			}
@@ -283,7 +285,7 @@ func (dr DomRenderer) gatherElements(node *Node, styles *StyleSet, localStyle Re
 			}
 
 		} else {
-			res = append(res, dr.renderNode(child, styles, localStyle)...)
+			res = append(res, dr.renderNode(child, styles, rctx)...)
 		}
 
 	}

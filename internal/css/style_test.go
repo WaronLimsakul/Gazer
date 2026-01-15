@@ -97,7 +97,7 @@ func TestMergeStyleMap(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := AddStylePtrMap(tc.input[0], tc.input[1])
+			result := AddStyleMap(tc.input[0], tc.input[1])
 			if !maps.EqualFunc(result, tc.expected, styleEq) {
 				t.Errorf("got %+v, want %+v", result, tc.expected)
 			}
@@ -167,7 +167,7 @@ func TestAddStylePtrSet(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := AddStylePtrSet(tc.input[0], tc.input[1])
+			result := AddStyleSet(tc.input[0], tc.input[1])
 			if result == nil && tc.expected == nil {
 				return
 			}
