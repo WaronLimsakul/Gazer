@@ -235,7 +235,7 @@ except I have to do it, meaning one of this is true:
 - I want "optionality" meaning I want caller to have a choice not to provide the value.
 - The struct is HUGE. Like HUGE... not just big.
 
-Other than that, F*** it, I'm just gonna pass by value.
+Other than that, F\*\*\* it, I'm just gonna pass by value.
 
 ### Reflection is just too good..
 `Style` struct in `css` package will grow bigger and bigger, but the way I implement it is just a bunch of `if` statement,
