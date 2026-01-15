@@ -242,3 +242,6 @@ Other than that, F\*\*\* it, I'm just gonna pass by value.
 I mean it's not some slice I can loop over. So I search it up and found `reflect` package in Go. That sh\*\* saves my life.
 You can do `reflect.ValueOf(something)` then get a very OP interface called `Value` which we can get `.Field(i)`, get `.NumField()`
 can even ask for a `Type().Field(i).Name` or if `value.IsNil()`?. Like yeah... I'm good with my life.
+
+### I will not look down on `net/url` again.
+I thought it's mid, but I was wrong, this s\*\*\*\* is so good. `url.Parse` can check if this relative or absoluate url is valid. If only want to validate url string for request, you have `url.ParseRequestURI`. If you have a url from some places but don't even know if it's relative or absolute and want to fetch from (e.g. inside `<link href="here">`), you have `someUrl.Parse`!!. It will gives you exactly where to look for.

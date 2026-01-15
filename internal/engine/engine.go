@@ -48,7 +48,8 @@ var client = &http.Client{Timeout: 3 * time.Second}
 
 // Start starts the engine to watch for notification and serve the request>
 func Start(state *State, window *app.Window) {
-	cache := make(map[*Tab]map[string]*parser.Node)
+	// cache for each tab's HTML parser, 1 tab = 1 cache
+	caches := make(map[*Tab]map[string]*parser.Node)
 
 	for noti := range state.Notifier {
 		// TODO: might spin up go routine for each job
@@ -56,13 +57,19 @@ func Start(state *State, window *app.Window) {
 		case Search:
 			tab := state.Tabs[noti.TabIdx]
 
-			tabCache, ok := cache[tab]
+			tabCache, ok := caches[tab]
 			if !ok {
 				tabCache = make(map[string]*parser.Node)
-				cache[tab] = tabCache
+				caches[tab] = tabCache
 			}
 
-			tab.Url = noti.Url
+			preparedUrl, err := prepareUrl(noti.Url)
+			if err != nil {
+				fmt.Println("prepareUrl: ", err)
+				continue
+			}
+			tab.Url = preparedUrl.String()
+
 			cachedRoot, ok := tabCache[tab.Url]
 			if ok {
 				tab.Root = cachedRoot
@@ -73,15 +80,8 @@ func Start(state *State, window *app.Window) {
 			tab.IsLoading = true
 			go reportProgress(tab, window, state.LoadProgress)
 
-			preparedUrl, err := prepareUrl(tab.Url)
-			if err != nil {
-				fmt.Println("prepareUrl: ", err)
-				continue
-			}
-			tab.Url = preparedUrl
-
 			root, err := search(tab.Url)
-			styles := getStyles(root, tab.Url)
+			styles := getStyles(root, preparedUrl)
 			tab.IsLoading = false
 
 			if err != nil {
@@ -138,8 +138,9 @@ func search(url string) (*parser.Node, error) {
 	return root, nil
 }
 
-// getStyles get the CSS StyleSet from the DOM root. it returns nil if not found.
-func getStyles(root *parser.Node, url string) *css.StyleSet {
+// getStyles get the CSS StyleSet from the DOM root (and might need the base url of the root).
+// it returns nil if not found.
+func getStyles(root *parser.Node, baseUrl *urlPkg.URL) *css.StyleSet {
 	head := findHead(root)
 	if head == nil {
 		return nil
@@ -159,46 +160,40 @@ func getStyles(root *parser.Node, url string) *css.StyleSet {
 			}
 			styles, err := css.Parse(contentBuilder.String())
 			if err != nil {
-				break
+				continue
 			}
 			internal = styles
 		case parser.Link:
 			if rel, ok := node.Attrs["rel"]; ok && rel == "stylesheet" {
 				href, ok := node.Attrs["href"]
 				if !ok {
-					break
+					continue
 				}
-
-				// if href doesn't look good, it might be a relative path
-				if !strings.HasPrefix(href, "https://") && !strings.HasPrefix(href, "http://") {
-					var err error
-					href, err = urlPkg.JoinPath(url, href)
-					if err != nil {
-						log.Println("url.JoinPath: ", err)
-						break
-					}
-				}
-				_, err := urlPkg.Parse(href)
+				hrefUrl, err := baseUrl.Parse(href) // OP function
 				if err != nil {
-					log.Println("Parse: ", err)
-					break
+					log.Println("baseUrl.Parse: ", err)
+					continue
 				}
-				res, err := client.Get(href)
+				res, err := client.Get(hrefUrl.String())
 				if err != nil {
 					log.Println("client.Get: ", err)
-					break
+					continue
 				}
 				defer res.Body.Close()
 				content, err := io.ReadAll(res.Body)
 				if err != nil {
 					log.Println("io.ReadAll: ", err)
-					break
+					continue
 				}
+				log.Printf("fetch CSS [%s]: %s", href, content)
+
 				styles, err := css.Parse(string(content))
 				if err != nil {
 					fmt.Println("css.Parse", err)
-					break
+					continue
 				}
+				log.Println("parse CSS: ", *styles)
+
 				external = styles
 			}
 		}
@@ -264,21 +259,21 @@ func findHead(root *parser.Node) *parser.Node {
 	return nil
 }
 
-// prepareUrl takes a url string and return a new url we hope we can fetch from
-func prepareUrl(url string) (string, error) {
-	if len(url) == 0 {
-		return "", fmt.Errorf("Empty URL")
+// prepareUrl takes a url string and return a new url.URL we can fetch from
+func prepareUrl(rawUrl string) (*urlPkg.URL, error) {
+	if len(rawUrl) == 0 {
+		return nil, fmt.Errorf("Empty URL")
 	}
 
 	// handle prefix: we want https:// or http://
-	if !strings.HasPrefix(url, "https://") && !strings.HasPrefix(url, "http://") {
-		url = "https://" + url
+	if !strings.HasPrefix(rawUrl, "https://") && !strings.HasPrefix(rawUrl, "http://") {
+		rawUrl = "https://" + rawUrl
 	}
 
 	// check valid url (don't use Parse, it's for both absolute and relative)
-	_, err := urlPkg.ParseRequestURI(url)
+	url, err := urlPkg.ParseRequestURI(rawUrl)
 	if err != nil {
-		return "", fmt.Errorf("url.Parse: %v", err)
+		return nil, fmt.Errorf("url.Parse: %v", err)
 	}
 
 	return url, nil

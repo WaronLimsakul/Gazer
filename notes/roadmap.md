@@ -3,8 +3,13 @@
 ### To-do Lists
 - [x] Support none-same-addr
 - [x] Test all the css rendering from different places 
+
 - [ ] Separate tab goroutine?
+  - not right now, we render one by one anyway
 - [ ] Optimize some more
+
+- [ ] Close tab button
+- [ ] Support `<header>`, `<footer>` 
 
 
 ### HTML tags support
