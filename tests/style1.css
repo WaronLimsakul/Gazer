@@ -1,8 +1,13 @@
 h1 {
     color: orange;
+    padding: 10px;
+    border-radius: 3px;
+    background-color: grey;
 }
 
 p {
+    font-size: 40px;
 	color: green;
+    margin: 5px;
     /* background-color: "green"; */
 }

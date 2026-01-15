@@ -5,7 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
-	urlPackage "net/url"
+	urlPkg "net/url"
 	"strings"
 	"time"
 
@@ -72,9 +72,18 @@ func Start(state *State, window *app.Window) {
 
 			tab.IsLoading = true
 			go reportProgress(tab, window, state.LoadProgress)
+
+			preparedUrl, err := prepareUrl(tab.Url)
+			if err != nil {
+				fmt.Println("prepareUrl: ", err)
+				continue
+			}
+			tab.Url = preparedUrl
+
 			root, err := search(tab.Url)
-			styles := getStyles(root)
+			styles := getStyles(root, tab.Url)
 			tab.IsLoading = false
+
 			if err != nil {
 				fmt.Println("search:", err)
 				continue
@@ -104,21 +113,6 @@ func NewState() *State {
 // search fetches the url and parse the DOM tree
 // then return the root of DOM tree and error if exists
 func search(url string) (*parser.Node, error) {
-	if len(url) == 0 {
-		return nil, fmt.Errorf("Empty URL")
-	}
-
-	// handle prefix: we want https:// or http://
-	if !strings.HasPrefix(url, "https://") && !strings.HasPrefix(url, "http://") {
-		url = "https://" + url
-	}
-
-	// check valid url
-	_, err := urlPackage.Parse(url)
-	if err != nil {
-		return nil, fmt.Errorf("url.Parse: %v", err)
-	}
-
 	res, err := fetch(url)
 	if err != nil {
 		return nil, fmt.Errorf("fetch: %v", err)
@@ -145,7 +139,7 @@ func search(url string) (*parser.Node, error) {
 }
 
 // getStyles get the CSS StyleSet from the DOM root. it returns nil if not found.
-func getStyles(root *parser.Node) *css.StyleSet {
+func getStyles(root *parser.Node, url string) *css.StyleSet {
 	head := findHead(root)
 	if head == nil {
 		return nil
@@ -174,20 +168,37 @@ func getStyles(root *parser.Node) *css.StyleSet {
 				if !ok {
 					break
 				}
-				_, err := urlPackage.Parse(href)
+
+				// if href doesn't look good, it might be a relative path
+				if !strings.HasPrefix(href, "https://") && !strings.HasPrefix(href, "http://") {
+					var err error
+					href, err = urlPkg.JoinPath(url, href)
+					if err != nil {
+						log.Println("url.JoinPath: ", err)
+						break
+					}
+				}
+				_, err := urlPkg.Parse(href)
 				if err != nil {
+					log.Println("Parse: ", err)
 					break
 				}
 				res, err := client.Get(href)
 				if err != nil {
+					log.Println("client.Get: ", err)
 					break
 				}
 				defer res.Body.Close()
 				content, err := io.ReadAll(res.Body)
 				if err != nil {
+					log.Println("io.ReadAll: ", err)
 					break
 				}
 				styles, err := css.Parse(string(content))
+				if err != nil {
+					fmt.Println("css.Parse", err)
+					break
+				}
 				external = styles
 			}
 		}
@@ -251,4 +262,24 @@ func findHead(root *parser.Node) *parser.Node {
 		}
 	}
 	return nil
+}
+
+// prepareUrl takes a url string and return a new url we hope we can fetch from
+func prepareUrl(url string) (string, error) {
+	if len(url) == 0 {
+		return "", fmt.Errorf("Empty URL")
+	}
+
+	// handle prefix: we want https:// or http://
+	if !strings.HasPrefix(url, "https://") && !strings.HasPrefix(url, "http://") {
+		url = "https://" + url
+	}
+
+	// check valid url (don't use Parse, it's for both absolute and relative)
+	_, err := urlPkg.ParseRequestURI(url)
+	if err != nil {
+		return "", fmt.Errorf("url.Parse: %v", err)
+	}
+
+	return url, nil
 }
