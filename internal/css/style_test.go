@@ -2,6 +2,7 @@ package css
 
 import (
 	"maps"
+	"reflect"
 	"testing"
 
 	"gioui.org/layout"
@@ -149,7 +150,7 @@ func TestAddStylePtrSet(t *testing.T) {
 					TagStyles:   map[parser.Tag]*Style{parser.Div: {FontSize: &fontSize16}},
 				},
 				{
-					ClassStyles: map[string]*Style{"c2": {FontSize: &fontSize12}},
+					ClassStyles: map[string]*Style{"c1": {FontSize: &fontSize12}},
 					TagStyles:   map[parser.Tag]*Style{parser.Span: {Color: &blue}},
 				},
 			},
@@ -195,18 +196,29 @@ func styleEq(a, b *Style) bool {
 	} else if a == nil || b == nil {
 		return false
 	}
-	return ptrValEq(a.Color, b.Color) && ptrValEq(a.BgColor, b.BgColor) &&
-		ptrValEq(a.Margin, b.Margin) && ptrValEq(a.Padding, b.Padding) &&
-		ptrValEq(a.Border, b.Border) && ptrValEq(a.FontSize, b.FontSize) &&
-		ptrValEq(a.FontWeight, b.FontWeight)
+
+	aV := reflect.ValueOf(a).Elem()
+	bV := reflect.ValueOf(a).Elem()
+
+	var res = true
+	for i := range aV.NumField() {
+		aField := aV.Field(i)
+		bField := bV.Field(i)
+		res = res && reflectPtrValEq(aField, bField)
+	}
+	return res
 }
 
-func ptrValEq[T comparable](a *T, b *T) bool {
-	if a == nil && b == nil {
+// reflectPtrValEq takes 2 reflect value (supposed to be pointer to the same type)
+// and return boolean whether it point to the same value
+func reflectPtrValEq(a reflect.Value, b reflect.Value) bool {
+	aNil := a.IsNil()
+	bNil := b.IsNil()
+	if aNil && bNil {
 		return true
-	} else if a == nil || b == nil {
+	} else if aNil || bNil {
 		return false
-	} else {
-		return *a == *b
 	}
+
+	return a.Elem().Interface() == b.Elem().Interface()
 }

@@ -26,8 +26,7 @@ type StyleSet struct {
 // The responsibility to intepret the struct is on caller.
 // Change this =
 // 1. modify how to parse the style name in Style.registerDecls
-// 2. modify comparison in styleEq function (in style_test.go)
-// 3. modify how to implement it in ui package
+// 2. modify how to implement it in ui package
 type Style struct {
 	Color      *color.NRGBA
 	BgColor    *color.NRGBA

@@ -1,8 +1,8 @@
 ## List of what I want to do
 
 ### To-do Lists
-- [ ] Support none-same-addr
-- [ ] Test all the css rendering from different places 
+- [x] Support none-same-addr
+- [x] Test all the css rendering from different places 
 - [ ] Separate tab goroutine?
 - [ ] Optimize some more
 

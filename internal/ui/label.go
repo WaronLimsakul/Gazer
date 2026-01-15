@@ -68,7 +68,7 @@ func (l Label) Layout(gtx C) D {
 	if l.clickable != nil {
 		l.clickable.Update(gtx)
 		if l.clickable.Hovered() {
-			pointer.CursorNone.Add(gtx.Ops)
+			pointer.CursorPointer.Add(gtx.Ops)
 		}
 	}
 
