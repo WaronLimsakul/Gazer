@@ -243,7 +243,6 @@ func Ol(style LabelStyle) LabelStyle {
 }
 
 // we don't need thm, but just try to make it like the others
-// TODO NOW: FIXME: Find other way to check if to add prefix, can't use this map anymore
 func Li(thm *Theme, style LabelStyle, ancestors []parser.Tag) LabelStyle {
 	if style.Extra.Prefix == "" {
 		for i := len(ancestors) - 1; i >= 0; i-- {

@@ -222,11 +222,17 @@ type RenderingStyle struct {
 
 Now when we traverse the tree and render, we can just check the node type, then build the style from `RenderingStyle` according to the node type.
 
+#### Update 6: No, I'm not done with you
+Now after we use accumulative recursion, the next problem is that the responsibility to know what the prefix of `<li>` is will
+be at the `ui.Li` function. And to know who's the direct ancestor of `<li>`, it needs to know more than just "am I ancestor of this guy?",
+Therefore, I removed the `Tags` field in `LabelExtraStyle`, and use just a simple stack called `ancestors` in the `RenderingContext` instead.
+Oh yeah, I change `RenderingStyle` to `RenderingContext` because it's not just style anymore.
+
 ### I have pass-by-pointer-o-phobia...
 It's so annoying checking for `nil` everytime I write a pass-by-pointer function. I'm just gonna stick to pass-by-value
 except I have to do it, meaning one of this is true:
-- I have map or slice in the struct: essentially, it's just as mutatable as pass-by-value
 - I have to mutate something passed into me 
 - I want "optionality" meaning I want caller to have a choice not to provide the value.
+- The struct is HUGE. Like HUGE... not just big.
 
 Other than that, F*** it, I'm just gonna pass by value.
