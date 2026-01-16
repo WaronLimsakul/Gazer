@@ -10,6 +10,7 @@
 
 - [x] Close tab button
 - [x] Support `<header>`, `<footer>` 
+- [ ] Support `<main>`, `<article>`
 - [ ] Support container style support
 - [ ] Support local files traversal
 - [ ] Support pdf if possible

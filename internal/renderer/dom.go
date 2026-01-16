@@ -89,6 +89,10 @@ func (dr *DomRenderer) renderNode(node *Node, styles *StyleSet, rctx RenderingCo
 		res = dr.gatherElements(node, styles, rctx)
 	case parser.Header:
 		res = dr.gatherElements(node, styles, rctx)
+	case parser.Main:
+		res = dr.gatherElements(node, styles, rctx)
+	case parser.Article:
+		res = dr.gatherElements(node, styles, rctx)
 	case parser.Footer:
 		res = dr.gatherElements(node, styles, rctx)
 	case parser.Br:
