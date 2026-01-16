@@ -10,6 +10,8 @@
 
 - [ ] Close tab button
 - [ ] Support `<header>`, `<footer>` 
+- [ ] Support local files traversal
+- [ ] Support pdf if possible
 
 
 ### HTML tags support

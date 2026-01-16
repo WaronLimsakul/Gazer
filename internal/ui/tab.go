@@ -30,9 +30,10 @@ type Tabs struct {
 }
 
 type Tab struct {
-	clickable    *widget.Clickable
-	SearchEditor *widget.Editor
-	Title        string
+	clickable      *widget.Clickable
+	closeClickable *widget.Clickable // for "close tab" button
+	SearchEditor   *widget.Editor
+	Title          string
 	// map url to fetched favicon (cache)
 	favIcons map[string]image.Image
 }
@@ -190,6 +191,17 @@ func (t *Tab) Layout(thm *Theme, gtx C, isSelected bool, url string) D {
 						}
 						return label.Layout(gtx)
 					}),
+					layout.Rigid(layout.Spacer{Width: unit.Dp(8)}.Layout),
+					layout.Rigid(func(gtx C) D {
+						closeIcon, err := widget.NewIcon(icons.NavigationCancel)
+						if err != nil {
+							panic("can't decode close icon")
+						}
+						closeButton := material.IconButton(thm, t.closeClickable, closeIcon, "")
+						closeButton.Size = unit.Dp(20)
+						closeButton.Inset = layout.Inset{}
+						return closeButton.Layout(gtx)
+					}),
 				)
 			})
 			tabContentOp := macro.Stop()
@@ -212,6 +224,7 @@ func (t *Tab) Layout(thm *Theme, gtx C, isSelected bool, url string) D {
 	})
 }
 
+// getFavIcon fetch favicon.ico from the raw string address then decode and return it in image.Image
 func (t Tab) getFavIcon(raw string) (image.Image, error) {
 	if raw == "" {
 		return nil, fmt.Errorf("Empty raw string")
@@ -247,6 +260,11 @@ func (t Tab) getFavIcon(raw string) (image.Image, error) {
 
 func newTab() *Tab {
 	clickable := new(widget.Clickable)
+	closeClickable := new(widget.Clickable)
 	searchEditor := setupSearchBarEditor()
-	return &Tab{clickable: clickable, SearchEditor: searchEditor, favIcons: make(map[string]image.Image)}
+	return &Tab{
+		clickable:      clickable,
+		closeClickable: closeClickable,
+		SearchEditor:   searchEditor,
+		favIcons:       make(map[string]image.Image)}
 }
