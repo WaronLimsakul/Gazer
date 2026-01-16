@@ -136,6 +136,28 @@ func (t Tabs) TabClicked(gtx C) int {
 	return -1
 }
 
+func (t *Tabs) DeleteTab(idx int) {
+	t.Tabs = append(t.Tabs[:idx], t.Tabs[idx+1:]...)
+	// deal with selected idx shifting
+	if idx <= t.Selected {
+		if t.Selected == 0 {
+			t.Selected++
+		} else {
+			t.Selected--
+		}
+	}
+}
+
+// TabClosed returns index of the tab that got "close tab" clicked if exist, otherwise returns -1
+func (t Tabs) TabClosed(gtx C) int {
+	for idx, tab := range t.Tabs {
+		if tab.closeClickable.Clicked(gtx) {
+			return idx
+		}
+	}
+	return -1
+}
+
 func (t *Tab) Layout(thm *Theme, gtx C, isSelected bool, url string) D {
 	tabMargin := layout.Inset{
 		Right: unit.Dp(3),

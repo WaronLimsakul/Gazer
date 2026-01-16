@@ -82,6 +82,15 @@ func Draw(window *app.Window, state *engine.State) {
 				state.Notifier <- Noti{Type: engine.AddTab}
 			}
 
+			tabClosed := tabsView.TabClosed(gtx)
+			if tabClosed != -1 {
+				if len(tabsView.Tabs) == 1 {
+					os.Exit(0) // close app
+				}
+				tabsView.DeleteTab(tabClosed)
+				state.Notifier <- Noti{Type: engine.CloseTab, TabIdx: tabClosed}
+			}
+
 			// handle clicking tab
 			tabClicked := tabsView.TabClicked(gtx)
 			if tabClicked != -1 {

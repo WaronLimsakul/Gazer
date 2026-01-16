@@ -20,6 +20,7 @@ const (
 	Search NotificationType = iota
 	AddTab
 	ChangeTab
+	CloseTab
 )
 
 type Notification struct {
@@ -95,6 +96,9 @@ func Start(state *State, window *app.Window) {
 			window.Invalidate()
 		case AddTab:
 			state.Tabs = append(state.Tabs, &Tab{})
+			window.Invalidate()
+		case CloseTab:
+			state.Tabs = append(state.Tabs[:noti.TabIdx], state.Tabs[noti.TabIdx+1:]...)
 			window.Invalidate()
 		default:
 			continue
