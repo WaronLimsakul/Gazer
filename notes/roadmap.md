@@ -10,7 +10,10 @@
 
 - [x] Close tab button
 - [x] Support `<header>`, `<footer>` 
-- [ ] Support `<main>`, `<article>`
+- [x] Support `<main>`, `<article>`
+- [ ] Support table element
+- [ ] CSS comment
+- [ ] CSS 
 - [ ] Support container style support
 - [ ] Support local files traversal
 - [ ] Support pdf if possible
@@ -54,6 +57,8 @@
     - [x] border shorthand
   - [x] Element padding size `padding`
   - [ ] Flex model 
+- [ ] At-rule
+- [ ] Comments
 
 ### JavaScript support
 - [ ] Light JavaScript support

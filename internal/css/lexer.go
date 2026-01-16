@@ -12,6 +12,7 @@ const (
 	Selector tokenType = iota
 	Property
 	Value
+	Comment
 	End  // end of the string
 	Void // for invalid token, parser can just skip if found one
 )
@@ -22,9 +23,10 @@ type Token struct {
 }
 
 type Lexer struct {
-	raw   string
-	pos   int
-	state tokenType // lexer state is just the current token type
+	raw       string
+	pos       int
+	prevState tokenType
+	state     tokenType // lexer state is just the current token type
 }
 
 // newLexer create a new CSS Lexer with the cursor pointing
@@ -44,9 +46,23 @@ func (sl *Lexer) getNextToken() Token {
 	content := ""
 	for i := sl.pos; i < len(sl.raw); i++ {
 		ch := sl.raw[i]
+
+		// check entering comment state first (cuz it can interrupt any state)
+		if i+1 < len(sl.raw) && sl.raw[i:i+2] == "/*" {
+			sl.prevState = sl.state
+			sl.state = Comment
+			sl.pos = i + 2
+			token := Token{Type: Void, Content: content}
+			return token
+		}
+
+		// TODO NOW: how to transition to comment?
+		// maybe if found "/*" during processing, return what we have right away as Void (invalid)
+		// skip 2 chars, then transition to comment
 		switch sl.state {
 		case Selector:
 			if ch == '{' {
+				sl.prevState = Selector
 				sl.state = Property
 				sl.pos = i + 1
 				return Token{Type: Selector, Content: strings.TrimSpace(content)}
@@ -54,11 +70,13 @@ func (sl *Lexer) getNextToken() Token {
 		case Property:
 			switch ch {
 			case ':':
+				sl.prevState = Property
 				sl.state = Value
 				sl.pos = i + 1
 				// TODO: not sure if case-insensitive
 				return Token{Type: Property, Content: strings.TrimSpace(content)}
 			case '}':
+				sl.prevState = Property
 				sl.state = Selector
 				sl.pos = i + 1
 				return Token{Type: Void}
@@ -66,13 +84,22 @@ func (sl *Lexer) getNextToken() Token {
 		case Value:
 			switch ch {
 			case ';':
+				sl.prevState = Value
 				sl.state = Property
 				sl.pos = i + 1
 				return Token{Type: Value, Content: strings.TrimSpace(content)}
 			case '}':
+				sl.prevState = Value
 				sl.state = Selector
 				sl.pos = i + 1
 				return Token{Type: Value, Content: strings.TrimSpace(content)}
+			}
+		case Comment:
+			if i+1 < len(sl.raw) && sl.raw[i:i+2] == "*/" {
+				sl.state = sl.prevState
+				sl.prevState = Comment
+				sl.pos = i + 2 // skip the '/' as well
+				return Token{Type: Comment, Content: content}
 			}
 		}
 		content += string(ch)

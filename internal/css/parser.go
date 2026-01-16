@@ -24,6 +24,8 @@ mainLoop: // first time in my life using this. Haha
 		switch token.Type {
 		case Void:
 			continue // skip invalid token
+		case Comment:
+			continue // skip comment token
 		case End:
 			// TODO: not sure if this will break, have to test
 			if state == Value {
