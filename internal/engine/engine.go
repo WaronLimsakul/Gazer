@@ -114,6 +114,20 @@ func NewState() *State {
 	return &s
 }
 
+// ResolveJumpTarget takes href string and the base url of the site
+// to determine the jump target address
+func ResolveJumpTarget(href, base string) (string, error) {
+	url, err := urlPkg.ParseRequestURI(base)
+	if err != nil {
+		return "", err
+	}
+	target, err := url.Parse(href)
+	if err != nil {
+		return "", err
+	}
+	return target.String(), nil
+}
+
 // search fetches the url and parse the DOM tree
 // then return the root of DOM tree and error if exists
 func search(url string) (*parser.Node, error) {

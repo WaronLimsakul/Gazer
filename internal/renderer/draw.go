@@ -67,12 +67,18 @@ func Draw(window *app.Window, state *engine.State) {
 				domRenderers[tabView] = domRenderer
 			}
 
-			// handle link clicking event
-			jump, url := domRenderer.linkClicked(gtx)
+			// handle hyperlink clicking event
+			jump, href := domRenderer.linkClicked(gtx)
 			if jump {
-				searchBar.SetText(url)
-				state.Notifier <- Noti{Type: engine.Search,
-					TabIdx: tabsView.Selected, Url: url}
+				href, err := engine.ResolveJumpTarget(href, tab.Url)
+				if err == nil {
+					searchBar.SetText(href)
+					state.Notifier <- Noti{
+						Type:   engine.Search,
+						TabIdx: tabsView.Selected,
+						Url:    href,
+					}
+				}
 			}
 
 			// handle clicking add tab button
