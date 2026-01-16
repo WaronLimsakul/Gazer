@@ -24,6 +24,8 @@ const (
 	Div
 	Span
 	Section
+	Header
+	Footer
 
 	H1
 	H2
@@ -62,6 +64,8 @@ var TagMap = map[string]Tag{
 	"div":     Div,
 	"span":    Span,
 	"section": Section,
+	"header":  Header,
+	"footer":  Footer,
 	"h1":      H1,
 	"h2":      H2,
 	"h3":      H3,
@@ -107,6 +111,10 @@ func (t Tag) String() string {
 		return "span"
 	case Section:
 		return "section"
+	case Header:
+		return "header"
+	case Footer:
+		return "footer"
 	case H1:
 		return "h1"
 	case H2:

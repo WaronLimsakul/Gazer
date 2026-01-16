@@ -87,6 +87,10 @@ func (dr *DomRenderer) renderNode(node *Node, styles *StyleSet, rctx RenderingCo
 		res = dr.gatherElements(node, styles, rctx)
 	case parser.Section:
 		res = dr.gatherElements(node, styles, rctx)
+	case parser.Header:
+		res = dr.gatherElements(node, styles, rctx)
+	case parser.Footer:
+		res = dr.gatherElements(node, styles, rctx)
 	case parser.Br:
 		res = append(res, []Element{layout.Spacer{Height: unit.Dp(10)}})
 	case parser.Hr:

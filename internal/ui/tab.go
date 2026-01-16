@@ -136,6 +136,7 @@ func (t Tabs) TabClicked(gtx C) int {
 	return -1
 }
 
+// DeleteTab... yeah you guess
 func (t *Tabs) DeleteTab(idx int) {
 	t.Tabs = append(t.Tabs[:idx], t.Tabs[idx+1:]...)
 	// deal with selected idx shifting

@@ -8,8 +8,9 @@
   - not right now, we render one by one anyway
 - [ ] Optimize some more
 
-- [ ] Close tab button
-- [ ] Support `<header>`, `<footer>` 
+- [x] Close tab button
+- [x] Support `<header>`, `<footer>` 
+- [ ] Support container style support
 - [ ] Support local files traversal
 - [ ] Support pdf if possible
 
