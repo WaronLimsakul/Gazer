@@ -73,6 +73,8 @@ else
     CSS_PID=""
 fi
 
+echo "NOTE: make client fetch 2 times to reload the change"
+
 # Function to cleanup
 cleanup() {
     echo ""
