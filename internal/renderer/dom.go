@@ -81,20 +81,6 @@ func (dr *DomRenderer) renderNode(node *Node, styles *StyleSet, rctx RenderingCo
 	switch node.Tag {
 	case parser.Body:
 		res = dr.gatherElements(node, styles, rctx)
-	case parser.Div:
-		res = dr.gatherElements(node, styles, rctx)
-	case parser.Span:
-		res = dr.gatherElements(node, styles, rctx)
-	case parser.Section:
-		res = dr.gatherElements(node, styles, rctx)
-	case parser.Header:
-		res = dr.gatherElements(node, styles, rctx)
-	case parser.Main:
-		res = dr.gatherElements(node, styles, rctx)
-	case parser.Article:
-		res = dr.gatherElements(node, styles, rctx)
-	case parser.Footer:
-		res = dr.gatherElements(node, styles, rctx)
 	case parser.Br:
 		res = append(res, []Element{layout.Spacer{Height: unit.Dp(10)}})
 	case parser.Hr:
@@ -109,6 +95,9 @@ func (dr *DomRenderer) renderNode(node *Node, styles *StyleSet, rctx RenderingCo
 		res = append(res, []Element{dr.renderInput(node)})
 	}
 
+	if parser.ContainerElements[node.Tag] {
+		res = append(res, []Element{dr.renderContainer(node, styles, rctx)})
+	}
 	if parser.TextElements[node.Tag] {
 		res = append(res, dr.renderText(node, styles, rctx)...)
 	}
@@ -116,6 +105,30 @@ func (dr *DomRenderer) renderNode(node *Node, styles *StyleSet, rctx RenderingCo
 	// pop from ancestors stack, done with this node
 	rctx.ancestors = rctx.ancestors[:len(rctx.ancestors)-1]
 	return res
+}
+
+// TODO: support other than Div
+func (dr *DomRenderer) renderContainer(node *Node, styles *StyleSet, rctx RenderingContext) Element {
+	// TODO: this entire style handling process should be centralized
+	var localStyle css.Style
+	localStylePtr := getNodeStyleFromStyleSet(styles, node)
+	if localStylePtr != nil {
+		localStyle = *localStylePtr
+	}
+
+	var inlineStyle css.Style
+	inlineStyleStr, ok := node.Attrs["style"]
+	if ok {
+		inlineStyle = css.ParseStyle(inlineStyleStr)
+	}
+
+	curStyle := css.AddStyle(inlineStyle, css.AddStyle(localStyle, rctx.base))
+
+	childrenRctx := rctx
+	childrenRctx.base = containerInheritStyle(curStyle)
+	children := dr.gatherElements(node, styles, childrenRctx)
+
+	return ui.NewDiv(dr.thm, curStyle, children)
 }
 
 // renderText returns [][]Element needs for rendering a text node and its children.
@@ -311,6 +324,8 @@ func (dr *DomRenderer) linkClicked(gtx C) (bool, string) {
 	return false, ""
 }
 
+// getNodeStyleFromStyleSet return a css.Style of the node according to
+// the CSS that styleset represent.
 func getNodeStyleFromStyleSet(ss *StyleSet, node *parser.Node) *css.Style {
 	if node == nil || ss == nil {
 		return nil
@@ -342,5 +357,15 @@ func getNodeStyleFromStyleSet(ss *StyleSet, node *parser.Node) *css.Style {
 		}
 	}
 
+	return res
+}
+
+// containerInheritStyle returns a container style with only inheritable fields
+func containerInheritStyle(style css.Style) css.Style {
+	var res css.Style
+	res.Color = style.Color
+	res.FontSize = style.FontSize
+	res.FontStyle = style.FontStyle
+	res.FontWeight = style.FontWeight
 	return res
 }

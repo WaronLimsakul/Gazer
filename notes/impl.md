@@ -245,3 +245,14 @@ can even ask for a `Type().Field(i).Name` or if `value.IsNil()`?. Like yeah... I
 
 ### I will not look down on `net/url` again.
 I thought it's mid, but I was wrong, this s\*\*\*\* is so good. `url.Parse` can check if this relative or absoluate url is valid. If only want to validate url string for request, you have `url.ParseRequestURI`. If you have a url from some places but don't even know if it's relative or absolute and want to fetch from (e.g. inside `<link href="here">`), you have `someUrl.Parse`!!. It will gives you exactly where to look for.
+
+### `layout.Background`
+Pretty good helper widget, when `Layout`, it pass the dimension of the foreground to background via `gtx.Constraints.Min`. All we gotta do
+when painting the background is just clip with that constraints, then paint.
+
+### Container Elements Rendering
+Interesting thing about this kind of element is that it is capable of selectively inherit styles to its children.
+For example, `<div style="margin: 10px; color: red;"><p>hello</p></div>` means it will inherit the color, but not the margin.
+I guess the best way to render this is to figure out all the children first (and of course we need to know what to inherit to them
+at that point), then we create our `Div` component based on its style and children.
+

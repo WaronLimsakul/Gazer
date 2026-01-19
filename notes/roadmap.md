@@ -12,11 +12,11 @@
 - [x] Support `<header>`, `<footer>` 
 - [x] Support `<main>`, `<article>`
 - [ ] Support table element
-- [ ] CSS comment
-- [ ] CSS 
+- [x] CSS comment
 - [ ] Support container style support
 - [ ] Support local files traversal
 - [ ] Support pdf if possible
+- [ ] Update serve.sh to observe change and reload
 
 
 ### HTML tags support
@@ -57,8 +57,8 @@
     - [x] border shorthand
   - [x] Element padding size `padding`
   - [ ] Flex model 
+- [x] Comments
 - [ ] At-rule
-- [ ] Comments
 
 ### JavaScript support
 - [ ] Light JavaScript support

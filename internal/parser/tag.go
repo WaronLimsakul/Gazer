@@ -192,6 +192,17 @@ var TextElements = map[Tag]bool{
 	Text:   true,
 }
 
+// elements that are supposed to be containers of others
+var ContainerElements = map[Tag]bool{
+	Div:     true,
+	Span:    true,
+	Section: true,
+	Header:  true,
+	Main:    true,
+	Article: true,
+	Footer:  true,
+}
+
 // inline elements = element that will not break line when
 // being child of another text element. E.g. <p>hello, <i>world</i></p> is one line
 var InlineElements = map[Tag]bool{
