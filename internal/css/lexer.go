@@ -56,9 +56,6 @@ func (sl *Lexer) getNextToken() Token {
 			return token
 		}
 
-		// TODO NOW: how to transition to comment?
-		// maybe if found "/*" during processing, return what we have right away as Void (invalid)
-		// skip 2 chars, then transition to comment
 		switch sl.state {
 		case Selector:
 			if ch == '{' {

@@ -16,7 +16,7 @@
 - [x] Support container style support
 - [ ] Support local files traversal
 - [ ] Support pdf if possible
-- [ ] Update serve.sh to observe change and reload
+- [x] Update serve.sh to observe change and reload
 - [ ] Fix loading bar, I saw it firing like a Gatling gun when load a large page.
 - [ ] Update serve.sh to observe the change and reload
 

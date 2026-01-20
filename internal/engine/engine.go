@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	urlPkg "net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -47,6 +48,12 @@ type Tab struct {
 
 var client = &http.Client{Timeout: 3 * time.Second}
 
+// checked content type in HTTPS header
+var supportedContentType = map[string]bool{
+	"text/html": true,
+	"text/css":  true,
+}
+
 // Start starts the engine to watch for notification and serve the request>
 func Start(state *State, window *app.Window) {
 	// cache for each tab's HTML parser, 1 tab = 1 cache
@@ -81,7 +88,7 @@ func Start(state *State, window *app.Window) {
 			tab.IsLoading = true
 			go reportProgress(tab, window, state.LoadProgress)
 
-			root, err := search(tab.Url)
+			root, err := getDom(*preparedUrl)
 			styles := getStyles(root, preparedUrl)
 			tab.IsLoading = false
 
@@ -128,20 +135,16 @@ func ResolveJumpTarget(href, base string) (string, error) {
 	return target.String(), nil
 }
 
-// search fetches the url and parse the DOM tree
+// getDom fetches the url and parse the DOM tree
 // then return the root of DOM tree and error if exists
-func search(url string) (*parser.Node, error) {
-	res, err := fetch(url)
+func getDom(url urlPkg.URL) (*parser.Node, error) {
+	contentReader, err := fetch(url)
 	if err != nil {
 		return nil, fmt.Errorf("fetch: %v", err)
 	}
-	defer res.Body.Close()
+	defer contentReader.Close()
 
-	if !strings.HasPrefix(res.Header["Content-Type"][0], "text/html") {
-		return nil, fmt.Errorf("Not HTML")
-	}
-
-	resBody, err := io.ReadAll(res.Body)
+	resBody, err := io.ReadAll(contentReader)
 	if err != nil {
 		return nil, fmt.Errorf("io.ReadAll: %v", err)
 	}
@@ -192,13 +195,14 @@ func getStyles(root *parser.Node, baseUrl *urlPkg.URL) *css.StyleSet {
 					log.Println("baseUrl.Parse: ", err)
 					continue
 				}
-				res, err := client.Get(hrefUrl.String())
+				contentReader, err := fetch(*hrefUrl)
 				if err != nil {
-					log.Println("client.Get: ", err)
+					log.Println("fetch:", err)
 					continue
 				}
-				defer res.Body.Close()
-				content, err := io.ReadAll(res.Body)
+
+				defer contentReader.Close()
+				content, err := io.ReadAll(contentReader)
 				if err != nil {
 					log.Println("io.ReadAll: ", err)
 					continue
@@ -226,19 +230,50 @@ func getStyles(root *parser.Node, baseUrl *urlPkg.URL) *css.StyleSet {
 	}
 }
 
-// fetch uses the url to fetch the response
-func fetch(url string) (*http.Response, error) {
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("http.NewRequest: %v", err)
-	}
-	req.Header.Set("User-Agent", "Gazer")
+// fetch uses the url to fetch the content and return
+// io.ReadCloser representing a content reader
+func fetch(url urlPkg.URL) (io.ReadCloser, error) {
+	switch url.Scheme {
+	case "file":
+		file, err := os.Open(url.Path)
+		if err != nil {
+			return nil, fmt.Errorf("os.Open: %v", err)
+		}
+		return file, nil
+	case "http":
+		res, err := http.Get(url.String())
+		if err != nil {
+			return nil, fmt.Errorf("http.Get: %v", err)
+		}
+		return res.Body, nil
+	case "https":
+		// use serious client for https
+		req, err := http.NewRequest(http.MethodGet, url.String(), nil)
+		if err != nil {
+			return nil, fmt.Errorf("http.NewRequest: %v", err)
+		}
+		req.Header.Set("User-Agent", "Gazer")
 
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("client.Do: %v", err)
+		res, err := client.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("client.Do: %v", err)
+		}
+
+		contentTypes, ok := res.Header["Content-Type"]
+		if !ok {
+			return nil, fmt.Errorf("No content type provided")
+		}
+
+		contentType := contentTypes[0]
+		if _, ok := supportedContentType[contentType]; !ok {
+			return nil, fmt.Errorf("Unsupported content type: %v", contentType)
+
+		}
+
+		return res.Body, nil
+	default:
+		return nil, fmt.Errorf("Unsupported scheme: %v", url.Scheme)
 	}
-	return res, nil
 }
 
 // reportProgress keep reporting synthetic progress to the channel in the state
@@ -279,20 +314,34 @@ func findHead(root *parser.Node) *parser.Node {
 }
 
 // prepareUrl takes a url string and return a new url.URL we can fetch from
+// supported scheme: HTTP, HTTPS, file system
 func prepareUrl(rawUrl string) (*urlPkg.URL, error) {
 	if len(rawUrl) == 0 {
 		return nil, fmt.Errorf("Empty URL")
 	}
 
 	// handle prefix: we want https:// or http://
-	if !strings.HasPrefix(rawUrl, "https://") && !strings.HasPrefix(rawUrl, "http://") {
+	if !strings.HasPrefix(rawUrl, "file://") &&
+		!strings.HasPrefix(rawUrl, "https://") &&
+		!strings.HasPrefix(rawUrl, "http://") {
 		rawUrl = "https://" + rawUrl
 	}
 
-	// check valid url (don't use Parse, it's for both absolute and relative)
-	url, err := urlPkg.ParseRequestURI(rawUrl)
+	// check normal valid url
+	url, err := urlPkg.Parse(rawUrl)
 	if err != nil {
 		return nil, fmt.Errorf("url.Parse: %v", err)
+	}
+
+	// support local file
+	if url.Scheme == "file" {
+		return url, nil
+	}
+
+	// check valid HTTP request url
+	url, err = urlPkg.ParseRequestURI(rawUrl)
+	if err != nil {
+		return nil, fmt.Errorf("url.ParseRequestURI: %v", err)
 	}
 
 	return url, nil
