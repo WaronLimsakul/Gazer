@@ -88,7 +88,7 @@ func GetNextToken(raw string, pos int) Token {
 
 		case DocType:
 			if char == '>' {
-				res.Content = strings.TrimSpace(res.Content)
+				res.Content = strings.ToLower(strings.TrimSpace(res.Content))
 				res.Endpos = idx + 1
 				return res
 			}
