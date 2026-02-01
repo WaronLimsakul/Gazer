@@ -40,7 +40,7 @@ type State struct {
 }
 
 type Tab struct {
-	Url       string
+	Url       string // processed URL
 	Root      *parser.Node
 	Styles    *css.StyleSet
 	IsLoading bool
@@ -138,9 +138,9 @@ func ResolveJumpTarget(href, base string) (string, error) {
 // getDom fetches the url and parse the DOM tree
 // then return the root of DOM tree and error if exists
 func getDom(url urlPkg.URL) (*parser.Node, error) {
-	contentReader, err := fetch(url)
+	contentReader, err := Fetch(url)
 	if err != nil {
-		return nil, fmt.Errorf("fetch: %v", err)
+		return nil, fmt.Errorf("Fetch: %v", err)
 	}
 	defer contentReader.Close()
 
@@ -195,9 +195,9 @@ func getStyles(root *parser.Node, baseUrl *urlPkg.URL) *css.StyleSet {
 					log.Println("baseUrl.Parse: ", err)
 					continue
 				}
-				contentReader, err := fetch(*hrefUrl)
+				contentReader, err := Fetch(*hrefUrl)
 				if err != nil {
-					log.Println("fetch:", err)
+					log.Println("Fetch:", err)
 					continue
 				}
 
@@ -230,9 +230,9 @@ func getStyles(root *parser.Node, baseUrl *urlPkg.URL) *css.StyleSet {
 	}
 }
 
-// fetch uses the url to fetch the content and return
+// Fetch uses the url to fetch the content and return
 // io.ReadCloser representing a content reader
-func fetch(url urlPkg.URL) (io.ReadCloser, error) {
+func Fetch(url urlPkg.URL) (io.ReadCloser, error) {
 	switch url.Scheme {
 	case "file":
 		file, err := os.Open(url.Path)
@@ -313,7 +313,7 @@ func findHead(root *parser.Node) *parser.Node {
 	return nil
 }
 
-// prepareUrl takes a url string and return a new url.URL we can fetch from
+// prepareUrl takes a url string and return a new url.URL we can Fetch from
 // supported scheme: HTTP, HTTPS, file system
 func prepareUrl(rawUrl string) (*urlPkg.URL, error) {
 	if len(rawUrl) == 0 {

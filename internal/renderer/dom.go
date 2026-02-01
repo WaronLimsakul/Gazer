@@ -2,6 +2,7 @@ package renderer
 
 import (
 	"fmt"
+	urlPkg "net/url"
 	"strings"
 	"unicode"
 
@@ -21,6 +22,9 @@ type StyleSet = css.StyleSet
 type DomRenderer struct {
 	thm *material.Theme
 	tab *ui.Tab
+	// have to save the currentlyRenderedUrl in case
+	// of the components want need it
+	renderedUrl string
 	// Cache the matrix of elements with root node pointer.
 	// Can cache it because engine also cache by pointer
 	// (same url + same tab = same root ptr).
@@ -46,7 +50,8 @@ func newDomRenderer(thm *material.Theme, tab *ui.Tab) *DomRenderer {
 // First layer (outer) is each horizontal line of rendering.
 // Second layer (inner) is each element in that line from left to right.
 // TODO: doc
-func (dr *DomRenderer) render(root *Node, styles *StyleSet) [][]Element {
+func (dr *DomRenderer) render(root *Node, styles *StyleSet, url string) [][]Element {
+	dr.renderedUrl = url // save currently rendered url
 	res := make([][]Element, 0)
 	// expect to be Root node
 	if root == nil || root.Tag != parser.Root {
@@ -212,15 +217,29 @@ func (dr *DomRenderer) renderText(node *Node, styles *StyleSet, rctx RenderingCo
 // renderImg receive Img tag node and return Img ui element.
 // Img is void element, don't have to gather more
 func (dr *DomRenderer) renderImg(node *Node) (Element, error) {
+	empty := layout.Spacer{}
 	if node == nil {
-		return layout.Spacer{}, fmt.Errorf("nil node")
+		return empty, fmt.Errorf("nil node")
 	}
 	if node.Tag != parser.Img {
-		return layout.Spacer{}, fmt.Errorf("invalid tag: %v", node.Tag.String())
+		return empty, fmt.Errorf("invalid tag: %v", node.Tag.String())
 	}
-	img, err := ui.NewImg(node.Attrs["src"])
+	baseUrl, err := urlPkg.Parse(dr.renderedUrl)
 	if err != nil {
-		return layout.Spacer{}, fmt.Errorf("ui.NewImg: %v", err)
+		return empty, fmt.Errorf("invalid base url: %v", err)
+	}
+
+	imgRawSrc, ok := node.Attrs["src"]
+	if !ok {
+		return empty, fmt.Errorf("No image src provided")
+	}
+	imgUrl, err := baseUrl.Parse(imgRawSrc)
+	if err != nil {
+		return empty, fmt.Errorf("baseUrl.Parse: %v", err)
+	}
+	img, err := ui.NewImg(imgUrl.String())
+	if err != nil {
+		return empty, fmt.Errorf("ui.NewImg: %v", err)
 	}
 	return img, nil
 }

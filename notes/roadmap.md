@@ -4,21 +4,21 @@
 - [x] Support none-same-addr
 - [x] Test all the css rendering from different places 
 
-- [ ] Separate tab goroutine?
-  - not right now, we render one by one anyway
-- [ ] Optimize some more
-
 - [x] Close tab button
 - [x] Support `<header>`, `<footer>` 
 - [x] Support `<main>`, `<article>`
 - [ ] Support table element
 - [x] CSS comment
 - [x] Support container style support
-- [ ] Support local files traversal
-- [ ] Support pdf if possible
+- [x] Support local files traversal
 - [x] Update serve.sh to observe change and reload
 - [ ] Fix loading bar, I saw it firing like a Gatling gun when load a large page.
-- [ ] Update serve.sh to observe the change and reload
+- [x] Update serve.sh to observe the change and reload
+- [x] Support local file url in img src 
+- [ ] Support gif
+- [ ] `info.cern.ch`, `berkshirehathaway.com` <- pure html and CSS. Can use for testing
+- [ ] Tab navigation
+
 
 
 ### HTML tags support
