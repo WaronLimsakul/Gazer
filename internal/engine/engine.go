@@ -34,16 +34,14 @@ type State struct {
 	Tabs []*Tab
 	// a channel for client to notify the engine with the event
 	Notifier chan Notification
-
-	// a channel for client to check the loading progress
-	LoadProgress chan float32
 }
 
 type Tab struct {
-	Url       string // processed URL
-	Root      *parser.Node
-	Styles    *css.StyleSet
-	IsLoading bool
+	Url          string // processed URL
+	Root         *parser.Node
+	Styles       *css.StyleSet
+	IsLoading    bool
+	LoadProgress chan float32 // a channel reporting the loading progress
 }
 
 var client = &http.Client{Timeout: 3 * time.Second}
@@ -86,7 +84,7 @@ func Start(state *State, window *app.Window) {
 			}
 
 			tab.IsLoading = true
-			go reportProgress(tab, window, state.LoadProgress)
+			go reportProgress(tab, window, tab.LoadProgress)
 
 			root, err := getDom(*preparedUrl)
 			styles := getStyles(root, preparedUrl)
@@ -102,7 +100,7 @@ func Start(state *State, window *app.Window) {
 			tab.Styles = styles
 			window.Invalidate()
 		case AddTab:
-			state.Tabs = append(state.Tabs, &Tab{})
+			state.Tabs = append(state.Tabs, newTab())
 			window.Invalidate()
 		case CloseTab:
 			state.Tabs = append(state.Tabs[:noti.TabIdx], state.Tabs[noti.TabIdx+1:]...)
@@ -116,9 +114,12 @@ func Start(state *State, window *app.Window) {
 func NewState() *State {
 	s := State{}
 	s.Notifier = make(chan Notification)
-	s.LoadProgress = make(chan float32)
-	s.Tabs = []*Tab{{}}
+	s.Tabs = []*Tab{newTab()}
 	return &s
+}
+
+func newTab() *Tab {
+	return &Tab{LoadProgress: make(chan float32)}
 }
 
 // ResolveJumpTarget takes href string and the base url of the site
@@ -265,6 +266,7 @@ func Fetch(url urlPkg.URL) (io.ReadCloser, error) {
 		}
 
 		contentType := contentTypes[0]
+		contentType = strings.Split(contentType, ";")[0]
 		if _, ok := supportedContentType[contentType]; !ok {
 			return nil, fmt.Errorf("Unsupported content type: %v", contentType)
 

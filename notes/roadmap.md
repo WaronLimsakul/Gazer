@@ -18,6 +18,8 @@
 - [ ] Support gif
 - [ ] `info.cern.ch`, `berkshirehathaway.com` <- pure html and CSS. Can use for testing
 - [ ] Tab navigation
+- [ ] When loading something and create a new tab, it seizure
+    - Gotta separate network engine by tab
 
 
 

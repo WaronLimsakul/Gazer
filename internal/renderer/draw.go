@@ -113,7 +113,7 @@ func Draw(window *app.Window, state *engine.State) {
 
 			// if loading the page, replace horizontal line with progress bar
 			if tab.IsLoading {
-				progress := <-state.LoadProgress
+				progress := <-tab.LoadProgress
 				appFlexChildren = append(appFlexChildren, ui.Rigid(material.ProgressBar(thm, progress)))
 			} else {
 				appFlexChildren = append(appFlexChildren, ui.Rigid(hLine))
