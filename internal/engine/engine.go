@@ -54,21 +54,39 @@ var supportedContentType = map[string]bool{
 
 // Start starts the engine to watch for notification and serve the request>
 func Start(state *State, window *app.Window) {
-	// cache for each tab's HTML parser, 1 tab = 1 cache
-	caches := make(map[*Tab]map[string]*parser.Node)
+	serverNotifiers := make(map[*Tab]chan Notification) // map notification to channel to server
 
 	for noti := range state.Notifier {
-		// TODO: might spin up go routine for each job
+		// 2 operations that manager has to deal: open and close tab
+		switch noti.Type {
+		case AddTab:
+			state.Tabs = append(state.Tabs, newTab())
+			window.Invalidate()
+		case CloseTab:
+			delete(serverNotifiers, state.Tabs[noti.TabIdx]) // delete the serverNotifier
+			state.Tabs = append(state.Tabs[:noti.TabIdx], state.Tabs[noti.TabIdx+1:]...)
+			window.Invalidate()
+		default:
+			tab := state.Tabs[noti.TabIdx]
+			serverNotifier, ok := serverNotifiers[tab]
+			if !ok {
+				serverNotifier = make(chan Notification)
+				serverNotifiers[tab] = serverNotifier
+				go serveTab(tab, serverNotifier, window)
+			}
+			serverNotifier <- noti
+		}
+	}
+}
+
+func serveTab(tab *Tab, notifier chan Notification, window *app.Window) {
+	// 1 url = 1 root node
+	cache := make(map[string]*parser.Node)
+	for noti := range notifier {
+		// TODO NOW: have go routine assigned for each tab and delegate
+		// the work depends on the tabID
 		switch noti.Type {
 		case Search:
-			tab := state.Tabs[noti.TabIdx]
-
-			tabCache, ok := caches[tab]
-			if !ok {
-				tabCache = make(map[string]*parser.Node)
-				caches[tab] = tabCache
-			}
-
 			preparedUrl, err := prepareUrl(noti.Url)
 			if err != nil {
 				fmt.Println("prepareUrl: ", err)
@@ -76,7 +94,7 @@ func Start(state *State, window *app.Window) {
 			}
 			tab.Url = preparedUrl.String()
 
-			cachedRoot, ok := tabCache[tab.Url]
+			cachedRoot, ok := cache[tab.Url]
 			if ok {
 				tab.Root = cachedRoot
 				window.Invalidate()
@@ -95,15 +113,9 @@ func Start(state *State, window *app.Window) {
 				continue
 			}
 
-			tabCache[tab.Url] = root
+			cache[tab.Url] = root
 			tab.Root = root
 			tab.Styles = styles
-			window.Invalidate()
-		case AddTab:
-			state.Tabs = append(state.Tabs, newTab())
-			window.Invalidate()
-		case CloseTab:
-			state.Tabs = append(state.Tabs[:noti.TabIdx], state.Tabs[noti.TabIdx+1:]...)
 			window.Invalidate()
 		default:
 			continue
