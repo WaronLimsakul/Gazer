@@ -171,7 +171,7 @@ func getTagFromContent(content string) Tag {
 func getTag(tagName string) Tag {
 	tag, ok := TagMap[strings.ToLower(tagName)]
 	if !ok {
-		return Div // TODO NOW: check this
+		return Div // assume unknown node to be a div
 	} else {
 		return tag
 	}

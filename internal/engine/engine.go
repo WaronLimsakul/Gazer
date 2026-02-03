@@ -22,6 +22,9 @@ const (
 	AddTab
 	ChangeTab
 	CloseTab
+	NavBack  // click go back in history
+	NavForth // click go forth in history
+	AcknowledgeUrlChanged
 )
 
 type Notification struct {
@@ -30,6 +33,8 @@ type Notification struct {
 	Url    string
 }
 
+// represent the program logic state
+// only engine modules can change this
 type State struct {
 	Tabs []*Tab
 	// a channel for client to notify the engine with the event
@@ -37,11 +42,19 @@ type State struct {
 }
 
 type Tab struct {
-	Url          string // processed URL
-	Root         *parser.Node
-	Styles       *css.StyleSet
-	IsLoading    bool
+	Url       string // processed URL
+	Dom       Dom
+	IsLoading bool
+	history   *navHistory
+	// a flag to let the UI knows that engine change the Url
+	UrlChanged   bool
 	LoadProgress chan float32 // a channel reporting the loading progress
+}
+
+// represent logic Dom information
+type Dom struct {
+	Root   *parser.Node
+	Styles *css.StyleSet
 }
 
 var client = &http.Client{Timeout: 3 * time.Second}
@@ -80,11 +93,9 @@ func Start(state *State, window *app.Window) {
 }
 
 func serveTab(tab *Tab, notifier chan Notification, window *app.Window) {
-	// 1 url = 1 root node
-	cache := make(map[string]*parser.Node)
+	// cache for node parsing: 1 url = 1 root node
+	cache := make(map[string]Dom)
 	for noti := range notifier {
-		// TODO NOW: have go routine assigned for each tab and delegate
-		// the work depends on the tabID
 		switch noti.Type {
 		case Search:
 			preparedUrl, err := prepareUrl(noti.Url)
@@ -93,10 +104,11 @@ func serveTab(tab *Tab, notifier chan Notification, window *app.Window) {
 				continue
 			}
 			tab.Url = preparedUrl.String()
+			tab.history.nav(tab.Url)
 
-			cachedRoot, ok := cache[tab.Url]
+			cachedDom, ok := cache[tab.Url]
 			if ok {
-				tab.Root = cachedRoot
+				tab.Dom = cachedDom
 				window.Invalidate()
 				continue
 			}
@@ -113,10 +125,37 @@ func serveTab(tab *Tab, notifier chan Notification, window *app.Window) {
 				continue
 			}
 
-			cache[tab.Url] = root
-			tab.Root = root
-			tab.Styles = styles
+			tab.Dom = Dom{Root: root, Styles: styles}
+			cache[tab.Url] = tab.Dom
 			window.Invalidate()
+		case NavBack:
+			tab.history.back()
+			curUrl := tab.history.getUrl()
+			tab.Url = curUrl
+			tab.UrlChanged = true
+			// If we already visit this url, it should be cached
+			cachedDom, ok := cache[curUrl]
+			if !ok {
+				log.Println("NavBack: couldn't find cached dom data")
+				tab.Dom = Dom{nil, nil} // in case we're back at invalid url
+			}
+			tab.Dom = cachedDom
+			window.Invalidate()
+		case NavForth:
+			tab.history.forth()
+			curUrl := tab.history.getUrl()
+			tab.Url = curUrl
+			tab.UrlChanged = true
+			// If we already visit this url, it should be cached
+			cachedDom, ok := cache[curUrl]
+			if !ok {
+				log.Println("NavForth: couldn't find cached dom data")
+				tab.Dom = Dom{nil, nil} // in case we're back at invalid url
+			}
+			tab.Dom = cachedDom
+			window.Invalidate()
+		case AcknowledgeUrlChanged:
+			tab.UrlChanged = false // switch flag back after ui acknowledge our change
 		default:
 			continue
 		}
@@ -131,7 +170,7 @@ func NewState() *State {
 }
 
 func newTab() *Tab {
-	return &Tab{LoadProgress: make(chan float32)}
+	return &Tab{LoadProgress: make(chan float32), history: newNavHistory()}
 }
 
 // ResolveJumpTarget takes href string and the base url of the site

@@ -256,3 +256,15 @@ For example, `<div style="margin: 10px; color: red;"><p>hello</p></div>` means i
 I guess the best way to render this is to figure out all the children first (and of course we need to know what to inherit to them
 at that point), then we create our `Div` component based on its style and children.
 
+### This day has come
+When loading something and add a tab, my program got seizure, so I assign one logic engine per tab.
+By just spinning up another goroutine doing a `serveTab` which should keep looking at its own tab's channel
+and serving.
+
+### Tab Navigation
+I think it would be cool to implement it, it's not really hard in term of backend logic,
+navigation history is just a linked list. I have a set of button called `PageNav` and 
+new notification types: `NavBack`, `NavForth` and `AcknowledgeUrlChanged`.
+The last one is when engine navigate back/forth and change state's url, we have to find a way
+to notify the ui without letting it mess with the engine, so I create a new field in `engine.Tab` called `urlChanged`
+now when UI see this flag being `true`, it will just set its search bar url to the changed on and notify the engine.

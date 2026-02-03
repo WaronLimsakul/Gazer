@@ -35,6 +35,7 @@ func NewSearchBar(thm *material.Theme, editor *widget.Editor) *SearchBar {
 	return &SearchBar{thm: thm, editor: editor, clickable: clickable}
 }
 
+// TODO: make it longer than this
 func (s *SearchBar) Layout(gtx C) D {
 	// handle ui interaction
 	s.clickable.Update(gtx)
@@ -48,8 +49,8 @@ func (s *SearchBar) Layout(gtx C) D {
 
 	// search bar spacing
 	margin := layout.Inset{
-		Top:    unit.Dp(25),
-		Bottom: unit.Dp(25),
+		Top:    unit.Dp(5),
+		Bottom: unit.Dp(5),
 		// press to get the search bar width
 		Left:  unit.Dp(400),
 		Right: unit.Dp(400),

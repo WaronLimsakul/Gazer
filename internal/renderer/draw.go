@@ -34,6 +34,7 @@ func Draw(window *app.Window, state *engine.State) {
 	ops := op.Ops{}
 	thm := newTheme()
 
+	pageNav := ui.NewPageNav(thm) // those 2 back and forth arrow button
 	hLine := ui.HorizontalLine{Thm: thm, Width: WINDOW_WIDTH, Height: unit.Dp(1)}
 	page := ui.NewPage(thm)     // page doesn't depend on the tab
 	tabsView := ui.NewTabs(thm) // will have another "tabs" from state
@@ -57,6 +58,15 @@ func Draw(window *app.Window, state *engine.State) {
 					Type:   engine.Search,
 					TabIdx: tabsView.Selected,
 					Url:    searchBar.Text(),
+				}
+			}
+
+			// handle when engine change the tab's url
+			if tab.UrlChanged {
+				searchBar.SetText(tab.Url)
+				state.Notifier <- Noti{
+					Type:   engine.AcknowledgeUrlChanged,
+					TabIdx: tabsView.Selected,
 				}
 			}
 
@@ -104,11 +114,25 @@ func Draw(window *app.Window, state *engine.State) {
 				window.Invalidate()
 			}
 
+			// handle page navigation back/forth buttons clicked
+			navBackClicked := pageNav.BackClicked(gtx)
+			if navBackClicked {
+				state.Notifier <- engine.Notification{
+					Type:   engine.NavBack,
+					TabIdx: tabsView.Selected}
+			}
+			navForthClicked := pageNav.ForthClicked(gtx)
+			if navForthClicked {
+				state.Notifier <- engine.Notification{
+					Type:   engine.NavForth,
+					TabIdx: tabsView.Selected}
+			}
+
 			// start render app
 			appFlex := layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}
 			appFlexChildren := []layout.FlexChild{
 				layout.Rigid(func(gtx C) D { return tabsView.Layout(gtx, tabs) }),
-				ui.Rigid(searchBar),
+				layout.Rigid(func(gtx C) D { return ui.NewTopBar(searchBar, pageNav).Layout(gtx) }),
 			}
 
 			// if loading the page, replace horizontal line with progress bar
@@ -120,8 +144,8 @@ func Draw(window *app.Window, state *engine.State) {
 			}
 
 			// handle page rendering
-			domRenderer.handleHead(tab.Root) // set tab data
-			pageElements := domRenderer.render(tab.Root, tab.Styles, tab.Url)
+			domRenderer.handleHead(tab.Dom.Root) // set tab data
+			pageElements := domRenderer.render(tab.Dom.Root, tab.Dom.Styles, tab.Url)
 			appFlexChildren = append(appFlexChildren, layout.Rigid(func(gtx C) D {
 				return page.Layout(gtx, pageElements)
 			}))
