@@ -61,8 +61,12 @@ var client = &http.Client{Timeout: 3 * time.Second}
 
 // checked content type in HTTPS header
 var supportedContentType = map[string]bool{
-	"text/html": true,
-	"text/css":  true,
+	"text/html":  true,
+	"text/css":   true,
+	"image/png":  true,
+	"image/jpeg": true,
+	"image/jpg":  true,
+	"image/gif":  true,
 }
 
 // Start starts the engine to watch for notification and serve the request>

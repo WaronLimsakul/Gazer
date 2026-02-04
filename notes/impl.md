@@ -261,7 +261,7 @@ When loading something and add a tab, my program got seizure, so I assign one lo
 By just spinning up another goroutine doing a `serveTab` which should keep looking at its own tab's channel
 and serving.
 
-### Tab Navigation
+### History Navigation
 I think it would be cool to implement it, it's not really hard in term of backend logic,
 navigation history is just a linked list. I have a set of button called `PageNav` and 
 new notification types: `NavBack`, `NavForth` and `AcknowledgeUrlChanged`.

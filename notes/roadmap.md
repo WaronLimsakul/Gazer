@@ -15,9 +15,9 @@
 - [x] Fix loading bar, I saw it firing like a Gatling gun when load a large page.
 - [x] Update serve.sh to observe the change and reload
 - [x] Support local file url in img src 
-- [ ] Support gif
+- [x] Support gif
 - [ ] `info.cern.ch`, `berkshirehathaway.com` <- pure html and CSS. Can use for testing
-- [ ] Tab navigation
+- [x] History navigation
 - [x] When loading something and create a new tab, it seizure
     - Gotta separate network engine by tab
 
