@@ -5,9 +5,8 @@ import (
 	"image"
 	"image/color"
 	"log"
-	"net/http"
 	urlPkg "net/url"
-	"strings"
+	"path/filepath"
 
 	"gioui.org/layout"
 	"gioui.org/op"
@@ -172,7 +171,10 @@ func (t *Tab) Layout(thm *Theme, gtx C, isSelected bool, url string) D {
 	// get favicon from the cache
 	favicon, ok := t.favIcons[url]
 	if !ok {
-		fetched, _ := t.getFavIcon(url)
+		fetched, err := t.getFavIcon(url)
+		if err != nil {
+			fmt.Println("getFavIcon:", err)
+		}
 		favicon = fetched
 		// even if getFavIcon fail, we still cache nil which means it fail
 		t.favIcons[url] = fetched
@@ -253,10 +255,6 @@ func (t Tab) getFavIcon(raw string) (image.Image, error) {
 		return nil, fmt.Errorf("Empty raw string")
 	}
 
-	if !strings.HasPrefix(raw, "https://") && !strings.HasPrefix(raw, "http://") {
-		raw = "https://" + raw
-	}
-
 	url, err := urlPkg.Parse(raw)
 	if err != nil {
 		return nil, fmt.Errorf("url.Parse: %v", err)
@@ -264,16 +262,23 @@ func (t Tab) getFavIcon(raw string) (image.Image, error) {
 
 	url.RawQuery = ""
 	url.RawFragment = ""
-	url.Path = "/favicon.ico"
-
-	reqUrl := url.String()
-	res, err := http.Get(reqUrl)
-	if err != nil {
-		return nil, fmt.Errorf("http.Get: %v", err)
+	if url.Scheme == "file" {
+		// For file://, get favicon.ico from the same directory
+		dirPath := filepath.Dir(url.Path)
+		url.Path = filepath.Join(dirPath, "favicon.ico")
+	} else {
+		// For http/https, get favicon.ico from root
+		url.Path = "/favicon.ico"
 	}
-	defer res.Body.Close()
 
-	img, _, err := image.Decode(res.Body)
+	icoReader, err := engine.Fetch(*url)
+	fmt.Println("favIconUrl: ", url.String())
+	if err != nil {
+		return nil, fmt.Errorf("engine.Fetch: %v", err)
+	}
+	defer icoReader.Close()
+
+	img, _, err := image.Decode(icoReader)
 	if err != nil {
 		return nil, fmt.Errorf("image.Decode: %v", err)
 	}

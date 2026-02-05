@@ -67,6 +67,10 @@ var supportedContentType = map[string]bool{
 	"image/jpeg": true,
 	"image/jpg":  true,
 	"image/gif":  true,
+	// ico
+	"image/x-icon": true,
+	// ico for mime
+	"image/vnd.microsoft.icon": true,
 }
 
 // Start starts the engine to watch for notification and serve the request>
@@ -205,13 +209,13 @@ func getDom(url urlPkg.URL) (*parser.Node, error) {
 		return nil, fmt.Errorf("io.ReadAll: %v", err)
 	}
 
-	log.Println("fetch:\n", string(resBody))
+	// log.Println("fetch:\n", string(resBody))
 
 	root, err := parser.Parse(string(resBody))
 	if err != nil {
 		return nil, fmt.Errorf("parse: %v", err)
 	}
-	log.Println("parse:\n", *root)
+	// log.Println("parse:\n", *root)
 	return root, nil
 }
 
@@ -293,6 +297,7 @@ func Fetch(url urlPkg.URL) (io.ReadCloser, error) {
 	case "file":
 		file, err := os.Open(url.Path)
 		if err != nil {
+			fmt.Println("os.Open:", err)
 			return nil, fmt.Errorf("os.Open: %v", err)
 		}
 		return file, nil

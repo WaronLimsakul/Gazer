@@ -20,6 +20,9 @@
 - [x] History navigation
 - [x] When loading something and create a new tab, it seizure
     - Gotta separate network engine by tab
+- [ ] Have a global error logging system
+    - [ ] Bubbling all errors up to log at the highest level.
+- [ ] Check bold/italic inside bullet point rendenring
 
 
 
