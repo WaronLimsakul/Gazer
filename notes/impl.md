@@ -268,3 +268,15 @@ new notification types: `NavBack`, `NavForth` and `AcknowledgeUrlChanged`.
 The last one is when engine navigate back/forth and change state's url, we have to find a way
 to notify the ui without letting it mess with the engine, so I create a new field in `engine.Tab` called `urlChanged`
 now when UI see this flag being `true`, it will just set its search bar url to the changed on and notify the engine.
+
+### Gif rendering
+So we're doing immediate mode. Rendering gif is somewhat kinda awkward. But here is what I did
+1. I fetch the data, use `gif.DecodeAll` fucntion to get all the frames
+2. Precompose all the frame and store it in a struct called `GifImg` <- this one is inside `Img` component
+    - Yeah, forget to mention that normally gif use composition of pixels from last frame, this way,
+    they can save lots of bandwidth
+3. Precompute a bunch of things to make rendering faster (e.g. `frameTimeBounds` <- `Delay`'s prefix sum)
+4. When `Layout`, just check what frame to shows and schedule the next rerendering time
+    - I use `op.InvalidateCmd` struct for that
+    - Spent 1 million years finding a function to execute the command: its `gtx.Execute()`
+

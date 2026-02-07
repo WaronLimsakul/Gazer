@@ -34,9 +34,9 @@ type GifImg struct {
 	start  time.Time     // starting rendering time
 	elapse time.Duration // elapse dur for each loop
 	// cache for check which frame to rendering
-	// usage: if gif (age % elapse) < frameCache[i],
+	// usage: if gif (age % elapse) < frameTimeBounds[i],
 	// then return composedFrames[i]
-	frameCache []time.Duration
+	frameTimeBounds []time.Duration
 	// precomposed frames for rendering
 	composedFrames []image.Image
 }
@@ -94,9 +94,9 @@ func (i Img) Layout(gtx C) D {
 	var size image.Point
 	var img image.Image
 	if i.isGif {
-		now := time.Now()
-		img = i.gifImg.getGifFrame(now)
-		op.InvalidateCmd{At: i.gifImg.getNextFrameTime(now)}.ImplementsCommand()
+		var nextFrameTime time.Time
+		img, nextFrameTime = i.gifImg.getGifFrameAndNextFrameTime(time.Now())
+		gtx.Execute(op.InvalidateCmd{At: nextFrameTime}) // no one tells me to use this...
 	} else {
 		img = i.img
 	}
@@ -115,12 +115,12 @@ func newGifImg(r io.Reader) (*GifImg, error) {
 		return nil, fmt.Errorf("gif.DecodeAll: %v", err)
 	}
 
-	// calculate elapse time and frameCache
+	// calculate elapse time and frameTimeBounds
 	var elapseAcc int // in 1/100 second unit
-	frameCache := make([]time.Duration, len(img.Delay))
+	frameTimeBounds := make([]time.Duration, len(img.Delay))
 	for i, delay := range img.Delay {
 		elapseAcc += delay
-		frameCache[i] = time.Duration(elapseAcc) * 10 * time.Millisecond
+		frameTimeBounds[i] = time.Duration(elapseAcc) * 10 * time.Millisecond
 	}
 	elapse := time.Duration(elapseAcc) * 10 * time.Millisecond
 
@@ -128,37 +128,23 @@ func newGifImg(r io.Reader) (*GifImg, error) {
 	composedFrames := composeGifFrames(img)
 
 	return &GifImg{
-		start:          time.Now(),
-		elapse:         elapse,
-		frameCache:     frameCache,
-		composedFrames: composedFrames,
+		start:           time.Now(),
+		elapse:          elapse,
+		frameTimeBounds: frameTimeBounds,
+		composedFrames:  composedFrames,
 	}, nil
 }
 
-// getGifFrame get a composed frame for rendering the gif
-// based on provided time t
-func (g GifImg) getGifFrame(t time.Time) image.Image {
-	// NOTE: actaully have to check LoopCount and 0 means loop forever.
-	// Let's assume it's loop forever.
+// getGifFrameAndNextFrameTime get the gif frame for rendering at the
+// exact time t, and also the next time next frame should come.
+func (g GifImg) getGifFrameAndNextFrameTime(t time.Time) (image.Image, time.Time) {
 	age := t.Sub(g.start) % g.elapse
-	for i, bound := range g.frameCache {
+	for i, bound := range g.frameTimeBounds {
 		if age <= bound {
-			return g.composedFrames[i]
+			return g.composedFrames[i], t.Add(bound - age)
 		}
 	}
-	return g.composedFrames[len(g.composedFrames)-1]
-}
-
-// getNextFrameTime recieve a time t and return the time
-// that next frame should come
-func (g GifImg) getNextFrameTime(t time.Time) time.Time {
-	age := t.Sub(g.start) % g.elapse
-	for _, bound := range g.frameCache {
-		if age <= bound {
-			return t.Add(bound - age)
-		}
-	}
-	return t.Add(g.elapse - age)
+	return g.composedFrames[len(g.composedFrames)-1], t.Add(g.elapse - age)
 }
 
 // composeGifFrames takes GIF data gg and create a
