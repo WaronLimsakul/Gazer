@@ -16,15 +16,36 @@ import (
 	"gioui.org/op"
 	"gioui.org/op/paint"
 	"github.com/WaronLimsakul/Gazer/internal/engine"
+	"github.com/srwiley/oksvg"
+	"github.com/srwiley/rasterx"
 )
 
-var imgFormats = []string{".jpg", ".jpeg", ".png", ".gif"}
+type ImgFormat uint8
+
+// All supported image format
+// Change this =
+// 1. change supportedImgFormats map
+// 2. change supportedContentType in engine
+const (
+	InvalidFormat ImgFormat = iota
+	Png
+	Jpg
+	Gif
+	Svg
+)
+
+var supportedImgFormats = map[string]ImgFormat{
+	".png":  Png,
+	".jpg":  Jpg,
+	".jpeg": Jpg,
+	".gif":  Gif,
+	".svg":  Svg,
+}
 
 type Img struct {
 	src    string
-	format string
+	format ImgFormat
 	img    image.Image
-	isGif  bool
 	gifImg *GifImg // nil if not gif format
 }
 
@@ -49,14 +70,14 @@ func NewImg(src string) (*Img, error) {
 	}
 
 	// check if the format is supported
-	var imgFormat string
-	for _, format := range imgFormats {
-		if strings.HasSuffix(parsedUrl.Path, format) {
+	imgFormat := InvalidFormat
+	for suffix, format := range supportedImgFormats {
+		if strings.HasSuffix(parsedUrl.Path, suffix) {
 			imgFormat = format
 			break
 		}
 	}
-	if len(imgFormat) == 0 {
+	if imgFormat == InvalidFormat {
 		fmt.Println("not supported file format:", parsedUrl.Path)
 		return nil, fmt.Errorf("Not supported file format")
 	}
@@ -71,33 +92,46 @@ func NewImg(src string) (*Img, error) {
 
 	// decode the image
 	var img image.Image
-	var format string
 	var gifImg *GifImg
-	var isGif bool
-	if imgFormat == ".gif" {
-		isGif = true
+	switch imgFormat {
+	case Gif:
 		gifImg, err = newGifImg(imgReader)
 		if err != nil {
 			return nil, fmt.Errorf("newGifImg: %v", err)
 		}
-	} else {
-		img, format, err = image.Decode(imgReader)
+	case Svg:
+		svgIcon, err := oksvg.ReadIconStream(imgReader)
+		if err != nil {
+			return nil, fmt.Errorf("ReadIconStream: %v", err)
+		}
+
+		w, h := int(svgIcon.ViewBox.W), int(svgIcon.ViewBox.H)
+		svgIcon.SetTarget(0, 0, float64(w), float64(h))
+
+		rgba := image.NewRGBA(image.Rect(0, 0, w, h))
+		scanner := rasterx.NewScannerGV(w, h, rgba, rgba.Bounds())
+		dasher := rasterx.NewDasher(w, h, scanner)
+		svgIcon.Draw(dasher, 1.0)
+
+		img = rgba
+	default:
+		img, _, err = image.Decode(imgReader)
 		if err != nil {
 			return nil, fmt.Errorf("image.Decode: %v", err)
 		}
 	}
-
-	return &Img{src: src, format: format, img: img, isGif: isGif, gifImg: gifImg}, nil
+	return &Img{src: src, format: imgFormat, img: img, gifImg: gifImg}, nil
 }
 
 func (i Img) Layout(gtx C) D {
 	var size image.Point
 	var img image.Image
-	if i.isGif {
+	switch i.format {
+	case Gif:
 		var nextFrameTime time.Time
 		img, nextFrameTime = i.gifImg.getGifFrameAndNextFrameTime(time.Now())
 		gtx.Execute(op.InvalidateCmd{At: nextFrameTime}) // no one tells me to use this...
-	} else {
+	default:
 		img = i.img
 	}
 	imgOp := paint.NewImageOp(img)

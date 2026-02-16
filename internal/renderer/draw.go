@@ -193,4 +193,5 @@ func newTheme() *material.Theme {
 // 	actions := system.ActionClose | system.ActionFullscreen | system.ActionMinimize
 // 	decoStyle := material.Decorations(thm, deco, actions, "GGG")
 // 	return &decoStyle
+
 // }

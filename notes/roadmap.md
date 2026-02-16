@@ -7,6 +7,11 @@
     - [ ] Bubbling all errors up to log at the highest level.
 - [ ] Check bold/italic inside bullet point rendenring
 - [ ] Support SVG file
+- [ ] Button component <- wrap gioui button, so we can inactivate
+- [ ] Tab navigation like window navigation
+- [ ] Limit image size
+- [ ] Have user input dispatcher, so I can do `range input` and `switch-case` the input type
+
 
 
 
@@ -53,6 +58,23 @@
 
 ### JavaScript support
 - [ ] Light JavaScript support
+- [ ] DOM Manipulation
+    - document.getElementById, querySelector, querySelectorAll
+    - element.innerHTML, element.textContent
+    - element.setAttribute, getAttribute, removeAttribute
+    - element.style (basic property setting)
+    - element.appendChild, removeChild, createElement
+    - element.classList.add/remove/toggle/contains
+- [ ] Events
+    - element.addEventListener, removeEventListener
+    - Basic event object (event.target, event.preventDefault, event.stopPropagation)
+    - Mouse events: click, mouseover, mouseout
+    - Keyboard events: keydown, keyup
+    - window.onload / DOMContentLoaded
+- [ ] Timers
+    - setTimeout, clearTimeout
+    - setInterval, clearInterval
+
 
 ### Other UI features
 - [x] Search bar's search button 
