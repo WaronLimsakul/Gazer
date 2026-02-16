@@ -36,6 +36,8 @@ type Style struct {
 	FontSize   *unit.Sp // TODO: might have to change after supporting other type
 	FontWeight *font.Weight
 	FontStyle  *font.Style
+	Width      *unit.Dp
+	Height     *unit.Dp
 }
 
 // AddStyleSet adds 2 style sets with different importance (high/low priority)
@@ -351,6 +353,23 @@ func (s *Style) registerDecls(decls map[string]string) {
 				continue
 			}
 			s.FontStyle = &fstyle
+		case "width":
+			w, err := s.parseLength(val)
+			if err != nil {
+				continue
+			}
+			// only assign when non-negative
+			if w >= 0 {
+				s.Width = &w
+			}
+		case "height":
+			h, err := s.parseLength(val)
+			if err != nil {
+				continue
+			}
+			if h >= 0 {
+				s.Height = &h
+			}
 		}
 
 	}

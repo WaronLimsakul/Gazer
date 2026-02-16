@@ -61,6 +61,7 @@ mainLoop: // first time in my life using this. Haha
 }
 
 // ParseStyle recieve a raw string of HTML inline "style" attribute and return a css.Style
+// e.g. ParseStyle("color: red; width: 100;") -> {color->red, width->100}
 func ParseStyle(raw string) (s Style) {
 	raw = strings.TrimSpace(raw)
 	decls := strings.Split(raw, ";")

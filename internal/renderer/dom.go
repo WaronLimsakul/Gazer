@@ -92,7 +92,7 @@ func (dr *DomRenderer) renderNode(node *Node, styles *StyleSet, rctx RenderingCo
 	case parser.Hr:
 		res = append(res, []Element{ui.HorizontalLine{Thm: dr.thm, Width: WINDOW_WIDTH, Height: unit.Dp(1)}})
 	case parser.Img:
-		img, err := dr.renderImg(node)
+		img, err := dr.renderImg(node, styles)
 		if err != nil {
 			// TODO: log or something
 			break
@@ -141,7 +141,6 @@ func (dr *DomRenderer) renderContainer(node *Node, styles *StyleSet, rctx Render
 // renderText returns [][]Element needs for rendering a text node and its children.
 // requires: node must be of the text type (check by using parser.TextElements)
 // TODO: doc
-// TODO: should we pass rctx by pointer or value?
 func (dr *DomRenderer) renderText(node *Node, styles *StyleSet, rctx RenderingContext) [][]Element {
 	// base case
 	if node.Tag == parser.Text {
@@ -216,9 +215,9 @@ func (dr *DomRenderer) renderText(node *Node, styles *StyleSet, rctx RenderingCo
 	return dr.gatherElements(node, styles, rctx)
 }
 
-// renderImg receive Img tag node and return Img ui element.
+// renderImg receive Img tag node, style set (for w, h) then return Img ui element.
 // Img is void element, don't have to gather more
-func (dr *DomRenderer) renderImg(node *Node) (Element, error) {
+func (dr *DomRenderer) renderImg(node *Node, styles *StyleSet) (Element, error) {
 	empty := layout.Spacer{}
 	if node == nil {
 		return empty, fmt.Errorf("nil node")
@@ -240,25 +239,7 @@ func (dr *DomRenderer) renderImg(node *Node) (Element, error) {
 		return empty, fmt.Errorf("baseUrl.Parse: %v", err)
 	}
 
-	// get width and height of image (-1 if not provided or err)
-	wStr, ok := node.Attrs["width"]
-	if !ok {
-		wStr = "-1"
-	}
-	w, err := strconv.Atoi(wStr)
-	if err != nil {
-		w = -1
-	}
-
-	hStr, ok := node.Attrs["height"]
-	if !ok {
-		hStr = "-1"
-	}
-	h, err := strconv.Atoi(hStr)
-	if err != nil {
-		h = -1
-	}
-
+	w, h := getImgWidthHeight(node, styles)
 	img, err := ui.NewImg(imgUrl.String(), w, h)
 	if err != nil {
 		return empty, fmt.Errorf("ui.NewImg: %v", err)
@@ -363,6 +344,73 @@ func (dr *DomRenderer) linkClicked(gtx C) (bool, string) {
 		}
 	}
 	return false, ""
+}
+
+// getImgWidthHeight get width and height value of the Img node
+// it return negative value if not provided or there is error
+func getImgWidthHeight(node *parser.Node, styles *StyleSet) (w int, h int) {
+	w, h = -1, -1
+	var err error
+
+	// get width and height of image from inline attrs (-1 if not provided or err)
+	wStr, ok := node.Attrs["width"]
+	if !ok {
+		wStr = "-1"
+	}
+	w, err = strconv.Atoi(wStr)
+	if err != nil {
+		w = -1
+	}
+
+	hStr, ok := node.Attrs["height"]
+	if !ok {
+		hStr = "-1"
+	}
+	h, err = strconv.Atoi(hStr)
+	if err != nil {
+		h = -1
+	}
+
+	// get w and h from inline style
+	var wInlineStyle, hInlineStyle = -1, -1
+	rawInlineStyle, ok := node.Attrs["style"]
+	if ok {
+		inlineStyle := css.ParseStyle(rawInlineStyle)
+		if inlineStyle.Width != nil {
+			wInlineStyle = int(*inlineStyle.Width)
+		}
+		if inlineStyle.Height != nil {
+			hInlineStyle = int(*inlineStyle.Height)
+		}
+	}
+
+	// get w and h from external style
+	var wExternalStyle, hExternalStyle = -1, -1
+	externalStyle := getNodeStyleFromStyleSet(styles, node)
+	if externalStyle != nil && externalStyle.Width != nil {
+		wExternalStyle = int(*externalStyle.Width)
+	}
+	if externalStyle != nil && externalStyle.Height != nil {
+		wExternalStyle = int(*externalStyle.Height)
+	}
+
+	// priority: separate > inline style > external style
+	if w < 0 {
+		if wInlineStyle >= 0 {
+			w = wInlineStyle
+		} else {
+			w = wExternalStyle
+		}
+	}
+	if h < 0 {
+		if hInlineStyle >= 0 {
+			h = hInlineStyle
+		} else {
+			h = hExternalStyle
+		}
+	}
+
+	return w, h
 }
 
 // getNodeStyleFromStyleSet return a css.Style of the node according to
