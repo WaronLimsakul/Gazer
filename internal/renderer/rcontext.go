@@ -7,6 +7,7 @@ import (
 )
 
 // Contextual style passed around in renderNode
+// used when rendering individaul node
 type RenderingContext struct {
 	ancestors []parser.Tag // ancestors history of the current, node, oldest at index 0
 	base      css.Style

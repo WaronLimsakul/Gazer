@@ -3,6 +3,7 @@ package renderer
 import (
 	"fmt"
 	urlPkg "net/url"
+	"strconv"
 	"strings"
 	"unicode"
 
@@ -93,6 +94,7 @@ func (dr *DomRenderer) renderNode(node *Node, styles *StyleSet, rctx RenderingCo
 	case parser.Img:
 		img, err := dr.renderImg(node)
 		if err != nil {
+			// TODO: log or something
 			break
 		}
 		res = append(res, []Element{img})
@@ -237,7 +239,27 @@ func (dr *DomRenderer) renderImg(node *Node) (Element, error) {
 	if err != nil {
 		return empty, fmt.Errorf("baseUrl.Parse: %v", err)
 	}
-	img, err := ui.NewImg(imgUrl.String())
+
+	// get width and height of image (-1 if not provided or err)
+	wStr, ok := node.Attrs["width"]
+	if !ok {
+		wStr = "-1"
+	}
+	w, err := strconv.Atoi(wStr)
+	if err != nil {
+		w = -1
+	}
+
+	hStr, ok := node.Attrs["height"]
+	if !ok {
+		hStr = "-1"
+	}
+	h, err := strconv.Atoi(hStr)
+	if err != nil {
+		h = -1
+	}
+
+	img, err := ui.NewImg(imgUrl.String(), w, h)
 	if err != nil {
 		return empty, fmt.Errorf("ui.NewImg: %v", err)
 	}

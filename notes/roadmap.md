@@ -6,10 +6,11 @@
 - [ ] Have a global error logging system
     - [ ] Bubbling all errors up to log at the highest level.
 - [ ] Check bold/italic inside bullet point rendenring
-- [ ] Support SVG file
+- [x] Support SVG file
 - [ ] Button component <- wrap gioui button, so we can inactivate
 - [ ] Tab navigation like window navigation
-- [ ] Limit image size
+- [x] Image size setting (`width`, `height` attribute)
+    - Supports, "500", "500px", "500rem" kind of input
 - [ ] Have user input dispatcher, so I can do `range input` and `switch-case` the input type
 
 

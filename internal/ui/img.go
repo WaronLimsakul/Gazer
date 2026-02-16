@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"image/draw"
 	"image/gif"
 	_ "image/jpeg"
 	_ "image/png"
@@ -18,6 +17,7 @@ import (
 	"github.com/WaronLimsakul/Gazer/internal/engine"
 	"github.com/srwiley/oksvg"
 	"github.com/srwiley/rasterx"
+	"golang.org/x/image/draw"
 )
 
 type ImgFormat uint8
@@ -63,7 +63,9 @@ type GifImg struct {
 }
 
 // NewImg creates a new Img component from legal URL src
-func NewImg(src string) (*Img, error) {
+// REQUIRES: src must be valid Url.
+// NOTE: width and height can be opt out by passing negative value
+func NewImg(src string, width int, height int) (*Img, error) {
 	parsedUrl, err := url.Parse(src)
 	if err != nil {
 		return nil, fmt.Errorf("url.Parse: %v", err)
@@ -120,6 +122,18 @@ func NewImg(src string) (*Img, error) {
 			return nil, fmt.Errorf("image.Decode: %v", err)
 		}
 	}
+
+	// rescale if dim provided
+	if width >= 0 || height >= 0 {
+		if imgFormat == Gif {
+			for i, frame := range gifImg.composedFrames {
+				gifImg.composedFrames[i] = rescaleImg(frame, width, height)
+			}
+		} else {
+			img = rescaleImg(img, width, height)
+		}
+	}
+
 	return &Img{src: src, format: imgFormat, img: img, gifImg: gifImg}, nil
 }
 
@@ -130,7 +144,8 @@ func (i Img) Layout(gtx C) D {
 	case Gif:
 		var nextFrameTime time.Time
 		img, nextFrameTime = i.gifImg.getGifFrameAndNextFrameTime(time.Now())
-		gtx.Execute(op.InvalidateCmd{At: nextFrameTime}) // no one tells me to use this...
+		// no one tells me to use this...
+		gtx.Execute(op.InvalidateCmd{At: nextFrameTime})
 	default:
 		img = i.img
 	}
@@ -206,4 +221,25 @@ func composeGifFrames(gg *gif.GIF) []image.Image {
 		frames[i] = curFrame
 	}
 	return frames
+}
+
+// rescaleImage rescales image.Image based on provided width and height
+// requires: w or h must be >= 0
+func rescaleImg(img image.Image, w int, h int) image.Image {
+	// in case only one dim provided, we set another to orignal proportion
+	if w < 0 {
+		originalDim := img.Bounds()
+		w = (h * originalDim.Dx()) / originalDim.Dy()
+	}
+	if h < 0 {
+		originalDim := img.Bounds()
+		h = (w * originalDim.Dy()) / originalDim.Dx()
+	}
+
+	// resize
+	imgSrc := img
+	imgDst := image.NewRGBA(image.Rect(0, 0, w, h))
+	// draw said near neighbor is fast but not high quality. I say it's good enough
+	draw.NearestNeighbor.Scale(imgDst, imgDst.Bounds(), imgSrc, imgSrc.Bounds(), draw.Over, nil)
+	return imgDst
 }
