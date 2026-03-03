@@ -4,20 +4,6 @@ Welcome to **Gazer**, a low-level browser engine built in Go using the Gio UI fr
 
 ---
 
-## Technical Overview: The State Machine
-
-At the core of our lexer is a Finite State Machine (FSM). It treats HTML strings like a suspicious obstacle course, moving from a "Void" state into specific paths for tags, comments, and doctypes.
-
-```json
-{
-  "lexer_name": "HTML_Tag_Lexer",
-  "initial_state": "Void",
-  "final_state": "return",
-  "description": "A state machine for identifying HTML-style tags, comments, and doctypes."
-}
-
-```
-
 ### High-Level Architecture
 
 Gazer follows an MVC-adjacent pattern split into two main packages:
@@ -44,11 +30,6 @@ We realized that `Inner string` fields are where dreams go to die. If you have `
 
 * **op.Record:** This is our secret weapon. We record operations to a macro, measure the resulting dimensions, and then retrospectively draw backgrounds. It’s basically time travel for UI drawing.
 * **Immediate Mode Gifs:** Rendering Gifs in an immediate-mode UI is awkward. We precompute frame time bounds and use `op.InvalidateCmd` to tell the GPU exactly when to wake up for the next frame.
-
-### 4. Reflection and "Pointer-o-phobia"
-
-* **Reflect Package:** We use Go's `reflect` to loop over CSS `Style` structs. It’s significantly cleaner than writing 500 `if` statements for every possible CSS property.
-* **Pass-by-Value:** We have a strict "no pointer" policy unless the struct is "huge," needs mutation, or is optional. If you see a pointer in our rendering logic, it’s there for a very good reason.
 
 ---
 
