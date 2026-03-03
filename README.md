@@ -20,7 +20,7 @@ It parses HTML and CSS, builds a DOM tree, and renders it using an immediate mod
 1. Install Go
 2. Clone the repository
   ```
-    git clone [https://github.com/WaronLimsakul/Gazer](https://github.com/WaronLimsakul/Gazer)
+    git clone https://github.com/WaronLimsakul/Gazer
   ```
 3. Build
   ```
