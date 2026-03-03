@@ -1,70 +1,46 @@
-# Gazer: The "I Can't Believe It's Not V8" Browser Engine
+# Gazer
 
-Welcome to **Gazer**, a low-level browser engine built in Go using the Gio UI framework. While modern browsers consume RAM like a competitive eater at a buffet, Gazer is handcrafted to render the web one state-machine transition at a time. It’s small, it’s fast-ish, and it’s mostly pointer-safe.
-
----
-
-### High-Level Architecture
-
-Gazer follows an MVC-adjacent pattern split into two main packages:
-
-* **The Engine:** The "brains" that handle state, tab logic, and network fetching.
-* **The Renderer:** The "brawn" that takes a DOM tree and forces Gio to draw it on your screen.
+A lightweight browser engine written in Go using the Gio UI framework.
+It parses HTML and CSS, builds a DOM tree, and renders it using an immediate mode UI approach.
 
 ---
 
-## Engineering Philosophies (The "Hard Way" Lessons)
+## What It Does
 
-### 1. Style Inheritance via Accumulative Recursion
-
-Originally, we tried a decorator pattern where styles flowed up. That was a mistake. We now use **accumulative recursion** where the parent’s style is passed down the tree.
-
-* **The H1 Test:** If you put an `<h1>` inside an `<h2>`, Gazer now correctly realizes that the universe shouldn't implode and renders the inner tag's style.
-* **Rendering Context:** We pass a `RenderingContext` stack rather than just a style struct. This allows a `<li>` to look up the stack, see its `<ul>` ancestor, and realize it needs a bullet point.
-
-### 2. The DOM and the Text Node Revolution
-
-We realized that `Inner string` fields are where dreams go to die. If you have `<p>Hello <br> world</p>`, a single string field can't handle the line break. We transitioned to a pure node-based system where everything—even "Hello "—is its own `Text` node.
-
-### 3. Gio Power User Moves
-
-* **op.Record:** This is our secret weapon. We record operations to a macro, measure the resulting dimensions, and then retrospectively draw backgrounds. It’s basically time travel for UI drawing.
-* **Immediate Mode Gifs:** Rendering Gifs in an immediate-mode UI is awkward. We precompute frame time bounds and use `op.InvalidateCmd` to tell the GPU exactly when to wake up for the next frame.
+• Fetches and parses HTML
+• Applies CSS from inline, internal, and external stylesheets
+• Builds a DOM tree with proper text nodes
+• Renders layout, typography, lists, images, links, and basic form elements
+• Supports GIF rendering with timed frame updates
 
 ---
 
-## Project Status
+## How to Run
 
-### Supported HTML Elements
+1. Install Go
+2. Clone the repository
+   git clone [https://github.com/WaronLimsakul/Gazer](https://github.com/WaronLimsakul/Gazer)
+3. Move into the project folder
+   cd Gazer
+4. Build
+   go build
+5. Run
+   ./Gazer
 
-| Category | Supported |
-| --- | --- |
-| **Layout** | `div`, `span`, `section`, `hr` |
-| **Typography** | `b`, `strong`, `i`, `em`, `h1-h6` |
-| **Lists** | `ul`, `ol`, `li` (with auto-incrementing counts) |
-| **Media** | `img` (including Gif and SVG), `a` (links) |
-| **Forms** | `button`, `input` (text, password, email, number) |
-
-### CSS Implementation
-
-* **Sources:** Supports Inline `style` attributes, Internal `<style>` tags, and External `<link>` stylesheets.
-* **Box Model:** Basic support for `margin`, `padding`, and `border` (including shorthand and radius).
-* **Typography:** `font-size` and `color` inheritance is fully functional.
+You can then enter a URL such as info.cern.ch to test rendering.
 
 ---
 
-## The Roadmap (Or: The "Why Did I Start This" List)
+## How to Contribute
 
-* [ ] **Flexbox:** Currently, we use a mix of `List` for rows and `Flex` for inline elements. Implementing a full Flexbox model is the final boss.
-* [ ] **Table Support:** Because 1990s web design deserves to be rendered correctly.
-* [ ] **JavaScript (The Light Version):** Support for basic DOM manipulation (`getElementById`) and timers (`setTimeout`).
-* [ ] **Custom Window Decorations:** Because the default Gio window is, let's be honest, a bit plain.
+1. Fork the repository
+2. Create a new branch
+3. Make your changes
+4. Submit a pull request
 
----
+Areas that need work:
 
-## Getting Started
-
-1. **Clone the repo:** `git clone https://github.com/WaronLimsakul/Gazer`
-2. **Build:** `go build`
-3. **Run:** `./Gazer`
-4. **Test:** Point it at `info.cern.ch` and witness the glorious dawn of the internet.
+• Flexbox layout system
+• Table rendering
+• Basic JavaScript support
+• Rendering improvements and performance optimization
