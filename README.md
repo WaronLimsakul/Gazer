@@ -7,11 +7,11 @@ It parses HTML and CSS, builds a DOM tree, and renders it using an immediate mod
 
 ## What It Does
 
-• Fetches and parses HTML
-• Applies CSS from inline, internal, and external stylesheets
-• Builds a DOM tree with proper text nodes
-• Renders layout, typography, lists, images, links, and basic form elements
-• Supports GIF rendering with timed frame updates
+- Fetches and parses HTML
+- Applies CSS from inline, internal, and external stylesheets
+- Builds a DOM tree with proper text nodes
+- Renders layout, typography, lists, images, links, and basic form elements
+- Supports GIF rendering with timed frame updates
 
 ---
 
@@ -19,13 +19,13 @@ It parses HTML and CSS, builds a DOM tree, and renders it using an immediate mod
 
 1. Install Go
 2. Clone the repository
-   git clone [https://github.com/WaronLimsakul/Gazer](https://github.com/WaronLimsakul/Gazer)
-3. Move into the project folder
-   cd Gazer
-4. Build
+  ```
+    git clone [https://github.com/WaronLimsakul/Gazer](https://github.com/WaronLimsakul/Gazer)
+  ```
+3. Build
+  ```
    go build
-5. Run
-   ./Gazer
+  ```
 
 You can then enter a URL such as info.cern.ch to test rendering.
 
@@ -39,8 +39,7 @@ You can then enter a URL such as info.cern.ch to test rendering.
 4. Submit a pull request
 
 Areas that need work:
-
-• Flexbox layout system
-• Table rendering
-• Basic JavaScript support
-• Rendering improvements and performance optimization
+- Flexbox layout system
+- Table rendering
+- Basic JavaScript support
+- Rendering improvements and performance optimization
